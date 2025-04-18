@@ -7,6 +7,18 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowBlazorApp", builder =>
+	{
+		builder.WithOrigins("https://localhost:7206")
+			   .AllowAnyMethod()
+			   .AllowAnyHeader()
+			   .AllowCredentials();
+	});
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -17,6 +29,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Usar CORS - importante colocarlo antes de UseAuthorization y UseEndpoints
+app.UseCors("AllowBlazorApp");
 
 app.UseAuthorization();
 
