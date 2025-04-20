@@ -64,3 +64,5 @@ nunit-*.xml
 # Build output
 bin/
 obj/
+/DASI_2025A/Backend/appsettings.json
+/DASI_2025A/Backend/appsettings.json
