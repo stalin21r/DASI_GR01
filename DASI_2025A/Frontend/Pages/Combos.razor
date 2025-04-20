@@ -1,0 +1,233 @@
+@page "/combos"
+
+@inject CombosService combosService
+@inject IJSRuntime JS
+@inject SweetAlertService Swal
+
+<PageTitle>Combos</PageTitle>
+
+<h1>Combos</h1>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <p>En este componente se desplegarán los combos</p>
+  <button class="btn btn-success rounded-circle" @onclick="ShowAddModal"><i class="fas fa-plus" /></button>
+</div>
+
+@if (combos == null)
+{
+  <p><em>Loading ...</em></p>
+}
+else
+{
+  <!-- En modal-body normal se ve combos tabla -->
+  <div class="d-none d-md-block">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Combo</th>
+          <th>Descripción</th>
+          <th>Precio</th>
+          <th>Opciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @{
+          int counter = 1;
+        }
+        @foreach (var combo in combos)
+        {
+          <tr>
+            <td>@counter</td>
+            <td>@combo.Name</td>
+            <td>@combo.Description</td>
+            <td>$ @combo.Price</td>
+            <td>
+              <button class="btn btn-sm btn-primary" @onclick="() => ShowEditModal(combo)"><i
+                  class="fas fa-edit" /></button>
+              <button class="btn btn-sm btn-danger" @onclick="() => DeleteCombo(combo.Id)"><i
+                  class="fas fa-trash" /></button>
+            </td>
+          </tr>
+          counter++;
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- en mobile se ve combos cards -->
+  <div class="row d-block d-md-none">
+    @foreach (var combo in combos)
+    {
+      <div class="col-12 col-sm-6 col-md-4 mb-4">
+        <div class="card rounded shadow">
+          <div class="card-body">
+            <h5 class="card-title">@combo.Name</h5>
+            <p class="card-text">@combo.Description</p>
+            <p class="card-text"><strong>Precio:</strong> $ @combo.Price</p>
+            <div class="d-flex justify-content-evenly">
+              <button class="btn btn-sm btn-primary d-flex gap-2 align-items-center justify-content-center"
+                @onclick="() => ShowEditModal(combo)">
+                <i class="fas fa-edit" /> Editar
+              </button>
+              <button class="btn btn-sm btn-danger d-flex gap-2 align-items-center justify-content-center"
+                @onclick="() => DeleteCombo(combo.Id)">
+                <i class="fas fa-trash" /> Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (showModal)
+{
+  <div class="modal fade show d-block " tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">@((!editCombo) ? "Agregar Combo" : "Editar Combo")</h5>
+          <button type="button" class="btn-close" @onclick="CloseModal"></button>
+        </div>
+        <div class="modal-body">
+          <EditForm Model="@comboForm">
+            <InputNumber style="display:none;" @bind-Value="comboForm.Id" TValue="int" />
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              <InputText class="form-control" @bind-Value="comboForm.Name" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Descripción</label>
+              <InputTextArea class="form-control" @bind-Value="comboForm.Description" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Precio</label>
+              <InputNumber class="form-control" @bind-Value="comboForm.Price" TValue="float" />
+            </div>
+          </EditForm>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @onclick="CloseModal">Cancelar</button>
+          <button class="btn btn-primary" @onclick="() => SaveCombo(comboForm)">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@code {
+  private List<Frontend.Combos>? combos;
+  private Frontend.Combos comboForm = new();
+  private bool showModal = false;
+  private bool editCombo = false;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var response = await combosService.GetCombosAsync();
+    combos = response.data;
+    Console.WriteLine("la respuesta");
+    Console.WriteLine(response.status);
+  }
+
+  private void ShowAddModal()
+  {
+    comboForm = new Frontend.Combos();
+    showModal = true;
+    editCombo = false;
+  }
+
+  private void ShowEditModal(Frontend.Combos combo)
+  {
+    comboForm = new Frontend.Combos
+    {
+      Id = combo.Id,
+      Name = combo.Name,
+      Description = combo.Description,
+      Price = combo.Price
+    };
+    showModal = true;
+    editCombo = true;
+  }
+
+  private void CloseModal()
+  {
+    showModal = false;
+  }
+
+  private async Task SaveCombo(Frontend.Combos combo)
+  {
+    SweetAlertOptions confirmOptions = new SweetAlertOptions
+    {
+      Title = editCombo ? "¿Estás seguro de editar este combo?" : "¿Estás seguro de agregar este combo?",
+      Icon = SweetAlertIcon.Question,
+      ShowCancelButton = true,
+      ConfirmButtonText = editCombo ? "Editar" : "Agregar",
+      CancelButtonText = "Cancelar"
+    };
+
+    var confirm = await Swal.FireAsync(confirmOptions);
+
+    if (confirm.IsConfirmed)
+    {
+      ApiResponse<bool> response;
+      if (editCombo)
+      {
+        response = await combosService.PutComboAsync(combo.Id, combo);
+      }
+      else
+      {
+        var postResponse = await combosService.PostComboAsync(combo);
+        response = new ApiResponse<bool>
+        {
+          status = postResponse.status,
+          data = postResponse.status == 200, // Assuming success is determined by status code
+          message = postResponse.message
+        };
+      }
+
+      if (response?.status == 200)
+      {
+        // Mostrar toast de éxito
+        await Swal.FireAsync("¡Éxito!", "Combo guardado correctamente", SweetAlertIcon.Success);
+        combos = (await combosService.GetCombosAsync())?.data;
+        CloseModal();
+      }
+      else
+      {
+        // Mostrar toast de error
+        await Swal.FireAsync("¡Error!", "Hubo un problema al guardar el combo", SweetAlertIcon.Error);
+      }
+    }
+  }
+
+  private async Task DeleteCombo(int id)
+  {
+    var confirm = await Swal.FireAsync(new SweetAlertOptions
+    {
+      Title = "¿Estás seguro?",
+      Text = "Esta acción no se puede deshacer.",
+      Icon = SweetAlertIcon.Warning,
+      ShowCancelButton = true,
+      ConfirmButtonText = "Eliminar",
+      CancelButtonText = "Cancelar"
+    });
+
+    if (confirm.IsConfirmed)
+    {
+      var response = await combosService.DeleteComboAsync(id);
+      if (response?.status == 200)
+      {
+        // Mostrar toast de éxito
+        await Swal.FireAsync("¡Éxito!", "Combo eliminado correctamente", SweetAlertIcon.Success);
+        combos = combos?.Where(c => c.Id != id).ToList();
+      }
+      else
+      {
+        // Mostrar toast de error
+        await Swal.FireAsync("¡Error!", "Hubo un problema al eliminar el combo", SweetAlertIcon.Error);
+      }
+    }
+  }
+}
