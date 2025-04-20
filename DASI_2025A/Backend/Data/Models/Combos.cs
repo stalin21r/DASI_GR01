@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace DASI_2025A.Backend.Data.Models
+namespace Backend.Data.Models
 {
   public class Combos
   {

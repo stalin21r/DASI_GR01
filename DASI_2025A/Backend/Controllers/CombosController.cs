@@ -1,10 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using DASI_2025A.Backend.Data;
-using DASI_2025A.Backend.Data.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Backend.Data;
+using Backend.Data.Models;
 
 namespace Backend.Controllers
 {
@@ -21,79 +18,96 @@ namespace Backend.Controllers
 
         // GET: api/Combos
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Combos>>> GetCombos()
+        public async Task<ActionResult<ApiResponse<IEnumerable<Combos>>>> GetCombos()
         {
-            return await _context.Combos.ToListAsync();
+            var combos = await _context.Combos.ToListAsync();
+            return Ok(new ApiResponse<IEnumerable<Combos>>(200, "Combos obtenidos con éxito", combos));
         }
 
         // GET: api/Combos/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Combos>> GetCombos(int id)
+        public async Task<ActionResult<ApiResponse<Combos>>> GetCombo(int id)
         {
             var combo = await _context.Combos.FindAsync(id);
-
             if (combo == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponse<Combos>(404, "Combo no encontrado"));
             }
 
-            return combo;
+            return Ok(new ApiResponse<Combos>(200, "Combo obtenido con éxito", combo));
         }
 
         // POST: api/Combos
         [HttpPost]
-        public async Task<ActionResult<Combos>> PostCombos(Combos combos)
+        public async Task<ActionResult<ApiResponse<object>>> PostCombo(Combos combo)
         {
-            _context.Combos.Add(combos);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Combos.Add(combo);
+                await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCombos), new { id = combos.Id }, combos);
+                return StatusCode(201, new ApiResponse<object>(201, "Combo creado con éxito"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<object>(500, $"Error al crear combo: {ex.Message}"));
+            }
         }
 
         // PUT: api/Combos/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCombos(int id, Combos combos)
+        public async Task<ActionResult<ApiResponse<object>>> PutCombo(int id, Combos combo)
         {
-            if (id != combos.Id)
+            if (id != combo.Id)
             {
-                return BadRequest();
+                return BadRequest(new ApiResponse<object>(400, "El ID del combo no coincide"));
             }
 
-            _context.Entry(combos).State = EntityState.Modified;
+            _context.Entry(combo).State = EntityState.Modified;
 
             try
             {
                 await _context.SaveChangesAsync();
+                return Ok(new ApiResponse<object>(200, "Combo guardado con éxito"));
             }
             catch (DbUpdateConcurrencyException)
             {
                 if (!CombosExists(id))
                 {
-                    return NotFound();
+                    return NotFound(new ApiResponse<object>(404, "Combo no encontrado"));
                 }
                 else
                 {
-                    throw;
+                    return StatusCode(500, new ApiResponse<object>(500, "Error de concurrencia al guardar combo"));
                 }
             }
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<object>(500, $"Error al guardar combo: {ex.Message}"));
+            }
         }
 
         // DELETE: api/Combos/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCombos(int id)
+        public async Task<ActionResult<ApiResponse<object>>> DeleteCombo(int id)
         {
-            var combos = await _context.Combos.FindAsync(id);
-            if (combos == null)
+            var combo = await _context.Combos.FindAsync(id);
+            if (combo == null)
             {
-                return NotFound();
+                return NotFound(new ApiResponse<object>(404, "Combo no encontrado"));
             }
 
-            _context.Combos.Remove(combos);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Combos.Remove(combo);
+                await _context.SaveChangesAsync();
 
-            return NoContent();
+                return Ok(new ApiResponse<object>(200, "Combo eliminado con éxito"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<object>(500, $"Error al eliminar combo: {ex.Message}"));
+            }
         }
 
         private bool CombosExists(int id)
