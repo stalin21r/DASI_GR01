@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://dotnet.microsoft.com/">
-    <img src="https://img.shields.io/badge/.NET_Core-5.0-blue?logo=dotnet" alt=".NET Core">
+    <img src="https://img.shields.io/badge/.NET_Core-8.0-blue?logo=dotnet" alt=".NET Core">
   </a>
   <a href="https://learn.microsoft.com/en-us/ef/core/">
     <img src="https://img.shields.io/badge/Entity_Framework-Core-green?logo=entity-framework" alt="Entity Framework">
@@ -33,39 +33,37 @@
 
 ## 👥 Colaboradores
 <div align="center">
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/stalin21r">
-        <img src="https://github.com/stalin21r.png" width="80" style="border-radius: 50%;" alt="Stalin Garcia"/>
-        <br/>
-        <sub><b>Stalin Garcia</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://github.com/M147D">
-        <img src="https://github.com/M147D.png" width="80" style="border-radius: 50%;" alt="Miguel Pastuña"/>
-        <br/>
-        <sub><b>Miguel Pastuña</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://github.com/dennisperezEPN">
-        <img src="https://github.com/dennisperezEPN.png" width="80" style="border-radius: 50%;" alt="Dennise Perez"/>
-        <br/>
-        <sub><b>Dennise Perez</b></sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="https://github.com/Aldxir">
-        <img src="https://github.com/Aldxir.png" width="80" style="border-radius: 50%;" alt="Patricio Flor"/>
-        <br/>
-        <sub><b>Patricio Flor</b></sub>
-      </a>
-    </td>
-  </tr>
-</table>
+  <table>
+    <tr>
+      <td align="center">
+        <a href="https://github.com/stalin21r">
+          <img src="https://github.com/stalin21r.png" width="80" alt="Stalin Garcia"/><br/>
+          <sub><b>Stalin Garcia</b></sub>
+        </a>
+      </td>
+      <td align="center">
+        <a href="https://github.com/M147D">
+          <img src="https://github.com/M147D.png" width="80" alt="Miguel Pastuña"/><br/>
+          <sub><b>Miguel Pastuña</b></sub>
+        </a>
+      </td>
+      <td align="center">
+        <a href="https://github.com/dennisperezEPN">
+          <img src="https://github.com/dennisperezEPN.png" width="80" alt="Dennise Perez"/><br/>
+          <sub><b>Dennise Perez</b></sub>
+        </a>
+      </td>
+      <td align="center">
+        <a href="https://github.com/Aldxir">
+          <img src="https://github.com/Aldxir.png" width="80" alt="Patricio Flor"/><br/>
+          <sub><b>Patricio Flor</b></sub>
+        </a>
+      </td>
+    </tr>
+  </table>
 </div>
+
+
 
 ---
 ## 📘 Descripción
@@ -221,12 +219,12 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
 ### 📅 Semana Sprint / Entregable Estado
 
-| Semana | Sprint / Entregable                   | Estado       |
-|--------|---------------------------------------|--------------|
-| 1      | Configuración de entorno y backlog    | <span style="background-color: green; color: white; border-radius: 12px; padding: 3px 8px;">Terminado</span> |
-| 2      | Diseño general del sistema           | <span style="background-color: yellow; color: black; border-radius: 12px; padding: 3px 8px;">Planeación</span> |
-| 3      | Registro y gestión de productos      | <span style="background-color: yellow; color: black; border-radius: 12px; padding: 3px 8px;">Planeación</span> |
-| 4      | Módulo de pedidos                    | <span style="background-color: yellow; color: black; border-radius: 12px; padding: 3px 8px;">Planeación</span> |
+| Semana | Sprint / Entregable                | Estado      |
+|--------|------------------------------------|-------------|
+| 1      | Configuración de entorno y backlog | ✅ Terminado |
+| 2      | Diseño general del sistema         | 🕐 Planeación |
+| 3      | Registro y gestión de productos    | 🕐 Planeación |
+| 4      | Módulo de pedidos                  | 🕐 Planeación |
 
 ---
 
