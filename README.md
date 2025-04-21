@@ -31,36 +31,25 @@
 
 ---
 
-## 👥 Colaboradores
+## 👥 Equipo
+
 <div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <a href="https://github.com/stalin21r">
-          <img src="https://github.com/stalin21r.png" width="80" alt="Stalin Garcia"/><br/>
-          <sub><b>Stalin Garcia</b></sub>
-        </a>
-      </td>
-      <td align="center">
-        <a href="https://github.com/M147D">
-          <img src="https://github.com/M147D.png" width="80" alt="Miguel Pastuña"/><br/>
-          <sub><b>Miguel Pastuña</b></sub>
-        </a>
-      </td>
-      <td align="center">
-        <a href="https://github.com/dennisperezEPN">
-          <img src="https://github.com/dennisperezEPN.png" width="80" alt="Dennise Perez"/><br/>
-          <sub><b>Dennise Perez</b></sub>
-        </a>
-      </td>
-      <td align="center">
-        <a href="https://github.com/Aldxir">
-          <img src="https://github.com/Aldxir.png" width="80" alt="Patricio Flor"/><br/>
-          <sub><b>Patricio Flor</b></sub>
-        </a>
-      </td>
-    </tr>
-  </table>
+  <a href="https://github.com/stalin21r" style="display: inline-block; margin: 0 10px; text-decoration: none;">
+    <img src="https://github.com/stalin21r.png" width="100" style="border-radius: 50%;"/><br/>
+    <sub><b>Stalin García</b></sub>
+  </a>
+  <a href="https://github.com/M147D" style="display: inline-block; margin: 0 10px; text-decoration: none;">
+    <img src="https://github.com/M147D.png" width="100" style="border-radius: 50%;"/><br/>
+    <sub><b>Miguel Pastuña</b></sub>
+  </a>
+  <a href="https://github.com/dennisperezEPN" style="display: inline-block; margin: 0 10px; text-decoration: none;">
+    <img src="https://github.com/dennisperezEPN.png" width="100" style="border-radius: 50%;"/><br/>
+    <sub><b>Dennise Pérez</b></sub>
+  </a>
+  <a href="https://github.com/Aldxir" style="display: inline-block; margin: 0 10px; text-decoration: none;">
+    <img src="https://github.com/Aldxir.png" width="100" style="border-radius: 50%;"/><br/>
+    <sub><b>Patricio Flor</b></sub>
+  </a>
 </div>
 
 
