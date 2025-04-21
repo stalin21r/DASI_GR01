@@ -1,4 +1,4 @@
-using DASI_2025A.Backend.Data;
+using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +19,7 @@ builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowBlazorApp", builder =>
 	{
-		builder.WithOrigins("https://localhost:7206/api")
+		builder.WithOrigins("https://localhost:7206")
 				 .AllowAnyMethod()
 				 .AllowAnyHeader()
 				 .AllowCredentials();

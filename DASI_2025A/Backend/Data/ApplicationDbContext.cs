@@ -1,9 +1,9 @@
 // Backend/Data/ApplicationDbContext.cs
 using Microsoft.EntityFrameworkCore;
-using DASI_2025A.Backend.Data; // Asegúrate de que la ruta del namespace sea correcta
-using DASI_2025A.Backend.Data.Models;
+using Backend.Data; // Asegúrate de que la ruta del namespace sea correcta
+using Backend.Data.Models;
 
-namespace DASI_2025A.Backend.Data
+namespace Backend.Data
 {
   public class ApplicationDbContext : DbContext
   {
