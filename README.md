@@ -33,24 +33,11 @@
 
 ## 👥 Equipo
 
-<div align="center">
-  <a href="https://github.com/stalin21r" style="display: inline-block; margin: 0 10px; text-decoration: none;">
-    <img src="https://github.com/stalin21r.png" width="100" style="border-radius: 50%;"/><br/>
-    <sub><b>Stalin García</b></sub>
-  </a>
-  <a href="https://github.com/M147D" style="display: inline-block; margin: 0 10px; text-decoration: none;">
-    <img src="https://github.com/M147D.png" width="100" style="border-radius: 50%;"/><br/>
-    <sub><b>Miguel Pastuña</b></sub>
-  </a>
-  <a href="https://github.com/dennisperezEPN" style="display: inline-block; margin: 0 10px; text-decoration: none;">
-    <img src="https://github.com/dennisperezEPN.png" width="100" style="border-radius: 50%;"/><br/>
-    <sub><b>Dennise Pérez</b></sub>
-  </a>
-  <a href="https://github.com/Aldxir" style="display: inline-block; margin: 0 10px; text-decoration: none;">
-    <img src="https://github.com/Aldxir.png" width="100" style="border-radius: 50%;"/><br/>
-    <sub><b>Patricio Flor</b></sub>
-  </a>
-</div>
+## 👥 Equipo
+
+| [![Stalin García](https://github.com/stalin21r.png?size=100)](https://github.com/stalin21r) | [![Miguel Pastuña](https://github.com/M147D.png?size=100)](https://github.com/M147D) | [![Dennise Pérez](https://github.com/dennisperezEPN.png?size=100)](https://github.com/dennisperezEPN) | [![Patricio Flor](https://github.com/Aldxir.png?size=100)](https://github.com/Aldxir) |
+|:-:|:-:|:-:|:-:|
+| **Stalin García** | **Miguel Pastuña** | **Dennise Pérez** | **Patricio Flor** |
 
 
 ---
