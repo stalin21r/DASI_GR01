@@ -222,7 +222,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 | Semana | Sprint / Entregable                | Estado      |
 |--------|------------------------------------|-------------|
 | 1      | Configuración de entorno y backlog | ✅ Terminado |
-| 2      | Diseño general del sistema         | 🕐 Planeación |
+| 2      | Diseño general del sistema         | 🕐 Proceso |
 | 3      | Registro y gestión de productos    | 🕐 Planeación |
 | 4      | Módulo de pedidos                  | 🕐 Planeación |
 
