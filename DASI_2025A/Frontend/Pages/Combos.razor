@@ -6,29 +6,50 @@
 
 <PageTitle>Combos</PageTitle>
 
-<h1>Combos</h1>
+<h1 class="text-3xl font-bold mb-6 text-gray-800">Combos</h1>
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-  <p>En este componente se desplegarán los combos</p>
-  <button class="btn btn-success rounded-circle" @onclick="ShowAddModal"><i class="fas fa-plus" /></button>
+<div class="flex items-center justify-between mb-6">
+  <p class="text-gray-600">En este componente se desplegarán los combos</p>
+  <button
+    class="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full transition-colors duration-200 flex items-center justify-center w-10 h-10 shadow-md hover:shadow-lg cursor-pointer"
+    @onclick="ShowAddModal">
+    <i class="fas fa-plus"></i>
+  </button>
 </div>
 
 @if (combos == null)
 {
-  <p><em>Loading ...</em></p>
+  <div class="w-full flex flex-col justify-center items-center py-10">
+    <div class="animate-pulse flex space-x-2">
+      <div class="h-3 w-3 bg-green-500 rounded-full"></div>
+      <div class="h-3 w-3 bg-green-500 rounded-full"></div>
+      <div class="h-3 w-3 bg-green-500 rounded-full"></div>
+    </div>
+    <p class="ml-3 text-gray-500"><em>Cargando combos...</em></p>
+  </div>
 }
 else
 {
-  <!-- En modal-body normal se ve combos tabla -->
-  <div class="d-none d-md-block">
-    <table class="table table-striped table-hover">
-      <thead>
+  <!-- Versión para pantallas medianas y grandes -->
+  <div class="hidden md:block overflow-x-auto rounded-lg shadow">
+    <table class="min-w-full bg-white">
+      <thead class="bg-gray-100">
         <tr>
-          <th>#</th>
-          <th>Combo</th>
-          <th>Descripción</th>
-          <th>Precio</th>
-          <th>Opciones</th>
+          <th
+            class="py-3 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+            #</th>
+          <th
+            class="py-3 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+            Combo</th>
+          <th
+            class="py-3 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+            Descripción</th>
+          <th
+            class="py-3 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+            Precio</th>
+          <th
+            class="py-3 px-4 border-b border-gray-200 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+            Opciones</th>
         </tr>
       </thead>
       <tbody>
@@ -37,45 +58,65 @@ else
         }
         @foreach (var combo in combos)
         {
-          <tr>
-            <td>@counter</td>
-            <td>@combo.Name</td>
-            <td>@combo.Description</td>
-            <td>$ @combo.Price</td>
-            <td>
-              <button class="btn btn-sm btn-primary" @onclick="() => ShowEditModal(combo)"><i
-                  class="fas fa-edit" /></button>
-              <button class="btn btn-sm btn-danger" @onclick="() => DeleteCombo(combo.Id)"><i
-                  class="fas fa-trash" /></button>
+          <tr class="hover:bg-gray-50 transition-colors duration-150">
+            <td class="py-3 px-4 border-b border-gray-200 text-sm">@counter</td>
+            <td class="py-3 px-4 border-b border-gray-200 text-sm font-medium text-gray-800">@combo.Name</td>
+            <td class="py-3 px-4 border-b border-gray-200 text-sm text-gray-600">@combo.Description</td>
+            <td class="py-3 px-4 border-b border-gray-200 text-sm font-medium">$ @combo.Price</td>
+            <td class="py-3 px-4 border-b border-gray-200 text-sm">
+              <div class="flex space-x-2">
+                <button
+                  class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded transition-colors duration-200 flex items-center gap-1 hover:shadow-md cursor-pointer"
+                  @onclick="() => ShowEditModal(combo)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button
+                  class="bg-red-500 hover:bg-red-400 text-white p-3 rounded transition-colors duration-200 flex items-center gap-1 hover:shadow-md cursor-pointer"
+                  @onclick="() => DeleteCombo(combo.Id)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </td>
           </tr>
           counter++;
+        }
+        @if (combos.Count() == 0)
+        {
+          <tr>
+            <td colspan="5" class="py-6 px-4 text-center text-gray-500">
+              No hay combos disponibles. ¡Agrega uno nuevo!
+            </td>
+          </tr>
         }
       </tbody>
     </table>
   </div>
 
-  <!-- en mobile se ve combos cards -->
-  <div class="row d-block d-md-none">
+  <!-- Versión para móviles -->
+  <div class="grid grid-cols-1 gap-4 md:hidden">
+    @if (combos.Count() == 0)
+    {
+      <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+        No hay combos disponibles. ¡Agrega uno nuevo!
+      </div>
+    }
     @foreach (var combo in combos)
     {
-      <div class="col-12 col-sm-6 col-md-4 mb-4">
-        <div class="card rounded shadow">
-          <div class="card-body">
-            <h5 class="card-title">@combo.Name</h5>
-            <p class="card-text">@combo.Description</p>
-            <p class="card-text"><strong>Precio:</strong> $ @combo.Price</p>
-            <div class="d-flex justify-content-evenly">
-              <button class="btn btn-sm btn-primary d-flex gap-2 align-items-center justify-content-center"
-                @onclick="() => ShowEditModal(combo)">
-                <i class="fas fa-edit" /> Editar
-              </button>
-              <button class="btn btn-sm btn-danger d-flex gap-2 align-items-center justify-content-center"
-                @onclick="() => DeleteCombo(combo.Id)">
-                <i class="fas fa-trash" /> Eliminar
-              </button>
-            </div>
-          </div>
+      <div class="bg-white rounded-lg shadow-md p-4 border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+        <h5 class="text-lg font-bold mb-2 text-gray-800">@combo.Name</h5>
+        <p class="mb-3 text-gray-600 text-sm">@combo.Description</p>
+        <p class="mb-4 text-gray-800 font-medium">$ @combo.Price</p>
+        <div class="flex justify-between">
+          <button
+            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition-colors duration-200 flex items-center gap-1 flex-1 justify-center mr-2 hover:shadow-md cursor-pointer"
+            @onclick="() => ShowEditModal(combo)">
+            <i class="fas fa-edit"></i> Editar
+          </button>
+          <button
+            class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded transition-colors duration-200 flex items-center gap-1 flex-1 justify-center hover:shadow-md cursor-pointer"
+            @onclick="() => DeleteCombo(combo.Id)">
+            <i class="fas fa-trash"></i> Eliminar
+          </button>
         </div>
       </div>
     }
@@ -84,42 +125,60 @@ else
 
 @if (showModal)
 {
-  <div class="modal fade show d-block " tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">@((!editCombo) ? "Agregar Combo" : "Editar Combo")</h5>
-          <button type="button" class="btn-close" @onclick="CloseModal"></button>
-        </div>
-        <div class="modal-body">
-          <EditForm Model="@comboForm">
-            <InputNumber style="display:none;" @bind-Value="comboForm.Id" TValue="int" />
-            <div class="mb-3">
-              <label class="form-label">Nombre</label>
-              <InputText class="form-control" @bind-Value="comboForm.Name" />
+  <!-- Fondo semi-transparente con blur y scroll principal -->
+  <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 overflow-y-auto flex items-center justify-center p-4"
+    @onclick="CloseModalOnBackdrop">
+    <!-- Modal con dimensiones fijas sin scroll interno -->
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto my-8" @onclick:stopPropagation="true">
+      <div class="flex justify-between items-center p-4 border-b bg-white rounded-t-lg">
+        <h5 class="text-xl font-semibold text-gray-800">@((!editCombo) ? "Agregar Combo" : "Editar Combo")</h5>
+        <button
+          class="text-gray-500 hover:text-gray-700 text-2xl focus:outline-none hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center cursor-pointer"
+          @onclick="CloseModal">&times;</button>
+      </div>
+      <!-- Contenido del modal sin scroll propio -->
+      <div class="p-5">
+        <EditForm Model="@comboForm" class="space-y-4">
+          <InputNumber style="display:none;" @bind-Value="comboForm.Id" TValue="int" />
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="nombre">Nombre</label>
+            <InputText id="nombre"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              @bind-Value="comboForm.Name" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="descripcion">Descripción</label>
+            <InputTextArea id="descripcion"
+              class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[100px]"
+              @bind-Value="comboForm.Description" />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="precio">Precio</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2 text-gray-500">$</span>
+              <InputNumber id="precio"
+                class="w-full border border-gray-300 rounded px-3 py-2 pl-6 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                @bind-Value="comboForm.Price" TValue="float" />
             </div>
-            <div class="mb-3">
-              <label class="form-label">Descripción</label>
-              <InputTextArea class="form-control" @bind-Value="comboForm.Description" />
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Precio</label>
-              <InputNumber class="form-control" @bind-Value="comboForm.Price" TValue="float" />
-            </div>
-          </EditForm>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" @onclick="CloseModal">Cancelar</button>
-          <button class="btn btn-primary" @onclick="() => SaveCombo(comboForm)">Guardar</button>
-        </div>
+          </div>
+        </EditForm>
+      </div>
+      <div class="flex justify-end items-center p-4 border-t gap-3 bg-gray-50 rounded-b-lg">
+        <button
+          class="px-4 py-2 border border-gray-300 rounded text-gray-700 bg-white hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 hover:shadow cursor-pointer"
+          @onclick="CloseModal">Cancelar</button>
+        <button
+          class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:shadow cursor-pointer"
+          @onclick="() => SaveCombo(comboForm)">Guardar</button>
       </div>
     </div>
   </div>
 }
 
-@code {
-  private List<Frontend.Combos>? combos;
-  private Frontend.Combos comboForm = new();
+@code
+{
+  private List<CombosDTO>? combos;
+  private CombosDTO comboForm = new();
   private bool showModal = false;
   private bool editCombo = false;
 
@@ -133,14 +192,14 @@ else
 
   private void ShowAddModal()
   {
-    comboForm = new Frontend.Combos();
+    comboForm = new CombosDTO();
     showModal = true;
     editCombo = false;
   }
 
-  private void ShowEditModal(Frontend.Combos combo)
+  private void ShowEditModal(CombosDTO combo)
   {
-    comboForm = new Frontend.Combos
+    comboForm = new CombosDTO
     {
       Id = combo.Id,
       Name = combo.Name,
@@ -156,7 +215,13 @@ else
     showModal = false;
   }
 
-  private async Task SaveCombo(Frontend.Combos combo)
+  // Función que faltaba para cerrar el modal al hacer clic en el fondo
+  private void CloseModalOnBackdrop()
+  {
+    showModal = false;
+  }
+
+  private async Task SaveCombo(CombosDTO combo)
   {
     SweetAlertOptions confirmOptions = new SweetAlertOptions
     {
@@ -179,12 +244,11 @@ else
       else
       {
         var postResponse = await combosService.PostComboAsync(combo);
-        response = new ApiResponse<bool>
-        {
-          status = postResponse.status,
-          data = postResponse.status == 200, // Assuming success is determined by status code
-          message = postResponse.message
-        };
+        response = new ApiResponse<bool>(
+        postResponse.status,
+        postResponse.message,
+        postResponse.status == 200 // Assuming success is determined by status code
+        );
       }
 
       if (response?.status == 200)

@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-namespace Frontend;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class Combos
+namespace Backend;
+
+public class CombosEntity
 {
   [Key]
+  [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
   public int Id { get; set; }
 
   [Required]
@@ -17,5 +20,3 @@ public class Combos
   [Range(0, float.MaxValue)]
   public float Price { get; set; }
 }
-
-

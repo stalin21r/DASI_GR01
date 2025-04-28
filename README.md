@@ -79,10 +79,10 @@ El proyecto se desarrolla utilizando **ASP.NET Core Web API como backend** y **B
 Diseñar e implementar una aplicación web que permita:
 
 - 🍹 Registrar productos (bebidas y alimentos)  
-- 🧾 Gestionar ventas, pedidos y cuentas por mesa  
+- 🧾 Gestionar ventas, pedidos y saldos 
 - 📦 Controlar el inventario de insumos  
 - 📊 Generar reportes de ventas  
-- 👤 Administrar roles de usuarios (mesero, administrador, etc.)
+- 👤 Administrar roles de usuarios (user, admin, superadmin.)
 
 ---
 
@@ -103,8 +103,8 @@ Diseñar e implementar una aplicación web que permita:
 
 | Nombre              | Rol Scrum       |
 |---------------------|-----------------|
-| Ing. David Mejía    | Product Owner   |
-| Ing. Ricardo Mena   | Scrum Master    |
+| David Mejía         | Product Owner   |
+| Ricardo Mena        | Scrum Master    |
 | Stalin Garcia       | Development Team|
 | Miguel Pastuña      | Development Team|
 | Dennise Perez       | Development Team|
@@ -178,7 +178,29 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
      "AllowedHosts": "*"
    }
 
-4. **Restaurar los paquetes NuGet:**
+4. **Instalar Tailwind cli (solo desarrollo)** 
+  
+   Abre una consola (power shell o bash), dirigete a la carpeta Frontend dentro de  DASI_2025A, ejecutar el comando:
+  
+   ```bash
+   npm install 
+   ```
+
+   Nota: solo se debe instalar una vez.
+   
+   Al terminar la instalacion, ejecutar el siguiente comando:
+
+   ```bash
+   npx @tailwindcss/cli -i ./styles/input.css -o ./wwwroot/css/tailwind.css --watch
+   ```
+
+   Esto ejecutara la compilacion de tailwind en tiempo real, cabe aclarar que este proceso solo se debe hacer para el modo desarrollo.
+   
+   En modo produccion no es necesario hacer este paso puesto que ya se tendra el css de tailwind compilado.
+
+   > **⚠️ Importante:** Recuerda tener instalado Node.js (https://nodejs.org/es)
+
+5. **Restaurar los paquetes NuGet:**
 
    Abre la consola integrada de Visual Studio (Terminal) y ejecuta el siguiente comando para restaurar los paquetes:
 
@@ -186,7 +208,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    dotnet restore DASI_2025A.sln
    ```
 
-5. **Actualizar la base de datos:**
+6. **Actualizar la base de datos:**
 
    Abre la consola de administración de paquetes NuGet, luego navega al directorio del **Backend** con el siguiente comando:
 
@@ -199,7 +221,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    PM> Update-Database
    ```
 
-6. **Configurar los proyectos de inicio:**
+7. **Configurar los proyectos de inicio:**
 
    Para ejecutar tanto el **Frontend** como el **Backend** al mismo tiempo, sigue estos pasos:
 
@@ -207,11 +229,11 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    - Despliega las opciones y selecciona **Configurar proyectos de inicio**.
    - En la ventana que aparece, selecciona la opción **Múltiples proyectos** y configura ambos (Frontend y Backend) para que se inicien al mismo tiempo.
 
-7. **Compilar la solución:**
+8. **Compilar la solución:**
 
    Una vez configurado, compila la solución para asegurarte de que todos los proyectos se construyan correctamente.
 
-8. **Ejecutar el proyecto:**
+9.  **Ejecutar el proyecto:**
 
    Finalmente, ejecuta el proyecto. Se abrirá en tu navegador en **localhost**, y podrás acceder a la aplicación.
 
@@ -222,7 +244,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 | Semana | Sprint / Entregable                | Estado      |
 |--------|------------------------------------|-------------|
 | 1      | Configuración de entorno y backlog | ✅ Terminado |
-| 2      | Diseño general del sistema         | 🕐 Proceso |
+| 2      | Diseño general del sistema         | 🔄 Proceso |
 | 3      | Registro y gestión de productos    | 🕐 Planeación |
 | 4      | Módulo de pedidos                  | 🕐 Planeación |
 
