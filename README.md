@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/Entity_Framework-Core-green?logo=entity-framework" alt="Entity Framework">
   </a>
   <a href="https://www.microsoft.com/en-us/sql-server/">
-    <img src="https://img.shields.io/badge/SQL_Server-2019-red?logo=microsoftsqlserver" alt="SQL Server">
+    <img src="https://img.shields.io/badge/SQL_Server-2022-red?logo=microsoftsqlserver" alt="SQL Server">
   </a>
   <a href="https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor">
     <img src="https://img.shields.io/badge/Blazor_WebAssembly-client--side-purple?logo=blazor" alt="Blazor WebAssembly">
@@ -21,8 +21,8 @@
   <a href="https://developer.mozilla.org/en-US/docs/Web/CSS">
     <img src="https://img.shields.io/badge/CSS3-1572b6?logo=css3&logoColor=white" alt="CSS">
   </a>
-  <a href="https://getbootstrap.com/">
-    <img src="https://img.shields.io/badge/Bootstrap-7952b3?logo=bootstrap&logoColor=white" alt="Bootstrap">
+  <a href="https://tailwindcss.com/">
+    <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white" alt="TailwindCSS">
   </a>
   <a href="https://sweetalert2.github.io/">
     <img src="https://img.shields.io/badge/SweetAlert2-ff69b4?logo=sweetalert&logoColor=white" alt="SweetAlert2">
@@ -94,6 +94,7 @@ Diseñar e implementar una aplicación web que permita:
 - SQL Server
 - Entity Framework Core
 - Visual Studio 2022 o superior
+- Tailwind 4
 - Postman
 - Git y GitHub
 
