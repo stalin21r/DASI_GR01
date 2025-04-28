@@ -65,6 +65,8 @@ nunit-*.xml
 bin/
 obj/
 
+/DASI_2025A/Backend/appsettings.json
+
 # Ignora el appsettings que seria nuestro .env
 /DASI_2025A/Backend/appsettings.json
 appsettings.json
@@ -78,3 +80,4 @@ appsettings.json
 
 # Ignorar package-lock.json en Frontend
 /DASI_2025A/Frontend/package-lock.json
+
