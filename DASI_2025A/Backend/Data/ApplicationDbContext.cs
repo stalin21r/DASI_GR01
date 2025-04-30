@@ -1,16 +1,31 @@
 // Backend/Data/ApplicationDbContext.cs
 using Microsoft.EntityFrameworkCore;
-using Backend.Data; // Asegúrate de que la ruta del namespace sea correcta
-using Backend.Data.Models;
 
-namespace Backend.Data
+namespace Backend
 {
   public class ApplicationDbContext : DbContext
   {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
     }
+    public DbSet<ProductEntity> Products { get; set; }
 
-    public DbSet<Combos> Combos { get; set; } // Agrega aquí tus modelos
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+      base.OnModelCreating(modelBuilder);
+
+      var auditableEntities = modelBuilder.Model.GetEntityTypes()
+          .Where(e => e.ClrType.IsSubclassOf(typeof(AuditableEntity)));
+
+      foreach (var auditableEntity in auditableEntities)
+      {
+        modelBuilder.Entity(auditableEntity.ClrType).Property<DateTime>("AuditableDate").HasDefaultValueSql("GETDATE()");
+        modelBuilder.Entity(auditableEntity.ClrType).Property<string>("MachineName").HasDefaultValueSql("HOST_NAME()");
+      }
+
+      // Mapear el ProductType como string
+      modelBuilder.Entity<ProductEntity>().Property(p => p.Type).HasConversion<string>();
+    }
+
   }
 }
