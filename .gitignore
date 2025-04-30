@@ -65,10 +65,19 @@ nunit-*.xml
 bin/
 obj/
 
+/DASI_2025A/Backend/appsettings.json
 
-/Backend/appsettings.json
-.appsettings.json
+# Ignora el appsettings que seria nuestro .env
+/DASI_2025A/Backend/appsettings.json
 appsettings.json
-Backend/appsettings.json
-./Backend/appsettings.json
-DASI_2025A/Backend/appsettings.json
+
+
+# Ignorar el .editorconfig dentro de DASI_2025A
+/DASI_2025A/.editorconfig
+
+# Ignorar node_modules en Frontend
+/DASI_2025A/Frontend/node_modules/
+
+# Ignorar package-lock.json en Frontend
+/DASI_2025A/Frontend/package-lock.json
+

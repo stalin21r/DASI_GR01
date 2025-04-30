@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/Entity_Framework-Core-green?logo=entity-framework" alt="Entity Framework">
   </a>
   <a href="https://www.microsoft.com/en-us/sql-server/">
-    <img src="https://img.shields.io/badge/SQL_Server-2019-red?logo=microsoftsqlserver" alt="SQL Server">
+    <img src="https://img.shields.io/badge/SQL_Server-2022-red?logo=microsoftsqlserver" alt="SQL Server">
   </a>
   <a href="https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor">
     <img src="https://img.shields.io/badge/Blazor_WebAssembly-client--side-purple?logo=blazor" alt="Blazor WebAssembly">
@@ -21,8 +21,8 @@
   <a href="https://developer.mozilla.org/en-US/docs/Web/CSS">
     <img src="https://img.shields.io/badge/CSS3-1572b6?logo=css3&logoColor=white" alt="CSS">
   </a>
-  <a href="https://getbootstrap.com/">
-    <img src="https://img.shields.io/badge/Bootstrap-7952b3?logo=bootstrap&logoColor=white" alt="Bootstrap">
+  <a href="https://tailwindcss.com/">
+    <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white" alt="TailwindCSS">
   </a>
   <a href="https://sweetalert2.github.io/">
     <img src="https://img.shields.io/badge/SweetAlert2-ff69b4?logo=sweetalert&logoColor=white" alt="SweetAlert2">
@@ -79,10 +79,10 @@ El proyecto se desarrolla utilizando **ASP.NET Core Web API como backend** y **B
 Diseñar e implementar una aplicación web que permita:
 
 - 🍹 Registrar productos (bebidas y alimentos)  
-- 🧾 Gestionar ventas, pedidos y cuentas por mesa  
+- 🧾 Gestionar ventas, pedidos y saldos 
 - 📦 Controlar el inventario de insumos  
 - 📊 Generar reportes de ventas  
-- 👤 Administrar roles de usuarios (mesero, administrador, etc.)
+- 👤 Administrar roles de usuarios (user, admin, superadmin.)
 
 ---
 
@@ -94,6 +94,7 @@ Diseñar e implementar una aplicación web que permita:
 - SQL Server
 - Entity Framework Core
 - Visual Studio 2022 o superior
+- Tailwind 4
 - Postman
 - Git y GitHub
 
@@ -103,8 +104,8 @@ Diseñar e implementar una aplicación web que permita:
 
 | Nombre              | Rol Scrum       |
 |---------------------|-----------------|
-| Ing. David Mejía    | Product Owner   |
-| Ing. Ricardo Mena   | Scrum Master    |
+| David Mejía         | Product Owner   |
+| Ricardo Mena        | Scrum Master    |
 | Stalin Garcia       | Development Team|
 | Miguel Pastuña      | Development Team|
 | Dennise Perez       | Development Team|
@@ -178,7 +179,29 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
      "AllowedHosts": "*"
    }
 
-4. **Restaurar los paquetes NuGet:**
+4. **Instalar Tailwind cli (solo desarrollo)** 
+  
+   Abre una consola (power shell o bash), dirigete a la carpeta Frontend dentro de  DASI_2025A, ejecutar el comando:
+  
+   ```bash
+   npm install 
+   ```
+
+   Nota: solo se debe instalar una vez.
+   
+   Al terminar la instalacion, ejecutar el siguiente comando:
+
+   ```bash
+   npx @tailwindcss/cli -i ./styles/input.css -o ./wwwroot/css/tailwind.css --watch
+   ```
+
+   Esto ejecutara la compilacion de tailwind en tiempo real, cabe aclarar que este proceso solo se debe hacer para el modo desarrollo.
+   
+   En modo produccion no es necesario hacer este paso puesto que ya se tendra el css de tailwind compilado.
+
+   > **⚠️ Importante:** Recuerda tener instalado Node.js (https://nodejs.org/es)
+
+5. **Restaurar los paquetes NuGet:**
 
    Abre la consola integrada de Visual Studio (Terminal) y ejecuta el siguiente comando para restaurar los paquetes:
 
@@ -186,7 +209,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    dotnet restore DASI_2025A.sln
    ```
 
-5. **Actualizar la base de datos:**
+6. **Actualizar la base de datos:**
 
    Abre la consola de administración de paquetes NuGet, luego navega al directorio del **Backend** con el siguiente comando:
 
@@ -199,7 +222,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    PM> Update-Database
    ```
 
-6. **Configurar los proyectos de inicio:**
+7. **Configurar los proyectos de inicio:**
 
    Para ejecutar tanto el **Frontend** como el **Backend** al mismo tiempo, sigue estos pasos:
 
@@ -207,11 +230,11 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    - Despliega las opciones y selecciona **Configurar proyectos de inicio**.
    - En la ventana que aparece, selecciona la opción **Múltiples proyectos** y configura ambos (Frontend y Backend) para que se inicien al mismo tiempo.
 
-7. **Compilar la solución:**
+8. **Compilar la solución:**
 
    Una vez configurado, compila la solución para asegurarte de que todos los proyectos se construyan correctamente.
 
-8. **Ejecutar el proyecto:**
+9.  **Ejecutar el proyecto:**
 
    Finalmente, ejecuta el proyecto. Se abrirá en tu navegador en **localhost**, y podrás acceder a la aplicación.
 
@@ -222,7 +245,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 | Semana | Sprint / Entregable                | Estado      |
 |--------|------------------------------------|-------------|
 | 1      | Configuración de entorno y backlog | ✅ Terminado |
-| 2      | Diseño general del sistema         | 🕐 Proceso |
+| 2      | Diseño general del sistema         | 🔄 Proceso |
 | 3      | Registro y gestión de productos    | 🕐 Planeación |
 | 4      | Módulo de pedidos                  | 🕐 Planeación |
 

@@ -1,16 +1,16 @@
-namespace Backend.Data
+namespace Backend
 {
   public class ApiResponse<T>
   {
-    public int Status { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public T? Data { get; set; }
+    public string message { get; set; } = string.Empty;
+    public T? data { get; set; }
+    public int totalRecords { get; set; }
 
-    public ApiResponse(int status, string message, T? data = default)
+    public ApiResponse(string message, T? data = default, int totalRecords = 0)
     {
-      Status = status;
-      Message = message;
-      Data = data;
+      this.message = message;
+      this.data = data;
+      this.totalRecords = totalRecords;
     }
   }
 }
