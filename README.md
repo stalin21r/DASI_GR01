@@ -50,7 +50,7 @@
       <td align="center">
         <a href="https://github.com/dennisperezEPN">
           <img src="https://github.com/dennisperezEPN.png" width="80" alt="Dennise Perez"/><br/>
-          <sub><b>Dennise Perez</b></sub>
+          <sub><b>Dennis Perez</b></sub>
         </a>
       </td>
       <td align="center">
