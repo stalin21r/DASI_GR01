@@ -65,4 +65,7 @@ nunit-*.xml
 bin/
 obj/
 /DASI_2025A/Backend/appsettings.json
+<<<<<<< Updated upstream
 /DASI_2025A/Backend/appsettings.json
+=======
+>>>>>>> Stashed changes
