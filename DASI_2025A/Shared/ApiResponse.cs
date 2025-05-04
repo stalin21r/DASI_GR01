@@ -1,12 +1,16 @@
 namespace Shared;
-public class ApiResponse<T> {
-  public int status { get; set; }
+public class ApiResponse<T>
+{
   public string message { get; set; } = string.Empty;
   public T? data { get; set; }
-  public ApiResponse(int status, string message, T? data = default) {
-    this.status = status;
+  public int totalRecords { get; set; }
+
+  public ApiResponse(string message, T? data = default, int totalRecords = 0)
+  {
     this.message = message;
     this.data = data;
+    this.totalRecords = totalRecords;
   }
 }
+
 
