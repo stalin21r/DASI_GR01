@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 
@@ -27,6 +28,7 @@ namespace Backend
     ///     En caso de error, retorna un <see cref="IActionResult"/> con un código de estado <see cref="StatusCodes.Status400BadRequest"/>.
     /// </returns>
     [HttpPost]
+    [Authorize(Policy = "AdminPlus")]
     public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto)
     {
       try
@@ -53,6 +55,7 @@ namespace Backend
     ///     Si ocurre un error inesperado, retorna un <see cref="IActionResult"/> con un código de estado <see cref="StatusCodes.Status400BadRequest"/>.
     /// </returns>
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetAllProducts()
     {
       try
@@ -80,6 +83,7 @@ namespace Backend
     ///     Si ocurre un error inesperado, retorna un <see cref="IActionResult"/> con código <see cref="StatusCodes.Status400BadRequest"/>.
     /// </returns>
     [HttpGet("tipo/{type}")]
+    [Authorize]
     public async Task<IActionResult> GetProductsByType([FromRoute] ProductType type)
     {
       try
@@ -107,6 +111,7 @@ namespace Backend
     ///     Retorna un <see cref="IActionResult"/> con código 400 Bad Request si ocurre un error inesperado.
     /// </returns>
     [HttpGet("{id:int:min(1)}")]
+    [Authorize]
     public async Task<IActionResult> GetProductById([FromRoute] int id)
     {
       try
@@ -134,6 +139,7 @@ namespace Backend
     ///     Retorna un <see cref="IActionResult"/> con código 400 Bad Request si ocurre un error inesperado.
     /// </returns>
     [HttpPut]
+    [Authorize(Policy = "AdminPlus")]
     public async Task<IActionResult> UpdateProduct([FromBody] ProductDto productDto)
     {
       try
@@ -144,6 +150,10 @@ namespace Backend
       catch (BadHttpRequestException ex)
       {
         return BadRequest(ex.Message);
+      }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(ex.Message);
       }
       catch (Exception)
       {
@@ -162,6 +172,7 @@ namespace Backend
     ///     Retorna un <see cref="IActionResult"/> con código 500 (Internal Server Error) para errores inesperados.
     /// </returns>
     [HttpDelete("{id:int:min(1)}")]
+    [Authorize(Policy = "AdminPlus")]
     public async Task<IActionResult> DeleteProduct([FromRoute] int id)
     {
       try
