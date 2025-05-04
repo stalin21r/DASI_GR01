@@ -145,6 +145,10 @@ namespace Backend
       {
         return BadRequest(ex.Message);
       }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(ex.Message);
+      }
       catch (Exception)
       {
         return BadRequest("Error del servidor al actualizar el producto.");

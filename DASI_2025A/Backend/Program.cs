@@ -1,6 +1,7 @@
 using Backend;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 var builder = WebApplication.CreateBuilder(args);
 
 // Añadir DbContext
@@ -12,13 +13,28 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Añadir repositorios.
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Añadir services.
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserService, UserService>();
 // Añadir controllers
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
 	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
+
+// Configuración de asp net core Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+	options.Password.RequireDigit = true;
+	options.Password.RequireLowercase = true;
+	options.Password.RequireNonAlphanumeric = true;
+	options.Password.RequireUppercase = true;
+	options.Password.RequiredLength = 8;
+	options.SignIn.RequireConfirmedAccount = false;
+})
+	.AddEntityFrameworkStores<ApplicationDbContext>()
+	.AddDefaultTokenProviders();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -50,8 +66,24 @@ app.UseHttpsRedirection();
 // Usar CORS - importante colocarlo antes de UseAuthorization y UseEndpoints
 app.UseCors("AllowBlazorApp");
 
+// Añadir uso de autenticación y autorización
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+	var services = scope.ServiceProvider;
+	try
+	{
+		await IdentityInitializer.InitializeAsync(services);
+	}
+	catch (Exception ex)
+	{
+		var logger = services.GetRequiredService<ILogger<Program>>();
+		logger.LogError(ex, "An error occurred while seeding the DB.");
+	}
+}
 
 app.Run();
