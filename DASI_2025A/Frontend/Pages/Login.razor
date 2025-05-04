@@ -1,5 +1,7 @@
 @page "/login"
 @layout NoLayout
+@inject IAuthService authService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Login</PageTitle>
 
@@ -11,19 +13,37 @@
       <img src="/Assets/Images/LogoScouts1.webp" class="w-[50%] sm:w-[100%] z-10" />
     </section>
     <section
-      class="backdrop-blur-xs bg-white/50 border border-white/30 rounded-2xl shadow-2xl p-8 w-3/4 sm:w-1/2 max-w-md">
-      <h1 class="text-2xl font-bold text-black mb-6 text-center">Inicio de sesión</h1>
-      <EditForm Model=@authDto OnValidSubmit="HandleSubmit" class="flex flex-col space-y-8">
+      class="backdrop-blur-xs bg-white/50 border border-white/30 rounded-2xl shadow-2xl p-8 w-3/4 sm:w-2/3 lg:1/2 max-w-md">
+      <h1 class="text-3xl font-bold text-[#5E9E0C] mb-6 pb-2 border-b border-white/30 text-center font-outline-white text-outline-white">Inicio de sesión</h1>
+      <EditForm Model="loginDto" OnValidSubmit="handleSubmit" class="flex flex-col space-y-8">
         <DataAnnotationsValidator />
-        <ValidationSummary />
-        <FloatingLabelInput Label="Correo electrónico" Name="email" Type="email" LabelColor="blue" Value="">
-        </FloatingLabelInput>
-        <FloatingLabelInput Label="Contraseña" Name="password" Type="password" LabelColor="blue" Value="">
-        </FloatingLabelInput>
+        <div class="mt-4">
+          <FloatingLabelInput Label="Correo electrónico" Name="email" Type="email" LabelColor="blue"
+            Value=@loginDto.Email OnChange="(e) => loginDto.Email = e.Value?.ToString() ?? string.Empty">
+          </FloatingLabelInput>
+          <ValidationMessage For="@(() => loginDto.Email)" />
+        </div>
+        <div>
+          <FloatingLabelInput Label="Contraseña" Name="password" Type="password" LabelColor="blue"
+            Value=@loginDto.Password OnChange="(e) => loginDto.Password = e.Value?.ToString() ?? string.Empty">
+          </FloatingLabelInput>
+          <ValidationMessage For="@(() => loginDto.Password)" />
+        </div>
+        
         <button type="submit"
-          class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-3 rounded-2xl border border-white/30 transition duration-200 cursor-pointer">
+          class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-3 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
           Iniciar Sesión
         </button>
+        @if (!string.IsNullOrEmpty(serverMessage))
+        {
+          <div class=@($"relative py-3 rounded-sm border border-white/30 text-center text-white text-sm font-semibold {serverMessageColor}")>
+            <button type="button" class="absolute top-1 right-2 text-white hover:text-red-300 transition duration-200 cursor-pointer rounded-2xl"
+                    @onclick="handleCloseServerMessage">
+              <i class="fa-solid fa-square-xmark"></i>
+            </button>
+            @serverMessage
+          </div>
+        }
       </EditForm>
     </section>
   </div>
@@ -31,10 +51,29 @@
 
 @code
 {
-  private AuthDto authDto = new AuthDto();
+  private LoginDto loginDto = new();
+  private string serverMessage = string.Empty;
+  private string serverMessageColor = "bg-sky-500";
 
-  public void HandleSubmit()
+  private async Task handleSubmit()
   {
-    Console.WriteLine(authDto);
+    serverMessage = "";
+    var result = await authService.LoginAsync(loginDto);
+    serverMessage = result.message;
+    if (result.data is not null)
+    {
+      NavigationManager.NavigateTo("/home");
+    }
+    else
+    {
+      serverMessageColor = "bg-red-500";
+    }
   }
+
+  private void handleCloseServerMessage()
+  {
+    serverMessage = string.Empty;
+  }
+
+
 }
