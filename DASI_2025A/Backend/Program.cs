@@ -2,6 +2,10 @@ using Backend;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 // Añadir DbContext
@@ -23,6 +27,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+
 // Configuración de asp net core Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
@@ -39,6 +44,41 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Configuración de JWT
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
+builder.Services.AddAuthentication(options =>
+{
+	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+	options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+	options.RequireHttpsMetadata = false; // Solo para desarrollo
+	options.SaveToken = true;
+	options.TokenValidationParameters = new TokenValidationParameters
+	{
+		ValidateIssuerSigningKey = true,
+		IssuerSigningKey = new SymmetricSecurityKey(key),
+		ValidateIssuer = true,
+		ValidIssuer = jwtSettings["Issuer"],
+		ValidateAudience = true,
+		ValidAudience = jwtSettings["Audience"],
+		ValidateLifetime = true,
+		ClockSkew = TimeSpan.Zero
+	};
+});
+
+// Añadir Políticas de autorización (SuperadminOnly -> solo Superadmin, AdminPlus -> Admin y Superadmin)
+builder.Services.AddAuthorization(options =>
+{
+	options.AddPolicy("SuperadminOnly", policy => policy.RequireClaim(ClaimTypes.Role, "Superadmin"));
+	options.AddPolicy("AdminPlus", policy => policy.RequireClaim(ClaimTypes.Role, "Superadmin", "Admin"));
+});
+
+// Registrar el servicio de JWT
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>

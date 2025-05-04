@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 
@@ -15,6 +16,7 @@ namespace Backend
     }
 
     [HttpPost]
+    [Authorize(Policy = "SuperadminOnly")]
     public async Task<IActionResult> CreateUser([FromBody] UserDto userDto)
     {
       try
@@ -32,7 +34,9 @@ namespace Backend
       }
     }
 
+
     [HttpGet]
+    [Authorize(Policy = "AdminPlus")]
     public async Task<IActionResult> GetAllUsers()
     {
       try
@@ -52,6 +56,7 @@ namespace Backend
 
     [HttpGet]
     [Route("{id}")]
+    [Authorize]
     public async Task<IActionResult> GetUserById([FromRoute] string id)
     {
       try
@@ -71,6 +76,7 @@ namespace Backend
 
     [HttpGet]
     [Route("email/{email}")]
+    [Authorize]
     public async Task<IActionResult> GetUserByEmail([FromRoute] string email)
     {
       try
@@ -89,6 +95,7 @@ namespace Backend
     }
 
     [HttpPut]
+    [Authorize]
     public async Task<IActionResult> UpdateUser([FromBody] UserDto userDto)
     {
       try
@@ -112,6 +119,7 @@ namespace Backend
 
     [HttpDelete]
     [Route("{id}")]
+    [Authorize(Policy = "SuperadminOnly")]
     public async Task<IActionResult> DeleteUser([FromRoute] string id)
     {
       try
