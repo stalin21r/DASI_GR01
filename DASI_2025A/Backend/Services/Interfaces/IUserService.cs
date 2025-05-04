@@ -1,6 +1,7 @@
 ﻿using Shared;
 
 namespace Backend;
+
 public interface IUserService
 {
 	Task<ApiResponse<UserDto>> CreateAsync(UserDto userDto);
