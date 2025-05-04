@@ -7,12 +7,7 @@
         style="WebkitTextStroke: 0.2px white;">
         @Label
     </label>
-    <label
-        for="@Name"
-        class=@($"absolute left-3 transition-all duration-200 pointer-events-none {FixBorder}")>
-        @Label
-    </label>
-
+    
     <input
         id="@Name"
         type="@Type"
@@ -45,12 +40,8 @@
     private bool ShouldFloat => IsFocused || !string.IsNullOrWhiteSpace(Value);
 
     private string LabelClasses => ShouldFloat
-        ? $"text-lg -top-4 left-4 bg-inherit z-2 px-1 {(IsFocused ? $"{TextColor} font-bold" : "text-gray-500 font-normal")}"
+        ? $"text-lg -top-7 left-4 bg-inherit z-2 px-1 {(IsFocused ? $"{TextColor} font-bold" : "text-gray-500 font-normal")}"
         : "text-gray-500 top-1/2 -translate-y-1/2";
-
-    private string FixBorder => ShouldFloat
-        ? "text-lg -top-[0.14rem] left-4.5 bg-white px-2 text-white -mt-[15px]"
-        : "hidden";
 
     private string TextColor => LabelColor switch
     {
