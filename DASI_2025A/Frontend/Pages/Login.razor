@@ -1,0 +1,40 @@
+@page "/login"
+@layout NoLayout
+
+<PageTitle>Login</PageTitle>
+
+<div
+  class="w-full h-screen flex items-center justify-center overflow-hidden bg-cover bg-center relative  bg-[url('/Assets/Images/ScoutsBackground.webp')]">
+  <div class="absolute inset-0 bg-black/30 z-0"></div>
+  <div class="w-full h-full flex flex-col sm:flex-row justify-center sm:justify-between items-center sm:p-20 lg:p-60">
+    <section class="w-3/4 sm:block max-w-md z-10 flex justify-center items-center">
+      <img src="/Assets/Images/LogoScouts1.webp" class="w-[50%] sm:w-[100%] z-10" />
+    </section>
+    <section
+      class="backdrop-blur-xs bg-white/50 border border-white/30 rounded-2xl shadow-2xl p-8 w-3/4 sm:w-1/2 max-w-md">
+      <h1 class="text-2xl font-bold text-black mb-6 text-center">Inicio de sesión</h1>
+      <EditForm Model=@authDto OnValidSubmit="HandleSubmit" class="flex flex-col space-y-8">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <FloatingLabelInput Label="Correo electrónico" Name="email" Type="email" LabelColor="blue" Value="">
+        </FloatingLabelInput>
+        <FloatingLabelInput Label="Contraseña" Name="password" Type="password" LabelColor="blue" Value="">
+        </FloatingLabelInput>
+        <button type="submit"
+          class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-3 rounded-2xl border border-white/30 transition duration-200 cursor-pointer">
+          Iniciar Sesión
+        </button>
+      </EditForm>
+    </section>
+  </div>
+</div>
+
+@code
+{
+  private AuthDto authDto = new AuthDto();
+
+  public void HandleSubmit()
+  {
+    Console.WriteLine(authDto);
+  }
+}
