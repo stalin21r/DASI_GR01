@@ -1,34 +1,23 @@
 using Backend;
-using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Añadir DbContext
+// ===============================
+// CONFIGURACIÓN DE SERVICIOS
+// ===============================
+
+// DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-	options.UseSqlServer(
-		builder.Configuration.GetConnectionString("DefaultConnection")
-		)
-);
+	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Añadir repositorios.
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-// Añadir services.
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IUserService, UserService>();
-// Añadir controllers
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
-
-
-// Configuración de asp net core Identity
+// Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
 	options.Password.RequireDigit = true;
@@ -38,14 +27,39 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 	options.Password.RequiredLength = 8;
 	options.SignIn.RequireConfirmedAccount = false;
 })
-	.AddEntityFrameworkStores<ApplicationDbContext>()
-	.AddDefaultTokenProviders();
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Repositorios y Servicios
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Controllers
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+	options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configuración de JWT
+// CORS
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("AllowBlazorApp", builder =>
+	{
+		builder.WithOrigins("https://localhost:7206")
+				 .AllowAnyMethod()
+				 .AllowAnyHeader()
+				 .AllowCredentials();
+	});
+});
+
+// JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
 builder.Services.AddAuthentication(options =>
@@ -55,7 +69,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-	options.RequireHttpsMetadata = false; // Solo para desarrollo
+	options.RequireHttpsMetadata = false;
 	options.SaveToken = true;
 	options.TokenValidationParameters = new TokenValidationParameters
 	{
@@ -68,33 +82,52 @@ builder.Services.AddAuthentication(options =>
 		ValidateLifetime = true,
 		ClockSkew = TimeSpan.Zero
 	};
+
+	options.Events = new JwtBearerEvents
+	{
+		OnChallenge = context =>
+		{
+			context.HandleResponse();
+
+			if (context.Response.HasStarted)
+				return Task.CompletedTask;
+
+			context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+			context.Response.ContentType = "application/json";
+
+			var mensaje = string.IsNullOrEmpty(context.Request.Headers["Authorization"])
+				? "{\"message\":\"No se envió un token\"}"
+				: "{\"message\":\"Sesión no válida\"}";
+
+			return context.Response.WriteAsync(mensaje);
+		},
+		OnAuthenticationFailed = context =>
+		{
+			if (context.Response.HasStarted)
+				return Task.CompletedTask;
+
+			context.NoResult();
+			context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+			context.Response.ContentType = "application/json";
+			return context.Response.WriteAsync("{\"message\":\"Token inválido o expirado\"}");
+		}
+	};
 });
 
-// Añadir Políticas de autorización (SuperadminOnly -> solo Superadmin, AdminPlus -> Admin y Superadmin)
+// Authorization Policies
 builder.Services.AddAuthorization(options =>
 {
 	options.AddPolicy("SuperadminOnly", policy => policy.RequireClaim(ClaimTypes.Role, "Superadmin"));
 	options.AddPolicy("AdminPlus", policy => policy.RequireClaim(ClaimTypes.Role, "Superadmin", "Admin"));
 });
 
-// Registrar el servicio de JWT
-builder.Services.AddScoped<IAuthService, AuthService>();
-
-// Configure CORS
-builder.Services.AddCors(options =>
-{
-	options.AddPolicy("AllowBlazorApp", builder =>
-	{
-		builder.WithOrigins("https://localhost:7206")
-				 .AllowAnyMethod()
-				 .AllowAnyHeader()
-				 .AllowCredentials();
-	});
-});
+// ===============================
+// CONFIGURACIÓN DE LA APP
+// ===============================
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Swagger solo en desarrollo
 if (app.Environment.IsDevelopment())
 {
 	app.UseSwagger();
@@ -103,15 +136,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Usar CORS - importante colocarlo antes de UseAuthorization y UseEndpoints
 app.UseCors("AllowBlazorApp");
 
-// Añadir uso de autenticación y autorización
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
+// Inicialización de usuarios y roles
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
