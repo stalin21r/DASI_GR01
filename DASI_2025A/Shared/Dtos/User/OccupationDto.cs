@@ -9,7 +9,5 @@ public class OccupationDto
   [MaxLength(50)]
   public string? Name { get; set; }
 
-  public ICollection<UserDto>? Users { get; set; }
-
 }
 

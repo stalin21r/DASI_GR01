@@ -5,11 +5,23 @@ public class UserService : IUserService
 {
   private readonly IUserRepository _userRepository;
 
+  /// <summary>
+  ///     Servicio para el manejo de usuarios.
+  /// </summary>
+  /// <param name="userRepository">Repositorio de usuarios.</param>
   public UserService(IUserRepository userRepository)
   {
     _userRepository = userRepository;
   }
 
+  /// <summary>
+  ///     Crea un nuevo usuario.
+  /// </summary>
+  /// <param name="userDto">Objeto con los datos del usuario a crear.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{UserDto}"/> con los datos del usuario recién creado.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo crear el usuario.
+  /// </returns>
   public async Task<ApiResponse<UserDto>> CreateAsync(UserDto userDto)
   {
     var result = await _userRepository.CreateAsync(userDto);
@@ -25,6 +37,13 @@ public class UserService : IUserService
     return response;
   }
 
+  /// <summary>
+  ///     Obtiene todos los usuarios.
+  /// </summary>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{IEnumerable{UserDto}}"/> con todos los usuarios.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron usuarios.
+  /// </returns>
   public async Task<ApiResponse<IEnumerable<UserDto>>> GetAllAsync()
   {
     var result = await _userRepository.GetAllAsync();
@@ -40,6 +59,14 @@ public class UserService : IUserService
     return response;
   }
 
+  /// <summary>
+  ///     Obtiene un usuario por su ID.
+  /// </summary>
+  /// <param name="id">El identificador del usuario.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{UserDto}"/> con el usuario solicitado.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron usuarios.
+  /// </returns>
   public async Task<ApiResponse<UserDto>> GetAsync(string id)
   {
     var result = await _userRepository.GetAsync(id);
@@ -55,6 +82,14 @@ public class UserService : IUserService
     return response;
   }
 
+  /// <summary>
+  ///     Obtiene un usuario por su correo electrónico.
+  /// </summary>
+  /// <param name="email">El correo electrónico del usuario.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{UserDto}"/> con el usuario solicitado.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron usuarios.
+  /// </returns>
   public async Task<ApiResponse<UserDto>> GetByEmailAsync(string email)
   {
     var result = await _userRepository.GetByEmailAsync(email);
@@ -70,6 +105,14 @@ public class UserService : IUserService
     return response;
   }
 
+  /// <summary>
+  ///     Actualiza un usuario existente.
+  /// </summary>
+  /// <param name="userDto">Objeto con los datos del usuario a actualizar.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{UserDto}"/> con los datos del usuario actualizado.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo actualizar el usuario.
+  /// </returns>
   public async Task<ApiResponse<UserDto>> UpdateAsync(UserDto userDto)
   {
     var result = await _userRepository.UpdateAsync(userDto);
@@ -85,6 +128,14 @@ public class UserService : IUserService
     return response;
   }
 
+  /// <summary>
+  ///     Elimina un usuario existente.
+  /// </summary>
+  /// <param name="id">El identificador del usuario a eliminar.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{bool}"/> con el resultado de la operación.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo eliminar el usuario.
+  /// </returns>
   public async Task<ApiResponse<bool>> DeleteAsync(string id)
   {
     var result = await _userRepository.DeleteAsync(id);

@@ -6,10 +6,22 @@ public class ProductService : IProductService
 {
   private readonly IProductRepository _repository;
 
+  /// <summary>
+  ///   Inicializa una nueva instancia de <see cref="ProductService"/>.</summary>
+  /// <param name="repository">Una instancia de <see cref="IProductRepository"/> para realizar operaciones de productos.</param>
   public ProductService(IProductRepository repository)
   {
     _repository = repository;
   }
+
+  /// <summary>
+  ///     Crea un nuevo producto en el sistema.
+  /// </summary>
+  /// <param name="productDto">Los datos del producto a crear.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{ProductDto}"/> con los datos del producto recién creado.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo crear el producto.
+  /// </returns>
 
   public async Task<ApiResponse<ProductDto>> CreateProductAsync(ProductDto productDto)
   {
@@ -26,7 +38,13 @@ public class ProductService : IProductService
     return response;
   }
 
-
+  /// <summary>
+  ///     Obtiene todos los productos del sistema.
+  /// </summary>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{IEnumerable{ProductDto}}"/> con todos los productos.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron productos.
+  /// </returns>
   public async Task<ApiResponse<IEnumerable<ProductDto>>> GetAllProductsAsync()
   {
     var result = await _repository.GetAllAsync();
@@ -41,6 +59,15 @@ public class ProductService : IProductService
     );
     return response;
   }
+
+  /// <summary>
+  ///     Obtiene productos por tipo del sistema.
+  /// </summary>
+  /// <param name="type">El tipo de producto a obtener.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{IEnumerable{ProductDto}}"/> con los productos del tipo especificado.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron productos del tipo especificado.
+  /// </returns>
 
   public async Task<ApiResponse<IEnumerable<ProductDto>>> GetProductsByTypeAsync(ProductType type)
   {
@@ -57,6 +84,14 @@ public class ProductService : IProductService
     return response;
   }
 
+  /// <summary>
+  ///     Obtiene un producto por su ID.
+  /// </summary>
+  /// <param name="id">El identificador del producto.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{ProductDto}"/> con los datos del producto solicitado.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontró el producto.
+  /// </returns>
   public async Task<ApiResponse<ProductDto>> GetProductByIdAsync(int id)
   {
     var result = await _repository.GetAsync(id);
@@ -72,6 +107,14 @@ public class ProductService : IProductService
     return response;
   }
 
+  /// <summary>
+  ///     Actualiza un producto existente.
+  /// </summary>
+  /// <param name="productDto">Objeto con los datos del producto a actualizar.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{ProductDto}"/> con los datos del producto actualizado.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo actualizar el producto.
+  /// </returns>
   public async Task<ApiResponse<ProductDto>> UpdateProductAsync(ProductDto productDto)
   {
     var result = await _repository.UpdateAsync(productDto);
@@ -87,6 +130,14 @@ public class ProductService : IProductService
     return response;
   }
 
+  /// <summary>
+  ///     Elimina un producto por su ID.
+  /// </summary>
+  /// <param name="id">El identificador del producto a eliminar.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{bool}"/> con el resultado de la operación.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo eliminar el producto.
+  /// </returns>
   public async Task<ApiResponse<bool>> DeleteProductAsync(int id)
   {
     var result = await _repository.DeleteAsync(id);

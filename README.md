@@ -246,7 +246,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 |--------|------------------------------------|-------------|
 | 1      | Configuración de entorno y backlog | ✅ Terminado |
 | 2      | Diseño general del sistema         | 🔄 Proceso |
-| 3      | Registro y gestión de productos    | 🕐 Planeación |
+| 3      | Usuarios y Login                   | 🧾 Pruebas |
 | 4      | Módulo de pedidos                  | 🕐 Planeación |
 
 ---
