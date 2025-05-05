@@ -22,9 +22,10 @@ public class IdentityInitializer
     // Crear un SuperAdmin
     var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var config = serviceProvider.GetRequiredService<IConfiguration>();
+    var superadmin = config.GetSection("Superadmin");
 
-    var superadminEmail = config["Superadmin:Email"];
-    var superadminPassword = config["Superadmin:Password"];
+    var superadminEmail = superadmin["Email"] ?? string.Empty;
+    var superadminPassword = superadmin["Password"] ?? string.Empty;
 
     if (await userManager.FindByEmailAsync(superadminEmail) == null)
     {

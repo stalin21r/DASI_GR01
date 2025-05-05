@@ -10,11 +10,27 @@ public class AuthService : IAuthService
 {
   private readonly UserManager<ApplicationUser> _userManager;
   private readonly IConfiguration _configuration;
+
+  /// <summary>
+  ///     Servicio de autenticación para manejar el inicio de sesión y generación de tokens.
+  /// </summary>
+  /// <param name="userManager">Administrador para manejar las operaciones de usuario.</param>
+  /// <param name="configuration">Configuración de la aplicación para obtener la configuración de Jwt.</param>
   public AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration)
   {
     _userManager = userManager;
     _configuration = configuration;
   }
+
+  /// <summary>
+  ///     Inicia sesión de un usuario utilizando el correo electrónico y la contraseña proporcionados.
+  /// </summary>
+  /// <param name="loginDto">Objeto que contiene el correo electrónico y la contraseña del usuario.</param>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{AuthDto}"/> que contiene el token JWT si el inicio de sesión es exitoso.
+  /// </returns>
+  /// <exception cref="KeyNotFoundException">Se lanza si el usuario no está registrado.</exception>
+  /// <exception cref="UnauthorizedAccessException">Se lanza si el usuario no está activo o si la contraseña es incorrecta.</exception>
   public async Task<ApiResponse<AuthDto>> LoginAsync(LoginDto loginDto)
   {
     var user = await _userManager.FindByEmailAsync(loginDto.Email);
@@ -44,6 +60,13 @@ public class AuthService : IAuthService
     return response;
   }
 
+  /// <summary>
+  ///     Genera un token JWT para el usuario proporcionado.
+  /// </summary>
+  /// <param name="user">El usuario para el que se va a generar el token.</param>
+  /// <returns>
+  ///     Retorna una cadena que contiene el token JWT.
+  /// </returns>
   private async Task<string> GenerateJwtToken(ApplicationUser user)
   {
     var claims = new List<Claim>

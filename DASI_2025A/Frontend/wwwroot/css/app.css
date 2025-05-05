@@ -98,3 +98,19 @@ body {
 code {
     color: #c02d76;
 }
+
+.font-outline-white {
+    -webkit-text-stroke: 0.5px white;
+}
+
+.text-shadow-white {
+    text-shadow: 0 0 4px white;
+}
+
+.text-outline-white {
+    text-shadow:
+        -1px -1px 0 white,
+        1px -1px 0 white,
+        -1px 1px 0 white,
+        1px 1px 0 white;
+}

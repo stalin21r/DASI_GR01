@@ -6,6 +6,10 @@ public class ProductRepository : IProductRepository
 {
   private readonly ApplicationDbContext _context;
 
+  /// <summary>
+  ///   Inicializa una nueva instancia de <see cref="ProductRepository"/>.
+  /// </summary>
+  /// <param name="context">El contexto de la base de datos.</param>
   public ProductRepository(ApplicationDbContext context)
   {
     _context = context;
@@ -28,6 +32,12 @@ public class ProductRepository : IProductRepository
     return productDto;
   }
 
+  /// <summary>
+  ///   Obtiene todos los productos de la base de datos.
+  /// </summary>
+  /// <returns>
+  ///   Retorna un <see cref="IList{ProductDto}"/> con todos los productos de la base de datos.
+  /// </returns>
   public async Task<IEnumerable<ProductDto>> GetAllAsync()
   {
     return await _context.Products.Select(
@@ -43,6 +53,14 @@ public class ProductRepository : IProductRepository
       }).ToListAsync();
   }
 
+  /// <summary>
+  ///   Obtiene una lista de productos filtrados por tipo.
+  /// </summary>
+  /// <param name="type">El tipo de producto a filtrar.</param>
+  /// <returns>
+  ///   Retorna una lista de <see cref="ProductDto"/> que representa los productos del tipo especificado.
+  /// </returns>
+
   public async Task<IEnumerable<ProductDto>> GetByTypeAsync(ProductType type)
   {
     return await _context.Products.Where(p => p.Type == type).Select(
@@ -57,6 +75,15 @@ public class ProductRepository : IProductRepository
         Type = p.Type
       }).ToListAsync();
   }
+
+  /// <summary>
+  ///   Obtiene un producto por su ID.
+  /// </summary>
+  /// <param name="id">El identificador del producto a buscar.</param>
+  /// <returns>
+  ///   Retorna un <see cref="ProductDto"/> con los datos del producto si se encuentra.
+  ///   Retorna <see langword="null"/> si no se encontró el producto.
+  /// </returns>
 
   public async Task<ProductDto?> GetAsync(int id)
   {
@@ -74,6 +101,14 @@ public class ProductRepository : IProductRepository
     ).FirstOrDefaultAsync();
   }
 
+  /// <summary>
+  ///   Actualiza un producto existente en la base de datos.
+  /// </summary>
+  /// <param name="productDto">Objeto con los datos del producto a actualizar.</param>
+  /// <returns>
+  ///   Retorna el objeto <see cref="ProductDto"/> actualizado si se encontró el producto.
+  ///   Retorna <see langword="null"/> si no se encontró el producto.
+  /// </returns>
   public async Task<ProductDto?> UpdateAsync(ProductDto productDto)
   {
     var entity = await _context.Products.FindAsync(productDto.Id);
@@ -91,6 +126,14 @@ public class ProductRepository : IProductRepository
     return productDto;
   }
 
+  /// <summary>
+  ///   Elimina un producto existente en la base de datos, solo lo desactiva.
+  /// </summary>
+  /// <param name="id">El identificador del producto a eliminar.</param>
+  /// <returns>
+  ///   Retorna <see langword="true"/> si se encontró el producto y se eliminó correctamente.
+  ///   Retorna <see langword="false"/> si no se encontró el producto.
+  /// </returns>
   public async Task<bool> DeleteAsync(int id)
   {
     var entity = await _context.Products.FindAsync(id);

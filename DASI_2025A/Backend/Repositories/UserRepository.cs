@@ -9,6 +9,14 @@ public class UserRepository : IUserRepository
   private readonly RoleManager<IdentityRole> _roleManager;
   private readonly ApplicationDbContext _context;
 
+  /// <summary>
+  /// Constructor de la clase UserRepository.
+  /// Inicializa una nueva instancia de la clase UserRepository con los servicios necesarios para la gestión de usuarios y roles.
+  /// </summary>
+  /// <param name="userManager">UserManager para gestionar usuarios de la aplicación.</param>
+  /// <param name="roleManager">RoleManager para gestionar roles de la aplicación.</param>
+  /// <param name="context">Contexto de la base de datos de la aplicación.</param>
+
   public UserRepository(
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,
@@ -19,6 +27,14 @@ public class UserRepository : IUserRepository
     _roleManager = roleManager;
     _context = context;
   }
+  /// <summary>
+  /// Asigna un rol a un usuario.
+  /// </summary>
+  /// <param name="user">Usuario al que se le va a asignar el rol.</param>
+  /// <param name="roleName">Nombre del rol a asignar.</param>
+  /// <returns>True si se asignó el rol, false en caso de error.</returns>
+  /// <exception cref="ArgumentException">Si el rol es nulo o vacío.</exception>
+  /// <exception cref="BadHttpRequestException">Si no se pudo asignar el rol.</exception>
   public async Task<bool> AssignRoleAsync(ApplicationUser user, string roleName)
   {
     if (!string.IsNullOrEmpty(roleName))
@@ -38,6 +54,13 @@ public class UserRepository : IUserRepository
   }
 
 
+  /// <summary>
+  /// Crea un nuevo usuario en la base de datos.
+  /// </summary>
+  /// <param name="userDto">Objeto con los datos del usuario a crear.</param>
+  /// <returns>Objeto con los datos del usuario recién creado.</returns>
+  /// <exception cref="ArgumentException">Si el password es nulo o vacío.</exception>
+  /// <exception cref="BadHttpRequestException">Si no se pudo crear el usuario.</exception>
   public async Task<UserDto> CreateAsync(UserDto userDto)
   {
     var user = new ApplicationUser
@@ -58,7 +81,7 @@ public class UserRepository : IUserRepository
     var result = await _userManager.CreateAsync(user, userDto.Password);
     if (!result.Succeeded)
     {
-      throw new BadHttpRequestException("Error al crear el nuevo usuario.");
+      throw new BadHttpRequestException("Error al crear usuario. Puede que el usuario ya este registrado.");
     }
     var roleResult = await AssignRoleAsync(user, userDto.Role ?? "User");
     if (!roleResult)
@@ -76,6 +99,14 @@ public class UserRepository : IUserRepository
     return userDto;
   }
 
+  /// <summary>
+  /// Obtiene todos los usuarios de la base de datos.
+  /// </summary>
+  /// <returns>
+  ///     Retorna un <see cref="IList{UserDto}"/> con todos los usuarios de la base de datos.
+  ///     Si no se encontraron usuarios, lanza una excepción <see cref="KeyNotFoundException"/>.
+  ///     Si ocurre un error inesperado, lanza una excepción <see cref="BadHttpRequestException"/>.
+  /// </returns>
   public async Task<IEnumerable<UserDto>> GetAllAsync()
   {
     var users = await _userManager.Users
@@ -123,6 +154,16 @@ public class UserRepository : IUserRepository
     return userDtos;
   }
 
+  /// <summary>
+  /// Obtiene un usuario por su ID.
+  /// </summary>
+  /// <param name="id">El identificador del usuario.</param>
+  /// <returns>
+  ///     Retorna un <see cref="UserDto"/> con los datos del usuario, si se encuentra.
+  ///     Retorna <see langword="null"/> si no se encontró el usuario.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron usuarios.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si ocurre un error inesperado.
+  /// </returns>
   public async Task<UserDto?> GetAsync(string id)
   {
     var user = await _userManager.Users
@@ -159,6 +200,16 @@ public class UserRepository : IUserRepository
     return userDto;
   }
 
+  /// <summary>
+  ///     Obtiene un usuario por su correo electrónico.
+  /// </summary>
+  /// <param name="email">El correo electrónico del usuario.</param>
+  /// <returns>
+  ///     Retorna un objeto <see cref="UserDto"/> que representa el usuario.
+  ///     Retorna <see langword="null"/> si no se encontró el usuario.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron usuarios.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si ocurre un error inesperado.
+  /// </returns>
   public async Task<UserDto?> GetByEmailAsync(string email)
   {
     var user = await _userManager.Users
@@ -194,9 +245,18 @@ public class UserRepository : IUserRepository
     }
     return userDto;
   }
+  /// <summary>
+  ///     Actualiza un usuario.
+  /// </summary>
+  /// <param name="userDto">Objeto con los datos del usuario a actualizar.</param>
+  /// <returns>
+  ///     Retorna el objeto <see cref="UserDto"/> actualizado.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontró el usuario.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si ocurre un error inesperado.
+  /// </returns>
   public async Task<UserDto> UpdateAsync(UserDto userDto)
   {
-    var user = await _userManager.FindByIdAsync(userDto.Id);
+    var user = await _userManager.FindByIdAsync(userDto.Id!);
     if (user == null)
     {
       throw new KeyNotFoundException("No se encontraron Usuarios.");
@@ -217,6 +277,14 @@ public class UserRepository : IUserRepository
     return userDto;
   }
 
+  /// <summary>
+  ///     Elimina un usuario por su ID. En realidad, lo que hace es desactivar la cuenta del usuario.
+  /// </summary>
+  /// <param name="id">El identificador del usuario a eliminar.</param>
+  /// <returns>
+  ///     Retorna un <see cref="bool"/> con el resultado de la operación.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontró el usuario.
+  /// </returns>
   public async Task<bool> DeleteAsync(string id)
   {
     var user = await _userManager.FindByIdAsync(id);
