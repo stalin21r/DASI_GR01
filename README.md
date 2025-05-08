@@ -167,6 +167,19 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
    ```json
    {
+     "Superadmin": {
+       "Email": "<email-del-superadmin>",
+       "Password": "<contraseña-del-superadmin>"
+     },
+    
+     "Jwt": {
+       "Key": "<clave-secreta-de-jwt>",
+       "Issuer": "<emisor-del-token>",
+       "Audience": "<audiencia-del-token>",
+       "ExpireMinutes": <minutos-de-expiracion-del-token>,
+       "RefreshTokenExpireDays": <dias-de-expiracion-del-refresh-token>
+     },
+   
      "ConnectionStrings": {
        "DefaultConnection": "Server={el nombre del server};Database=gestion_bar;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
      },
