@@ -1,0 +1,65 @@
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="relative w-full">
+    <label
+        for="@Name"
+        class=@($"absolute left-3 transition-all duration-200 pointer-events-none {LabelClasses}")
+        style="WebkitTextStroke: 0.2px white;">
+        @Label
+    </label>
+    
+    <input
+        id="@Name"
+        type="@Type"
+        name="@Name"
+        placeholder="@Placeholder"
+        value="@Value"
+        @oninput="HandleInput"
+        @onfocus="() => IsFocused = true"
+        @onblur="() => IsFocused = false"
+        class=@($"w-full px-3 pt-4 pb-4 bg-white border border-gray-400 rounded-xl focus:outline-none focus:ring-2 {RingColor} text-black font-semibold focus:border-transparent z-200") />
+</div>
+
+@code {
+    [Parameter] public required string Label { get; set; }
+    [Parameter] public string Type { get; set; } = "text";
+    [Parameter] public required string Name { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "";
+    [Parameter] public required string Value { get; set; }
+    [Parameter] public string LabelColor { get; set; } = "blue";
+    [Parameter] public EventCallback<ChangeEventArgs> OnChange { get; set; }
+
+    private bool IsFocused { get; set; } = false;
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString() ?? "";
+        await OnChange.InvokeAsync(e);
+    }
+
+    private bool ShouldFloat => IsFocused || !string.IsNullOrWhiteSpace(Value);
+
+    private string LabelClasses => ShouldFloat
+        ? $"text-lg -top-7 left-4 bg-inherit z-2 px-1 {(IsFocused ? $"{TextColor} font-bold" : "text-gray-500 font-normal")}"
+        : "text-gray-500 top-1/2 -translate-y-1/2";
+
+    private string TextColor => LabelColor switch
+    {
+        "red" => "text-red-600",
+        "green" => "text-green-600",
+        "purple" => "text-purple-600",
+        "pink" => "text-pink-600",
+        "indigo" => "text-indigo-600",
+        _ => "text-blue-600"
+    };
+
+    private string RingColor => LabelColor switch
+    {
+        "red" => "focus:ring-red-500",
+        "green" => "focus:ring-green-500",
+        "purple" => "focus:ring-purple-500",
+        "pink" => "focus:ring-pink-500",
+        "indigo" => "focus:ring-indigo-500",
+        _ => "focus:ring-blue-500"
+    };
+}

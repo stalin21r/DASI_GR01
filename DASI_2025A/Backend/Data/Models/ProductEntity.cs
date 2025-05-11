@@ -1,8 +1,8 @@
-﻿namespace Backend;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Shared;
 
+namespace Backend;
 public class ProductEntity : AuditableEntity
 {
   [Key]
