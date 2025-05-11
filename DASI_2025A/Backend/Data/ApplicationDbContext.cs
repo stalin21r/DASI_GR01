@@ -12,8 +12,9 @@ namespace Backend
 
     public DbSet<OccupationEntity> Occupations { get; set; }
     public DbSet<ProductEntity> Products { get; set; }
+    public DbSet<ProductLoggerEntity> ProductLogs { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       base.OnModelCreating(modelBuilder);
 
