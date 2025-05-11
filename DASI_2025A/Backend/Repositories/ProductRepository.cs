@@ -47,6 +47,7 @@ public class ProductRepository : IProductRepository
         Name = p.Name,
         Description = p.Description ?? string.Empty,
         Price = p.Price,
+        Stock = p.Stock,
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
@@ -70,6 +71,7 @@ public class ProductRepository : IProductRepository
         Name = p.Name,
         Description = p.Description ?? string.Empty,
         Price = p.Price,
+        Stock = p.Stock,
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
@@ -93,7 +95,8 @@ public class ProductRepository : IProductRepository
         Id = p.Id,
         Name = p.Name,
         Description = p.Description ?? string.Empty,
-        Price = p.Price,
+        Price = p.Price,        
+        Stock = p.Stock,
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
@@ -119,6 +122,7 @@ public class ProductRepository : IProductRepository
     entity.Name = productDto.Name;
     entity.Description = productDto.Description;
     entity.Price = productDto.Price;
+    entity.Stock = productDto.Stock;
     entity.Image = productDto.Image;
     entity.Active = productDto.Active;
     entity.Type = productDto.Type;
