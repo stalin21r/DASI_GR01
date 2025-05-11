@@ -1,9 +1,11 @@
 ﻿using Shared;
 
-namespace Backend
+namespace Backend;
+   
+public interface IProductLoggerRepository 
 {
-    public interface IProductLoggerRepository
-    {
-        Task<ProductLoggerDto> CreateAsync(ProductLoggerDto productLoggerdto);
-    }
+	Task<ProductLoggerDto> CreateAsync(ProductLoggerDto productLoggerdto);
+	Task<IEnumerable<ProductLoggerDto>> GetAllAsync();	
+	Task<ProductLoggerDto?> GetAsync(int id);
+	Task<IEnumerable<ProductLoggerDto>> GetByProductIdAsync(int productId);
 }

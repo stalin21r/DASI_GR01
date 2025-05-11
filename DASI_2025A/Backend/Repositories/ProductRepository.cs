@@ -128,8 +128,25 @@ public class ProductRepository : IProductRepository
     await _context.SaveChangesAsync();
     return productDto;
   }
-
-	public async Task<ProductDto?> SellProductAsync(SellProductDto sellProductDto)
+	/// <summary>
+	///   Registra una venta de producto y reduce su stock disponible.
+	/// </summary>
+	/// <param name="sellProductDto">
+	///   Objeto DTO con la información de la venta, incluyendo el ID del producto y la cantidad.
+	/// </param>
+	/// <param name="userId">
+	///   El identificador del usuario que realiza la venta.
+	/// </param>
+	/// <returns>
+	///   Retorna el <see cref="ProductDto"/> actualizado con el nuevo stock si la venta fue exitosa.
+	///   Retorna <see langword="null"/> si no se encontró el producto, si no está activo, o si no hay stock suficiente.
+	/// </returns>
+	/// <remarks>
+	///   Este método gestiona todo el proceso de venta en una única transacción, garantizando
+	///   la consistencia entre la actualización del stock y el registro del log de operación.
+	///   Si ocurre algún error durante el proceso, la transacción se revierte completamente.
+	/// </remarks>
+	public async Task<ProductDto?> SellProductAsync(SellProductDto sellProductDto, string userId)
 	{
 		// La validación básica ya está en el DTO con las anotaciones
 		using var transaction = await _context.Database.BeginTransactionAsync();
@@ -150,8 +167,24 @@ public class ProductRepository : IProductRepository
 				return null;
 			}
 
+			// Guardamos el stock antes de la actualización
+			uint stockBefore = entity.Stock;
+
 			// Actualizamos el stock
 			entity.Stock -= sellProductDto.Quantity;
+
+            // Creamos el registro de la operación
+            var logEntry = new ProductLoggerEntity
+            {
+                Action = "SELL",
+                Description = $"Venta de {sellProductDto.Quantity} unidades del producto '{entity.Name}'",
+                QuantityBefore = stockBefore,
+                QuantityAfter = entity.Stock,
+                ProductFk = entity.Id,
+                UserFk = userId,
+            };
+
+			_context.ProductLogs.Add(logEntry);
 
 			await _context.SaveChangesAsync();
 			await transaction.CommitAsync();

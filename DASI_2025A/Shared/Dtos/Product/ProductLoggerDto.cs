@@ -15,7 +15,7 @@ namespace Shared
         public int ProductId { get; set; }
 
         [Required]
-        public int UserId { get; set; }
+        public string UserId { get; set; }
 
         [Required(ErrorMessage = "Action es requerido")]
         [StringLength(10, ErrorMessage = "Action debe tener menos de 10 caracteres")]
@@ -26,12 +26,10 @@ namespace Shared
 
         [Required(ErrorMessage = "QuantityBefore es requerido")]
         [Range(0, int.MaxValue, ErrorMessage = "QuantityBefore debe ser mayor o igual a 0")]
-        public int QuantityBefore { get; set; }
+        public uint QuantityBefore { get; set; }
 
         [Required(ErrorMessage = "QuantityAfter es requerido")]
         [Range(0, int.MaxValue, ErrorMessage = "QuantityAfter debe ser mayor o igual a 0")]
-        public int QuantityAfter { get; set; }
-
-
+        public uint QuantityAfter { get; set; }
     }
 }

@@ -129,9 +129,9 @@ public class ProductService : IProductService
     );
     return response;
   }
-  public async Task<ApiResponse<ProductDto>> SellProductAsync(SellProductDto sellProductDto)
+  public async Task<ApiResponse<ProductDto>> SellProductAsync(SellProductDto sellProductDto, string userId)
 	{
-		var result = await _repository.SellProductAsync(sellProductDto);
+		var result = await _repository.SellProductAsync(sellProductDto, userId);
 		if (result == null)
 		{
 			throw new BadHttpRequestException("Error al vender el producto.");

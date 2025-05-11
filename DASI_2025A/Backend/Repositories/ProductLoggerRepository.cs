@@ -2,9 +2,9 @@
 using Shared;
 
 
-namespace Backend
-{
-    public class ProductLoggerRepository : IProductLoggerRepository
+namespace Backend;
+
+public class ProductLoggerRepository : IProductLoggerRepository
     {
         private readonly ApplicationDbContext _context;
 
@@ -12,8 +12,55 @@ namespace Backend
         {
             _context = context;
         }
+		public async Task<IEnumerable<ProductLoggerDto>> GetAllAsync()
+		{
+			return await _context.ProductLogs
+				.Select(p => new ProductLoggerDto
+				{
+					Id = p.Id,
+					Action = p.Action,
+					Description = p.Description,
+					QuantityBefore = p.QuantityBefore,
+					QuantityAfter = p.QuantityAfter,
+					ProductId = p.ProductFk,
+					UserId = p.UserFk
+				})
+				.ToListAsync();
+		}
 
-        public async Task<ProductLoggerDto> CreateAsync(ProductLoggerDto productLoggerDto)
+		public async Task<ProductLoggerDto?> GetAsync(int id)
+		{
+			return await _context.ProductLogs
+				.Select(p => new ProductLoggerDto
+				{
+					Id = p.Id,
+					Action = p.Action,
+					Description = p.Description,
+					QuantityBefore = p.QuantityBefore,
+					QuantityAfter = p.QuantityAfter,
+					ProductId = p.ProductFk,
+					UserId = p.UserFk
+				})
+				.FirstOrDefaultAsync();
+		}
+
+		public async Task<IEnumerable<ProductLoggerDto>> GetByProductIdAsync(int productId)
+		{
+			return await _context.ProductLogs.Where(p => p.ProductFk == productId).Select(
+				p => new ProductLoggerDto
+				{
+					Id = p.Id,
+					Action = p.Action,
+					Description = p.Description,
+					QuantityBefore = p.QuantityBefore,
+					QuantityAfter = p.QuantityAfter,
+					ProductId = p.ProductFk,
+					UserId = p.UserFk
+				})
+				.ToListAsync();
+		}
+
+		public async Task<ProductLoggerDto> CreateAsync(ProductLoggerDto productLoggerDto)
         {
             var entity = new ProductLoggerEntity
             {
@@ -33,4 +80,3 @@ namespace Backend
 
 
     }
-}

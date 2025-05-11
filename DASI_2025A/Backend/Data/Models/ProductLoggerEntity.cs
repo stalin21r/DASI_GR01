@@ -19,10 +19,10 @@ namespace Backend
         public required string Description { get; set; }
 
         [Required]
-        public required int QuantityBefore { get; set; }
+        public required uint QuantityBefore { get; set; }
 
         [Required]
-        public required int QuantityAfter { get; set; }
+        public required uint QuantityAfter { get; set; }
 
         // FK a Product
         [Required]
@@ -32,7 +32,7 @@ namespace Backend
 
         // FK a User
         [Required]
-        public int UserFk { get; set; }
+        public string UserFk { get; set; }
         [ForeignKey("UserFk")]
         public ApplicationUser? User { get; set; }
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
+using System.Security.Claims;
 
 namespace Backend
 {
@@ -160,13 +161,15 @@ namespace Backend
         return BadRequest("Error del servidor al actualizar el producto.");
       }
     }
+
 		[HttpPost("sell")]
 		[Authorize(Policy = "AdminPlus")]
 		public async Task<IActionResult> SellProductAsync([FromBody] SellProductDto SellProductDto)
 		{
 			try
 			{
-				var response = await _productService.SellProductAsync(SellProductDto);
+				var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+				var response = await _productService.SellProductAsync(SellProductDto, userId);
 				return Ok(response);
 			}
 			catch (BadHttpRequestException ex)
