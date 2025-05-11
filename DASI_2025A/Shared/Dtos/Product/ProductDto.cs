@@ -17,6 +17,10 @@ public class ProductDto
   [Required(ErrorMessage = "El precio es requerido")]
   [Range(0, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
   public decimal Price { get; set; }
+  
+  [Required(ErrorMessage = "La cantidad es requerida")]
+  [Range(0, uint.MaxValue, ErrorMessage = "La cantidad debe ser mayor o igual a 0")]
+  public uint Stock { get; set; } = 0;
 
   [StringLength(500, ErrorMessage = "La imagen debe tener menos de 500 caracteres")]
   public string? Image { get; set; }
