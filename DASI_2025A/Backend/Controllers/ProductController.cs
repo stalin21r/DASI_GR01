@@ -160,18 +160,40 @@ namespace Backend
         return BadRequest("Error del servidor al actualizar el producto.");
       }
     }
+		[HttpPost("sell")]
+		[Authorize(Policy = "AdminPlus")]
+		public async Task<IActionResult> SellProductAsync([FromBody] SellProductDto SellProductDto)
+		{
+			try
+			{
+				var response = await _productService.SellProductAsync(SellProductDto);
+				return Ok(response);
+			}
+			catch (BadHttpRequestException ex)
+			{
+				return BadRequest(ex.Message);
+			}
+			catch (KeyNotFoundException ex)
+			{
+				return NotFound(ex.Message);
+			}
+			catch (Exception)
+			{
+				return BadRequest("Error del servidor al actualizar el producto.");
+			}
+		}
 
-    /// <summary>
-    ///     Elimina un producto.
-    /// </summary>
-    /// <param name="id">El identificador del producto a eliminar.</param>
-    /// <returns>
-    ///     Retorna un <see cref="IActionResult"/> con código 200 (OK) si el producto se eliminó correctamente.
-    ///     Retorna un <see cref="IActionResult"/> con código 400 (Bad Request) si la solicitud es inválida.
-    ///     Retorna un <see cref="IActionResult"/> con código 404 (Not Found) si el producto no existe.
-    ///     Retorna un <see cref="IActionResult"/> con código 500 (Internal Server Error) para errores inesperados.
-    /// </returns>
-    [HttpDelete("{id:int:min(1)}")]
+		/// <summary>
+		///     Elimina un producto.
+		/// </summary>
+		/// <param name="id">El identificador del producto a eliminar.</param>
+		/// <returns>
+		///     Retorna un <see cref="IActionResult"/> con código 200 (OK) si el producto se eliminó correctamente.
+		///     Retorna un <see cref="IActionResult"/> con código 400 (Bad Request) si la solicitud es inválida.
+		///     Retorna un <see cref="IActionResult"/> con código 404 (Not Found) si el producto no existe.
+		///     Retorna un <see cref="IActionResult"/> con código 500 (Internal Server Error) para errores inesperados.
+		/// </returns>
+		[HttpDelete("{id:int:min(1)}")]
     [Authorize(Policy = "AdminPlus")]
     public async Task<IActionResult> DeleteProduct([FromRoute] int id)
     {
