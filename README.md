@@ -50,7 +50,7 @@
       <td align="center">
         <a href="https://github.com/dennisperezEPN">
           <img src="https://github.com/dennisperezEPN.png" width="80" alt="Dennise Perez"/><br/>
-          <sub><b>Dennise Perez</b></sub>
+          <sub><b>Dennis Perez</b></sub>
         </a>
       </td>
       <td align="center">
@@ -167,6 +167,19 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
    ```json
    {
+     "Superadmin": {
+       "Email": "<email-del-superadmin>",
+       "Password": "<contraseña-del-superadmin>"
+     },
+    
+     "Jwt": {
+       "Key": "<clave-secreta-de-jwt>",
+       "Issuer": "<emisor-del-token>",
+       "Audience": "<audiencia-del-token>",
+       "ExpireMinutes": <minutos-de-expiracion-del-token>,
+       "RefreshTokenExpireDays": <dias-de-expiracion-del-refresh-token>
+     },
+   
      "ConnectionStrings": {
        "DefaultConnection": "Server={el nombre del server};Database=gestion_bar;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
      },

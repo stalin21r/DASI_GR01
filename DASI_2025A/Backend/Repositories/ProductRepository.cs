@@ -22,6 +22,7 @@ public class ProductRepository : IProductRepository
       Name = productDto.Name,
       Description = productDto.Description,
       Price = productDto.Price,
+      Stock = productDto.Stock,
       Image = productDto.Image,
       Active = productDto.Active,
       Type = productDto.Type,
@@ -47,6 +48,7 @@ public class ProductRepository : IProductRepository
         Name = p.Name,
         Description = p.Description ?? string.Empty,
         Price = p.Price,
+        Stock = p.Stock,
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
@@ -70,6 +72,7 @@ public class ProductRepository : IProductRepository
         Name = p.Name,
         Description = p.Description ?? string.Empty,
         Price = p.Price,
+        Stock = p.Stock,
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
@@ -94,6 +97,7 @@ public class ProductRepository : IProductRepository
         Name = p.Name,
         Description = p.Description ?? string.Empty,
         Price = p.Price,
+        Stock = p.Stock,
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
@@ -118,7 +122,6 @@ public class ProductRepository : IProductRepository
     }
     entity.Name = productDto.Name;
     entity.Description = productDto.Description;
-    entity.Price = productDto.Price;
     entity.Image = productDto.Image;
     entity.Active = productDto.Active;
     entity.Type = productDto.Type;
@@ -129,10 +132,86 @@ public class ProductRepository : IProductRepository
 
     return productDto;
   }
+  /// <summary>
+  ///   Registra una venta de producto y reduce su stock disponible.
+  /// </summary>
+  /// <param name="sellProductDto">
+  ///   Objeto DTO con la información de la venta, incluyendo el ID del producto y la cantidad.
+  /// </param>
+  /// <param name="userId">
+  ///   El identificador del usuario que realiza la venta.
+  /// </param>
+  /// <returns>
+  ///   Retorna el <see cref="ProductDto"/> actualizado con el nuevo stock si la venta fue exitosa.
+  ///   Retorna <see langword="null"/> si no se encontró el producto, si no está activo, o si no hay stock suficiente.
+  /// </returns>
+  /// <remarks>
+  ///   Este método gestiona todo el proceso de venta en una única transacción, garantizando
+  ///   la consistencia entre la actualización del stock y el registro del log de operación.
+  ///   Si ocurre algún error durante el proceso, la transacción se revierte completamente.
+  /// </remarks>
+  public async Task<ProductDto?> SellProductAsync(SellProductDto sellProductDto, string userId)
+  {
+    // La validación básica ya está en el DTO con las anotaciones
+    using var transaction = await _context.Database.BeginTransactionAsync();
 
-  //TODO: modificar el actual update para no modificar precio.
-  //TODO: Crear un update para disminuir el stock (patch)
-  //TODO: crear un nuevo dto para actualizar (updateProductoDto) -> agregar descripcion (no null), enviar el id de usuario que hace el update.
+    try
+    {
+      var entity = await _context.Products.FindAsync(sellProductDto.ProductId);
+
+      // Verificamos si el producto existe y está activo
+      if (entity == null || !entity.Active)
+      {
+        return null;
+      }
+
+      // Verificamos si hay stock suficiente
+      if (entity.Stock < sellProductDto.Quantity)
+      {
+        return null;
+      }
+
+      // Guardamos el stock antes de la actualización
+      uint stockBefore = entity.Stock;
+
+      // Actualizamos el stock
+      entity.Stock -= sellProductDto.Quantity;
+
+      // Creamos el registro de la operación
+      var logEntry = new ProductLoggerEntity
+      {
+        Action = "SELL",
+        Description = $"Venta de {sellProductDto.Quantity} unidades del producto '{entity.Name}'",
+        QuantityBefore = stockBefore,
+        QuantityAfter = entity.Stock,
+        ProductFk = entity.Id,
+        UserFk = userId,
+      };
+
+      _context.ProductLogs.Add(logEntry);
+
+      await _context.SaveChangesAsync();
+      await transaction.CommitAsync();
+
+      // Retornamos el producto actualizado
+      return new ProductDto
+      {
+        Id = entity.Id,
+        Name = entity.Name,
+        Description = entity.Description ?? string.Empty,
+        Price = entity.Price,
+        Stock = entity.Stock,
+        Image = entity.Image,
+        Active = entity.Active,
+        Type = entity.Type
+      };
+    }
+    catch
+    {
+      await transaction.RollbackAsync();
+      throw;
+    }
+  }
 
   /// <summary>
   ///   Elimina un producto existente en la base de datos, solo lo desactiva.

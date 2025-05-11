@@ -10,4 +10,5 @@ public interface IProductService
   Task<ApiResponse<ProductDto>> GetProductByIdAsync(int id);
   Task<ApiResponse<ProductDto>> UpdateProductAsync(ProductDto productDto);
   Task<ApiResponse<bool>> DeleteProductAsync(int id);
+  Task<ApiResponse<ProductDto>> SellProductAsync(SellProductDto sellProductDto, string UserId);
 }
