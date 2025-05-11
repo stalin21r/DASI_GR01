@@ -23,6 +23,8 @@ public class ProductEntity : AuditableEntity
   [StringLength(500)]
   public string? Image { get; set; }
 
+  //TODO: agregar cantidad.
+
   public bool Active { get; set; } = true;
 
   [Required]

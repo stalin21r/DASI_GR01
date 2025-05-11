@@ -123,8 +123,16 @@ public class ProductRepository : IProductRepository
     entity.Active = productDto.Active;
     entity.Type = productDto.Type;
     await _context.SaveChangesAsync();
+    //Si es que el update es correcto instanciar un LoggerDto
+    //luego del update se hace la llamda al LoggerRepositorio al metodo insertar log
+    //al metodo insertar log se le pasaria una instancia mapeada de UpdateDto a LoggerDto
+
     return productDto;
   }
+
+  //TODO: modificar el actual update para no modificar precio.
+  //TODO: Crear un update para disminuir el stock (patch)
+  //TODO: crear un nuevo dto para actualizar (updateProductoDto) -> agregar descripcion (no null), enviar el id de usuario que hace el update.
 
   /// <summary>
   ///   Elimina un producto existente en la base de datos, solo lo desactiva.
