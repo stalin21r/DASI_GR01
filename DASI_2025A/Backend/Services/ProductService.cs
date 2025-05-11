@@ -129,16 +129,30 @@ public class ProductService : IProductService
     );
     return response;
   }
+  public async Task<ApiResponse<ProductDto>> SellProductAsync(SellProductDto sellProductDto)
+	{
+		var result = await _repository.SellProductAsync(sellProductDto);
+		if (result == null)
+		{
+			throw new BadHttpRequestException("Error al vender el producto.");
+		}
+		ApiResponse<ProductDto> response = new ApiResponse<ProductDto>(
+		  message: "Producto vendido exitosamente",
+		  data: result,
+		  totalRecords: 1
+		);
+		return response;
+	}
 
-  /// <summary>
-  ///     Elimina un producto por su ID.
-  /// </summary>
-  /// <param name="id">El identificador del producto a eliminar.</param>
-  /// <returns>
-  ///     Retorna un <see cref="ApiResponse{bool}"/> con el resultado de la operación.
-  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo eliminar el producto.
-  /// </returns>
-  public async Task<ApiResponse<bool>> DeleteProductAsync(int id)
+	/// <summary>
+	///     Elimina un producto por su ID.
+	/// </summary>
+	/// <param name="id">El identificador del producto a eliminar.</param>
+	/// <returns>
+	///     Retorna un <see cref="ApiResponse{bool}"/> con el resultado de la operación.
+	///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo eliminar el producto.
+	/// </returns>
+	public async Task<ApiResponse<bool>> DeleteProductAsync(int id)
   {
     var result = await _repository.DeleteAsync(id);
     if (!result)
