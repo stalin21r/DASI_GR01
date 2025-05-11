@@ -22,6 +22,7 @@ public class ProductRepository : IProductRepository
       Name = productDto.Name,
       Description = productDto.Description,
       Price = productDto.Price,
+      Stock = productDto.Stock,
       Image = productDto.Image,
       Active = productDto.Active,
       Type = productDto.Type,
@@ -121,8 +122,6 @@ public class ProductRepository : IProductRepository
     }
     entity.Name = productDto.Name;
     entity.Description = productDto.Description;
-    entity.Price = productDto.Price;
-    entity.Stock = productDto.Stock;
     entity.Image = productDto.Image;
     entity.Active = productDto.Active;
     entity.Type = productDto.Type;
@@ -130,15 +129,62 @@ public class ProductRepository : IProductRepository
     return productDto;
   }
 
-  /// <summary>
-  ///   Elimina un producto existente en la base de datos, solo lo desactiva.
-  /// </summary>
-  /// <param name="id">El identificador del producto a eliminar.</param>
-  /// <returns>
-  ///   Retorna <see langword="true"/> si se encontró el producto y se eliminó correctamente.
-  ///   Retorna <see langword="false"/> si no se encontró el producto.
-  /// </returns>
-  public async Task<bool> DeleteAsync(int id)
+	public async Task<ProductDto?> SellProductAsync(SellProductDto sellProductDto)
+	{
+		// La validación básica ya está en el DTO con las anotaciones
+		using var transaction = await _context.Database.BeginTransactionAsync();
+
+		try
+		{
+			var entity = await _context.Products.FindAsync(sellProductDto.ProductId);
+
+			// Verificamos si el producto existe y está activo
+			if (entity == null || !entity.Active)
+			{
+				return null;
+			}
+
+			// Verificamos si hay stock suficiente
+			if (entity.Stock < sellProductDto.Quantity)
+			{
+				return null;
+			}
+
+			// Actualizamos el stock
+			entity.Stock -= sellProductDto.Quantity;
+
+			await _context.SaveChangesAsync();
+			await transaction.CommitAsync();
+
+			// Retornamos el producto actualizado
+			return new ProductDto
+			{
+				Id = entity.Id,
+				Name = entity.Name,
+				Description = entity.Description ?? string.Empty,
+				Price = entity.Price,
+				Stock = entity.Stock,
+				Image = entity.Image,
+				Active = entity.Active,
+				Type = entity.Type
+			};
+		}
+		catch
+		{
+			await transaction.RollbackAsync();
+			throw;
+		}
+	}
+
+	/// <summary>
+	///   Elimina un producto existente en la base de datos, solo lo desactiva.
+	/// </summary>
+	/// <param name="id">El identificador del producto a eliminar.</param>
+	/// <returns>
+	///   Retorna <see langword="true"/> si se encontró el producto y se eliminó correctamente.
+	///   Retorna <see langword="false"/> si no se encontró el producto.
+	/// </returns>
+	public async Task<bool> DeleteAsync(int id)
   {
     var entity = await _context.Products.FindAsync(id);
     if (entity == null)
