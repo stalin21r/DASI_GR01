@@ -29,6 +29,6 @@ public class ProductEntity : AuditableEntity
   public bool Active { get; set; } = true;
 
   [Required]
-  public ProductType Type { get; set; }
+  public ProductType Type { get; set; } 
 
 }
