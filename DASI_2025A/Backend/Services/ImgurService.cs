@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Shared;
 
 namespace Backend;
+
 public class ImgurService : IImgurService
 {
   private readonly IConfiguration _configuration;
@@ -62,7 +63,7 @@ public class ImgurService : IImgurService
 
   public async Task DeleteImageAsync(string deletehash)
   {
-    var clientId = _configuration["Imgur:ClientId"];
+    var clientId = _configuration["Imgur:ImgurClientId"];
     var httpClient = _httpClientFactory.CreateClient();
     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Client-ID", clientId);
 
