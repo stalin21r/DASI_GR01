@@ -1,9 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 
 namespace Shared;
 
-public class ProductDto
+public class UpdateProductDto
 {
   public int Id { get; set; }
 
@@ -11,13 +11,8 @@ public class ProductDto
   [StringLength(200, ErrorMessage = "El nombre debe tener menos de 200 caracteres")]
   public string Name { get; set; } = string.Empty;
 
-  [Required(ErrorMessage = "La descripción es requerida")]
   [StringLength(1000, ErrorMessage = "La descripción debe tener menos de 1000 caracteres")]
   public string Description { get; set; } = string.Empty;
-
-  [Required(ErrorMessage = "El precio es requerido")]
-  [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
-  public decimal Price { get; set; }
 
   [Required(ErrorMessage = "La cantidad es requerida")]
   [Range(0, uint.MaxValue, ErrorMessage = "La cantidad debe ser mayor o igual a 0")]
@@ -31,10 +26,6 @@ public class ProductDto
   [Required(ErrorMessage = "El tipo es requerido")]
   public ProductType Type { get; set; }
 
-
-  public override string ToString()
-  {
-    return $"Id: {Id}, Name: {Name}, Description: {Description}, Price: {Price}, Stock: {Stock}, Active: {Active}, Type: {Type}";
-  }
-
+  [Required(ErrorMessage = "Razón de la actualización es requerida")]
+  public string Reason { get; set; } = string.Empty;
 }

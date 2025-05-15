@@ -5,30 +5,76 @@ namespace Backend;
 public class ProductRepository : IProductRepository
 {
   private readonly ApplicationDbContext _context;
+  private readonly IProductLoggerRepository _logger;
+  private readonly IImgurService _imgurService;
 
   /// <summary>
   ///   Inicializa una nueva instancia de <see cref="ProductRepository"/>.
   /// </summary>
   /// <param name="context">El contexto de la base de datos.</param>
-  public ProductRepository(ApplicationDbContext context)
+  public ProductRepository(ApplicationDbContext context, IProductLoggerRepository logger, IImgurService imgurService)
   {
     _context = context;
+    _logger = logger;
+    _imgurService = imgurService;
   }
 
-  public async Task<ProductDto> CreateAsync(ProductDto productDto)
+  public async Task<ProductDto> CreateAsync(ProductDto productDto, string userId)
   {
+    string? imgurLink = null;
+    string? deleteHash = null;
+
+    if (!string.IsNullOrWhiteSpace(productDto.Image))
+    {
+      try
+      {
+
+        var uploadResult = await _imgurService.UploadImageAsync(productDto.Image, productDto.Name);
+        imgurLink = uploadResult.Link;
+        deleteHash = uploadResult.DeleteHash;
+
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine($"Error al subir la imagen a Imgur: {ex.Message}");
+        imgurLink = null;
+        deleteHash = null;
+      }
+    }
+
+    productDto.Image = imgurLink;
+
     var entity = new ProductEntity
     {
       Name = productDto.Name,
       Description = productDto.Description,
       Price = productDto.Price,
       Stock = productDto.Stock,
-      Image = productDto.Image,
+      Image = imgurLink ?? string.Empty, // o null si tu columna lo permite
       Active = productDto.Active,
       Type = productDto.Type,
+      ImageDeleteHash = deleteHash ?? string.Empty
     };
+
     _context.Products.Add(entity);
-    await _context.SaveChangesAsync();
+    var result = await _context.SaveChangesAsync();
+    if (result == 0)
+    {
+      throw new Exception("No se pudo insertar el producto.");
+    }
+
+    var loggerDto = new ProductLoggerDto
+    {
+      ProductId = entity.Id,
+      UserId = userId,
+      Action = "Crear Producto",
+      Description = "Producto Creado",
+      QuantityBefore = 0,
+      QuantityAfter = entity.Stock
+    };
+
+    await _logger.CreateAsync(loggerDto);
+
     productDto.Id = entity.Id;
     return productDto;
   }
@@ -113,25 +159,82 @@ public class ProductRepository : IProductRepository
   ///   Retorna el objeto <see cref="ProductDto"/> actualizado si se encontró el producto.
   ///   Retorna <see langword="null"/> si no se encontró el producto.
   /// </returns>
-  public async Task<ProductDto?> UpdateAsync(ProductDto productDto)
+  public async Task<ProductDto?> UpdateAsync(UpdateProductDto productDto, string userId)
   {
     var entity = await _context.Products.FindAsync(productDto.Id);
     if (entity == null)
     {
       return null;
     }
+
+    uint stockBefore = entity.Stock;
+
+    // Solo subir nueva imagen si viene una en base64
+    if (!string.IsNullOrWhiteSpace(productDto.Image))
+    {
+      try
+      {
+        // Eliminar imagen anterior si existe deleteHash
+        if (!string.IsNullOrEmpty(entity.ImageDeleteHash))
+        {
+          await _imgurService.DeleteImageAsync(entity.ImageDeleteHash);
+        }
+
+        // Subir nueva imagen
+        var uploadResult = await _imgurService.UploadImageAsync(productDto.Image, productDto.Name);
+        entity.Image = uploadResult.Link;
+        entity.ImageDeleteHash = uploadResult.DeleteHash;
+      }
+      catch (Exception ex)
+      {
+        // Aquí puedes loguear el error o manejarlo según convenga
+        Console.WriteLine($"Error al actualizar la imagen en Imgur: {ex.Message}");
+        // No sobreescribas la imagen actual si falla la subida
+      }
+    }
+
+    // Actualizar propiedades restantes
     entity.Name = productDto.Name;
     entity.Description = productDto.Description;
-    entity.Image = productDto.Image;
+    entity.Stock = productDto.Stock;
     entity.Active = productDto.Active;
     entity.Type = productDto.Type;
-    await _context.SaveChangesAsync();
-    //Si es que el update es correcto instanciar un LoggerDto
-    //luego del update se hace la llamda al LoggerRepositorio al metodo insertar log
-    //al metodo insertar log se le pasaria una instancia mapeada de UpdateDto a LoggerDto
 
-    return productDto;
+    var result = await _context.SaveChangesAsync();
+    if (result == 0)
+    {
+      throw new BadHttpRequestException("No se realizaron cambios en el producto.");
+    }
+
+    // Guardar log
+    ProductLoggerDto loggerDto = new ProductLoggerDto
+    {
+      ProductId = entity.Id,
+      UserId = userId,
+      Action = "Actualizar Producto",
+      Description = productDto.Reason,
+      QuantityBefore = stockBefore,
+      QuantityAfter = entity.Stock
+    };
+
+    await _logger.CreateAsync(loggerDto);
+
+    // Construir DTO resultado
+    var updatedProductDto = new ProductDto
+    {
+      Id = entity.Id,
+      Name = entity.Name,
+      Description = entity.Description ?? string.Empty,
+      Price = entity.Price,
+      Stock = entity.Stock,
+      Image = entity.Image,
+      Active = entity.Active,
+      Type = entity.Type
+    };
+
+    return updatedProductDto;
   }
+
   /// <summary>
   ///   Registra una venta de producto y reduce su stock disponible.
   /// </summary>
@@ -155,62 +258,53 @@ public class ProductRepository : IProductRepository
     // La validación básica ya está en el DTO con las anotaciones
     using var transaction = await _context.Database.BeginTransactionAsync();
 
-    try
+
+    var entity = await _context.Products.FindAsync(sellProductDto.ProductId);
+
+    // Verificamos si el producto existe y está activo
+    if (entity == null || !entity.Active)
     {
-      var entity = await _context.Products.FindAsync(sellProductDto.ProductId);
-
-      // Verificamos si el producto existe y está activo
-      if (entity == null || !entity.Active)
-      {
-        return null;
-      }
-
-      // Verificamos si hay stock suficiente
-      if (entity.Stock < sellProductDto.Quantity)
-      {
-        return null;
-      }
-
-      // Guardamos el stock antes de la actualización
-      uint stockBefore = entity.Stock;
-
-      // Actualizamos el stock
-      entity.Stock -= sellProductDto.Quantity;
-
-      // Creamos el registro de la operación
-      var logEntry = new ProductLoggerEntity
-      {
-        Action = "SELL",
-        Description = $"Venta de {sellProductDto.Quantity} unidades del producto '{entity.Name}'",
-        QuantityBefore = stockBefore,
-        QuantityAfter = entity.Stock,
-        ProductFk = entity.Id,
-        UserFk = userId,
-      };
-
-      _context.ProductLogs.Add(logEntry);
-
-      await _context.SaveChangesAsync();
-      await transaction.CommitAsync();
-
-      // Retornamos el producto actualizado
-      return new ProductDto
-      {
-        Id = entity.Id,
-        Name = entity.Name,
-        Description = entity.Description ?? string.Empty,
-        Price = entity.Price,
-        Stock = entity.Stock,
-        Image = entity.Image,
-        Active = entity.Active,
-        Type = entity.Type
-      };
+      throw new KeyNotFoundException("No se encontro este producto.");
     }
-    catch
+
+    // Verificamos si hay stock suficiente
+    if (entity.Stock < sellProductDto.Quantity)
     {
-      await transaction.RollbackAsync();
-      throw;
+      throw new BadHttpRequestException("No hay stock suficiente.");
     }
+
+    // Guardamos el stock antes de la actualización
+    uint stockBefore = entity.Stock;
+
+    // Actualizamos el stock
+    entity.Stock -= sellProductDto.Quantity;
+
+    // Creamos el registro de la operación
+    var logEntry = new ProductLoggerEntity
+    {
+      Action = "Venta de Producto",
+      Description = $"Venta de {sellProductDto.Quantity} unidades del producto '{entity.Name}'",
+      QuantityBefore = stockBefore,
+      QuantityAfter = entity.Stock,
+      ProductFk = entity.Id,
+      UserFk = userId,
+    };
+    await _context.SaveChangesAsync();
+
+    await _context.ProductLogs.AddAsync(logEntry);
+
+    // Retornamos el producto actualizado
+    return new ProductDto
+    {
+      Id = entity.Id,
+      Name = entity.Name,
+      Description = entity.Description ?? string.Empty,
+      Price = entity.Price,
+      Stock = entity.Stock,
+      Image = entity.Image,
+      Active = entity.Active,
+      Type = entity.Type
+    };
   }
 
   /// <summary>
@@ -221,15 +315,25 @@ public class ProductRepository : IProductRepository
   ///   Retorna <see langword="true"/> si se encontró el producto y se eliminó correctamente.
   ///   Retorna <see langword="false"/> si no se encontró el producto.
   /// </returns>
-  public async Task<bool> DeleteAsync(int id)
+  public async Task<bool> DeleteAsync(int id, string userId)
   {
     var entity = await _context.Products.FindAsync(id);
     if (entity == null)
     {
-      return false;
+      throw new KeyNotFoundException("No se encontró este producto.");
     }
     entity.Active = false;
+    entity.Stock = 0;
     await _context.SaveChangesAsync();
+    await _logger.CreateAsync(new ProductLoggerDto
+    {
+      ProductId = entity.Id,
+      UserId = userId,
+      Action = "Eliminar Producto",
+      Description = "Producto eliminado",
+      QuantityBefore = entity.Stock,
+      QuantityAfter = 0
+    });
     return true;
   }
 }

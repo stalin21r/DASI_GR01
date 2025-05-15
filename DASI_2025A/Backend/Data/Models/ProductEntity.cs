@@ -19,18 +19,18 @@ public class ProductEntity : AuditableEntity
   [Required]
   [Column(TypeName = "decimal(18,2)")]
   public decimal Price { get; set; }
-	
+
   [Required]
   public uint Stock { get; set; }
 
   [StringLength(500)]
   public string? Image { get; set; }
 
-  //TODO: agregar cantidad.
-
   public bool Active { get; set; } = true;
 
   [Required]
-  public ProductType Type { get; set; } 
+  public ProductType Type { get; set; }
+
+  public string? ImageDeleteHash { get; set; }
 
 }

@@ -11,7 +11,7 @@ namespace Backend
         public int Id { get; set; }
 
         [Required]
-        [StringLength(10)] // Debe inicializar con un valor
+        [StringLength(50)] // Debe inicializar con un valor
         public required string Action { get; set; }
 
         [Required]
@@ -32,7 +32,7 @@ namespace Backend
 
         // FK a User
         [Required]
-        public string UserFk { get; set; }
+        public required string UserFk { get; set; }
         [ForeignKey("UserFk")]
         public ApplicationUser? User { get; set; }
 
