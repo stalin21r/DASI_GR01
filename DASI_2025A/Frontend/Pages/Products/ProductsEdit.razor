@@ -1,0 +1,228 @@
+@page "/Productos/Editar/{id}"
+@using System.Text.Json
+@inject IProductService _productService
+@inject SweetAlertService _sw
+@inject NavigationManager NavigationManager
+
+<PageTitle>Editar Producto</PageTitle>
+
+<div class="space-y-4 w-full">
+  <BodyHeader title="Editar Producto o Lunch"></BodyHeader>
+
+  <section class="w-full flex justify-between items-center px-4">
+    <h1 class="text-4xl font-bold text-[#427500]">Editar Producto</h1>
+    <div class="flex gap-4">
+      <NavLink href="/Productos"
+        class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i>Atrás
+      </NavLink>
+    </div>
+  </section>
+  @if (updateProductDto == null && string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
+  }
+  else if (!string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
+  }
+  else
+  {
+    <section class="w-full flex justify-center items-center">
+      <EditForm Model="updateProductDto" OnValidSubmit="handleSubmit"
+        class="p-10 w-full rounded-2xl border border-gray-300/50 shadow-2xl">
+
+        <div class="grid grid-cols-3 grid-rows-4 gap-4 space-y-4">
+          <DataAnnotationsValidator />
+          <div>
+            <div>
+              <FloatingLabelInput Label="Nombre" Name="name" Type="text" LabelColor="blue" Value="@updateProductDto?.Name"
+                OnChange="(e) => updateProductDto!.Name = e.Value?.ToString() ?? string.Empty">
+              </FloatingLabelInput>
+              <ValidationMessage For="@(() => updateProductDto!.Name)" />
+            </div>
+          </div>
+          <div class="col-start-1 row-start-2">
+            <div>
+              <FloatingLabelSelect Label="Tipo" Name="Type" LabelColor="blue"
+                SelectedValue="@(updateProductDto?.Type.ToString())"
+                SelectedValueChanged="(value) => updateProductDto!.Type = Enum.Parse<ProductType>(value)"
+                Placeholder="Tipo">
+                <option value="General">General</option>
+                <option value="Lunch">Lunch</option>
+              </FloatingLabelSelect>
+              <ValidationMessage For="@(() => updateProductDto!.Type)" />
+            </div>
+          </div>
+          <div class="col-start-1 row-start-3">
+            <div>
+              <FloatingLabelInput Label="Stock" Name="Stock" Type="number" LabelColor="blue"
+                Value="@updateProductDto?.Stock.ToString()"
+                OnChange="(e) => updateProductDto!.Stock = uint.Parse(e.Value?.ToString() ?? string.Empty)">
+              </FloatingLabelInput>
+              <ValidationMessage For="@(() => updateProductDto!.Stock)" />
+            </div>
+          </div>
+          <div class="col-start-1 row-start-4">
+            <div>
+              <FloatingLabelInput Label="Precio" Name="Price" Type="number" LabelColor="blue" Value="@price.ToString()"
+                step="any" disabled="true">
+              </FloatingLabelInput>
+              <ValidationMessage For="@(() => price)" />
+            </div>
+          </div>
+          <div class="row-span-2 col-start-2 row-start-1">
+            <div>
+              <FloatingLabelTextArea Label="Descripción" Name="Description" LabelColor="blue"
+                Value="@updateProductDto?.Description"
+                OnChange="(e) => updateProductDto!.Description = e.Value?.ToString() ?? string.Empty">
+              </FloatingLabelTextArea>
+              <ValidationMessage For="@(() => updateProductDto!.Description)" />
+            </div>
+          </div>
+          <div class="row-span-2 col-start-2 row-start-3">
+            <div>
+              <FloatingLabelTextArea Label="Razón del cambio" Name="Reason" LabelColor="blue"
+                Value="@updateProductDto?.Reason"
+                OnChange="(e) => updateProductDto!.Reason = e.Value?.ToString() ?? string.Empty">
+              </FloatingLabelTextArea>
+              <ValidationMessage For="@(() => updateProductDto!.Reason)" />
+            </div>
+          </div>
+          <div class="row-span-3 col-start-3 row-start-1 flex flex-col justify-center items-center">
+            <div
+              class="flex-3 flex justify-center px-2 items-center rounded-lg border-2 border-gray-800/50 border-dashed">
+              <!-- Aqui va  la preview de  la imagen -->
+              @if (!string.IsNullOrEmpty(previewUrl))
+              {
+                <img src="@previewUrl" alt="Vista previa" class="h-[150px] w-[150px] object-contain rounded shadow" />
+              }
+              else if (updateProductDto?.Image != null)
+              {
+                <img src="@updateProductDto?.Image" alt="Vista previa"
+                  class="h-[150px] w-[150px] object-contain rounded shadow" />
+              }
+              else
+              {
+                <img src="/Assets/Images/noImage.webp" alt="Vista previa"
+                  class="h-[150px] w-[150px] object-contain rounded-2xl shadow bg-gray-600/20" />
+              }
+            </div>
+            <div class="flex flex-col justify-center items-center flex-1 w-full">
+              <label for="fileInput" accept="image/*"
+                class="text-sm inline-block px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 text-center w-3/4">
+                Seleccionar archivo
+              </label>
+              <InputFile id="fileInput" OnChange="HandleFileSelected" class="hidden" />
+            </div>
+          </div>
+          <div class="col-start-3 row-start-4 flex justify-center items-start">
+            <button type="submit"
+              class="bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
+              Editar Producto
+            </button>
+          </div>
+        </div>
+      </EditForm>
+    </section>
+  }
+</div>
+
+@code
+{
+  [Parameter] public string? id { get; set; }
+  private UpdateProductDto updateProductDto = new();
+  private string serverMessage = string.Empty;
+  private string errorMessage = string.Empty;
+  private decimal price = 0;
+  private string? previewUrl;
+
+  protected override async Task OnInitializedAsync()
+  {
+    if (!string.IsNullOrEmpty(id) && int.TryParse(id, out _))
+    {
+      var response = await _productService.GetProductByIdAsync(int.Parse(id));
+
+      if (response.data is null)
+      {
+        errorMessage = response.message;
+      }
+      else
+      {
+        updateProductDto = new UpdateProductDto
+        {
+          Id = response.data.Id,
+          Name = response.data.Name,
+          Description = response.data.Description,
+          Image = response.data.Image,
+          Active = response.data.Active,
+          Type = response.data.Type,
+          Stock = response.data.Stock
+        };
+        price = response.data.Price;
+      }
+    }
+    else
+    {
+      errorMessage = "Error al obtener el producto.";
+    }
+  }
+
+  private async Task handleSubmit()
+  {
+    var result = await _productService.UpdateProductAsync(updateProductDto);
+    //Console.WriteLine(result.data);
+    serverMessage = result.message;
+
+    if (result.data is null)
+    {
+      await _sw.FireAsync("Error", serverMessage, SweetAlertIcon.Error);
+      return;
+    }
+    await _sw.FireAsync("Producto creado", serverMessage, SweetAlertIcon.Success);
+    NavigationManager.NavigateTo("/Productos");
+  }
+
+  private async Task HandleFileSelected(InputFileChangeEventArgs e)
+  {
+    try
+    {
+      var file = e.File;
+
+      if (file != null)
+      {
+        if (!file.ContentType.Contains("image/jpeg") &&
+        !file.ContentType.Contains("image/jpg") &&
+        !file.ContentType.Contains("image/gif") &&
+        !file.ContentType.Contains("image/png") &&
+        !file.ContentType.Contains("image/apng") &&
+        !file.ContentType.Contains("image/tiff"))
+        {
+          await _sw.FireAsync("Error", "Debe seleccionar un archivo con formato de imagen", SweetAlertIcon.Error);
+          return;
+        }
+
+        using var stream = file.OpenReadStream(5 * 1024 * 1024); // 5 MB
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var imageBytes = ms.ToArray();
+
+        previewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
+        updateProductDto.Image = Convert.ToBase64String(imageBytes);
+      }
+    }
+    catch (IOException ex)
+    {
+      if (ex.Message.Contains("exceeds the maximum"))
+      {
+        Console.WriteLine(ex.Message);
+        await _sw.FireAsync("Error", "El archivo es demasiado grande, máximo permitido 5mb", SweetAlertIcon.Error);
+      }
+      else
+      {
+        await _sw.FireAsync("Error", "Error al leer el archivo", SweetAlertIcon.Error);
+      }
+    }
+  }
+
+}

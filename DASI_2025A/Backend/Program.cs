@@ -31,11 +31,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddDefaultTokenProviders();
 
 // Repositorios y Servicios
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductLoggerRepository, ProductLoggerRepository>();
+builder.Services.AddScoped<IProductLoggerService, ProductLoggerService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IImgurService, ImgurService>();
+
 
 // Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -45,7 +50,42 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+	// Configuración para habilitar autorización JWT en Swagger
+	c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+	{
+		Title = "DASI API",
+		Version = "v1",
+		Description = "API para el proyecto DASI"
+	});
+
+	// Definir el esquema de seguridad
+	c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+	{
+		Name = "Authorization",
+		Description = "Ingrese el token JWT con el prefijo 'Bearer '",
+		In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+		Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+		Scheme = "Bearer"
+	});
+
+	// Aplicar el esquema de seguridad globalmente
+	c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+	{
+		{
+			new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+			{
+				Reference = new Microsoft.OpenApi.Models.OpenApiReference
+				{
+					Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+					Id = "Bearer"
+				}
+			},
+			Array.Empty<string>()
+		}
+	});
+});
 
 // CORS
 builder.Services.AddCors(options =>
