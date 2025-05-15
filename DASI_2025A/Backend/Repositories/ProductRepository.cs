@@ -2,6 +2,7 @@
 using Shared;
 
 namespace Backend;
+
 public class ProductRepository : IProductRepository
 {
   private readonly ApplicationDbContext _context;
