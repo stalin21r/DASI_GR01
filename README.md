@@ -88,7 +88,7 @@ Diseñar e implementar una aplicación web que permita:
 
 ## 🛠️ Tecnologías Utilizadas
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+- [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - ASP.NET Core con Blazor (WebAssembly)
 - ASP.NET Core Web API
 - SQL Server
@@ -117,7 +117,7 @@ Diseñar e implementar una aplicación web que permita:
 
 Accede al tablero ágil donde organizamos nuestras **User Stories**:
 
-🔗 [Tablero en Trello - Sistema de Gestión de Bar](https://trello.com/b/WZy7aK5m/sistema-de-gestion-de-bar)
+🔗 [Tablero en Notion - Sistema de Gestión de Bar](https://discreet-denim-afc.notion.site/1e26e2532fa98087b2a3f731570748c9?v=1e26e2532fa9812689a6000c1a781e54)
 
 ---
 
@@ -167,19 +167,21 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
    ```json
    {
+      "Imgur": {
+      "ImgutToken": "<token>",
+      "ImgurRefreshToken": "<refreshtoken>"
+    },
      "Superadmin": {
        "Email": "<email-del-superadmin>",
        "Password": "<contraseña-del-superadmin>"
-     },
-    
+     },    
      "Jwt": {
        "Key": "<clave-secreta-de-jwt>",
        "Issuer": "<emisor-del-token>",
        "Audience": "<audiencia-del-token>",
        "ExpireMinutes": <minutos-de-expiracion-del-token>,
        "RefreshTokenExpireDays": <dias-de-expiracion-del-refresh-token>
-     },
-   
+     },   
      "ConnectionStrings": {
        "DefaultConnection": "Server={el nombre del server};Database=gestion_bar;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
      },
@@ -216,10 +218,12 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
 5. **Restaurar los paquetes NuGet:**
 
+   Herramientas > Administrador de paquetes NuGet > Consola del Administrador de paquetes
+
    Abre la consola integrada de Visual Studio (Terminal) y ejecuta el siguiente comando para restaurar los paquetes:
 
    ```bash
-   dotnet restore DASI_2025A.sln
+   Update-Package -Reinstall
    ```
 
 6. **Actualizar la base de datos:**
@@ -232,7 +236,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    Asegúrate de que el contexto esté seleccionado en el proyecto Backend y ejecuta el siguiente comando para aplicar las migraciones de la base de datos:
 
    ```bash
-   PM> Update-Database
+   Update-Database
    ```
 
 7. **Configurar los proyectos de inicio:**
@@ -260,7 +264,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 | 1      | Configuración de entorno y backlog | ✅ Terminado |
 | 2      | Diseño general del sistema         | 🔄 Proceso |
 | 3      | Usuarios y Login                   | 🧾 Pruebas |
-| 4      | Módulo de pedidos                  | 🕐 Planeación |
+| 4      | Módulo de Productos                | 🧾 Pruebas |
 
 ---
 

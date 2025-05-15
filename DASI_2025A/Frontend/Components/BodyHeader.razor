@@ -1,0 +1,21 @@
+@namespace Frontend.Components
+@using Microsoft.AspNetCore.Components.Web
+
+<section class="flex flex-col w-full justify-center items-start">
+  <div class="p-2 flex gap-4 justify-center items-center">
+    <img src="/Assets/Images/mapache.webp" alt="mapache scout SSCC" class="w-auto h-[120px]">
+    <div class="text-center">
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-[#2b4266]">SS.CC.</span>
+        <span class="text-2xl font-bold text-[#1C328C]">Rumipamba</span>
+      </div>
+      <span class="text-gray-400/90 text-sm font-bold">@title</span>
+    </div>
+  </div>
+</section>
+
+
+@code
+{
+  [Parameter] public string? title { get; set; }
+}

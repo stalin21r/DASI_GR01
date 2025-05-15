@@ -8,41 +8,38 @@
         style="WebkitTextStroke: 0.2px white;">
         @Label
     </label>
-    
-    <input
+
+    <select
         id="@Name"
-        type="@Type"
         name="@Name"
-        placeholder="@Placeholder"
-        value="@Value"
-        step="@step"
-        @oninput="HandleInput"
+        value="@SelectedValue"
+        @onchange="HandleChange"
         @onfocus="() => IsFocused = true"
         @onblur="() => IsFocused = false"
-        disabled="@disabled"
-        class=@($"w-full px-3 pt-4 pb-4 bg-white border border-gray-400 rounded-xl focus:outline-none focus:ring-2 {RingColor} text-black font-semibold focus:border-transparent z-200") />
+        class=@($"w-full px-3 pt-4 pb-4 bg-white border border-gray-400 rounded-xl focus:outline-none focus:ring-2 {RingColor} text-black font-semibold focus:border-transparent z-200")>
+
+        @ChildContent
+    </select>
 </div>
 
 @code {
     [Parameter] public required string Label { get; set; }
-    [Parameter] public string Type { get; set; } = "text";
     [Parameter] public required string Name { get; set; }
     [Parameter] public string Placeholder { get; set; } = "";
-    [Parameter] public required string Value { get; set; }
+
+    [Parameter]
+    public string SelectedValue { get; set; } = "";
+    
+    [Parameter]
+    public EventCallback<string> SelectedValueChanged { get; set; }
+
     [Parameter] public string LabelColor { get; set; } = "blue";
-    [Parameter] public EventCallback<ChangeEventArgs> OnChange { get; set; }
-    [Parameter] public string? step { get; set; }
-    [Parameter] public bool disabled { get; set; } = false;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
 
     private bool IsFocused { get; set; } = false;
 
-    private async Task HandleInput(ChangeEventArgs e)
-    {
-        Value = e.Value?.ToString() ?? "";
-        await OnChange.InvokeAsync(e);
-    }
-
-    private bool ShouldFloat => IsFocused || !string.IsNullOrWhiteSpace(Value);
+    private bool ShouldFloat => IsFocused || !string.IsNullOrWhiteSpace(SelectedValue);
 
     private string LabelClasses => ShouldFloat
         ? $"text-lg -top-7 left-4 bg-inherit z-2 px-1 {(IsFocused ? $"{TextColor} font-bold" : "text-gray-500 font-normal")}"
@@ -67,4 +64,10 @@
         "indigo" => "focus:ring-indigo-500",
         _ => "focus:ring-blue-500"
     };
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        SelectedValue = e.Value?.ToString() ?? "";
+        await SelectedValueChanged.InvokeAsync(SelectedValue);
+    }
 }

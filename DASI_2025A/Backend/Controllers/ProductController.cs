@@ -34,16 +34,17 @@ namespace Backend
     {
       try
       {
-        var response = await _productService.CreateProductAsync(productDto);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.CreateProductAsync(productDto, userId!);
         return Created(string.Empty, response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al crear el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el producto." });
       }
     }
 
@@ -66,11 +67,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener los productos.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener los productos." });
       }
     }
 
@@ -94,11 +95,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener los productos.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener los productos." });
       }
     }
 
@@ -122,11 +123,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener el producto." });
       }
     }
 
@@ -141,77 +142,79 @@ namespace Backend
     /// </returns>
     [HttpPut]
     [Authorize(Policy = "AdminPlus")]
-    public async Task<IActionResult> UpdateProduct([FromBody] ProductDto productDto)
+    public async Task<IActionResult> UpdateProduct([FromBody] UpdateProductDto productDto)
     {
       try
       {
-        var response = await _productService.UpdateProductAsync(productDto);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.UpdateProductAsync(productDto, userId!);
         return Ok(response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al actualizar el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al actualizar el producto." });
       }
     }
 
-		[HttpPost("sell")]
-		[Authorize(Policy = "AdminPlus")]
-		public async Task<IActionResult> SellProductAsync([FromBody] SellProductDto SellProductDto)
-		{
-			try
-			{
-				var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-				var response = await _productService.SellProductAsync(SellProductDto, userId);
-				return Ok(response);
-			}
-			catch (BadHttpRequestException ex)
-			{
-				return BadRequest(ex.Message);
-			}
-			catch (KeyNotFoundException ex)
-			{
-				return NotFound(ex.Message);
-			}
-			catch (Exception)
-			{
-				return BadRequest("Error del servidor al actualizar el producto.");
-			}
-		}
+    [HttpPost("sell")]
+    [Authorize(Policy = "AdminPlus")]
+    public async Task<IActionResult> SellProductAsync([FromBody] SellProductDto SellProductDto)
+    {
+      try
+      {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.SellProductAsync(SellProductDto, userId!);
+        return Ok(response);
+      }
+      catch (BadHttpRequestException ex)
+      {
+        return BadRequest(new { message = ex.Message });
+      }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(new { messaage = ex.Message });
+      }
+      catch (Exception)
+      {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al actualizar el producto." });
+      }
+    }
 
-		/// <summary>
-		///     Elimina un producto.
-		/// </summary>
-		/// <param name="id">El identificador del producto a eliminar.</param>
-		/// <returns>
-		///     Retorna un <see cref="IActionResult"/> con código 200 (OK) si el producto se eliminó correctamente.
-		///     Retorna un <see cref="IActionResult"/> con código 400 (Bad Request) si la solicitud es inválida.
-		///     Retorna un <see cref="IActionResult"/> con código 404 (Not Found) si el producto no existe.
-		///     Retorna un <see cref="IActionResult"/> con código 500 (Internal Server Error) para errores inesperados.
-		/// </returns>
-		[HttpDelete("{id:int:min(1)}")]
+    /// <summary>
+    ///     Elimina un producto.
+    /// </summary>
+    /// <param name="id">El identificador del producto a eliminar.</param>
+    /// <returns>
+    ///     Retorna un <see cref="IActionResult"/> con código 200 (OK) si el producto se eliminó correctamente.
+    ///     Retorna un <see cref="IActionResult"/> con código 400 (Bad Request) si la solicitud es inválida.
+    ///     Retorna un <see cref="IActionResult"/> con código 404 (Not Found) si el producto no existe.
+    ///     Retorna un <see cref="IActionResult"/> con código 500 (Internal Server Error) para errores inesperados.
+    /// </returns>
+    [HttpDelete("{id:int:min(1)}")]
     [Authorize(Policy = "AdminPlus")]
     public async Task<IActionResult> DeleteProduct([FromRoute] int id)
     {
       try
       {
-        var response = await _productService.DeleteProductAsync(id);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.DeleteProductAsync(id, userId!);
         return Ok(response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al eliminar el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al eliminar el producto." });
       }
     }
   }

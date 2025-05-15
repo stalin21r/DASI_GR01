@@ -3,38 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 using Shared;
 
 
-namespace Backend {
+namespace Backend
+{
 
-[Route("api/v1/[controller]")]
+	[Route("api/v1/[controller]")]
 	[ApiController]
 	public class ProductLoggerController : ControllerBase
-    {
-        private readonly IProductLoggerService _productLoggerService;
+	{
+		private readonly IProductLoggerService _productLoggerService;
 
-        public ProductLoggerController(IProductLoggerService productLoggerService)
-        {
-            _productLoggerService = productLoggerService;
-        }
-
-		[HttpPost]
-		[Authorize(Policy = "AdminPlus")]
-		public async Task<IActionResult> CreateProductLog([FromBody] ProductLoggerDto productLoggerDto)
-        {
-            try
-            {
-                var response = await _productLoggerService.CreateProductLogAsync(productLoggerDto);
-                return Created(string.Empty, response);
-            }
-            catch (BadHttpRequestException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (Exception)
-            {
-                return BadRequest("Error del servidor al crear el log del producto.");
-            }
-
-        }
+		public ProductLoggerController(IProductLoggerService productLoggerService)
+		{
+			_productLoggerService = productLoggerService;
+		}
 
 		/// <summary>
 		/// Obtiene todos los registros de log de productos.
@@ -48,9 +29,10 @@ namespace Backend {
 				var response = await _productLoggerService.GetAllProductLogsAsync();
 				return Ok(response);
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				return StatusCode(500, "Error del servidor al obtener los logs de productos.");
+				Console.WriteLine(ex);
+				return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener los logs de productos." });
 			}
 		}
 
@@ -69,11 +51,11 @@ namespace Backend {
 			}
 			catch (BadHttpRequestException ex)
 			{
-				return NotFound(ex.Message);
+				return NotFound(new { message = ex.Message });
 			}
 			catch (Exception)
 			{
-				return StatusCode(500, "Error del servidor al obtener el log de producto.");
+				return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener el log de producto." });
 			}
 		}
 
@@ -92,7 +74,7 @@ namespace Backend {
 			}
 			catch (Exception)
 			{
-				return StatusCode(500, $"Error del servidor al obtener logs del producto con ID {productId}.");
+				return StatusCode(StatusCodes.Status500InternalServerError, new { message = $"Error del servidor al obtener logs del producto con ID {productId}." });
 			}
 		}
 	}
