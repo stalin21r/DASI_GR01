@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
+using System.Security.Claims;
 
 namespace Backend
 {
@@ -33,16 +34,17 @@ namespace Backend
     {
       try
       {
-        var response = await _productService.CreateProductAsync(productDto);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.CreateProductAsync(productDto, userId!);
         return Created(string.Empty, response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al crear el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el producto." });
       }
     }
 
@@ -65,11 +67,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener los productos.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener los productos." });
       }
     }
 
@@ -93,11 +95,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener los productos.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener los productos." });
       }
     }
 
@@ -121,11 +123,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener el producto." });
       }
     }
 
@@ -140,24 +142,49 @@ namespace Backend
     /// </returns>
     [HttpPut]
     [Authorize(Policy = "AdminPlus")]
-    public async Task<IActionResult> UpdateProduct([FromBody] ProductDto productDto)
+    public async Task<IActionResult> UpdateProduct([FromBody] UpdateProductDto productDto)
     {
       try
       {
-        var response = await _productService.UpdateProductAsync(productDto);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.UpdateProductAsync(productDto, userId!);
         return Ok(response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al actualizar el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al actualizar el producto." });
+      }
+    }
+
+    [HttpPost("sell")]
+    [Authorize(Policy = "AdminPlus")]
+    public async Task<IActionResult> SellProductAsync([FromBody] SellProductDto SellProductDto)
+    {
+      try
+      {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.SellProductAsync(SellProductDto, userId!);
+        return Ok(response);
+      }
+      catch (BadHttpRequestException ex)
+      {
+        return BadRequest(new { message = ex.Message });
+      }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(new { messaage = ex.Message });
+      }
+      catch (Exception)
+      {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al actualizar el producto." });
       }
     }
 
@@ -177,16 +204,17 @@ namespace Backend
     {
       try
       {
-        var response = await _productService.DeleteProductAsync(id);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.DeleteProductAsync(id, userId!);
         return Ok(response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al eliminar el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al eliminar el producto." });
       }
     }
   }

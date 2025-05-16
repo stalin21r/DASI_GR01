@@ -23,9 +23,9 @@ public class ProductService : IProductService
   ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo crear el producto.
   /// </returns>
 
-  public async Task<ApiResponse<ProductDto>> CreateProductAsync(ProductDto productDto)
+  public async Task<ApiResponse<ProductDto>> CreateProductAsync(ProductDto productDto, string userId)
   {
-    var result = await _repository.CreateAsync(productDto);
+    var result = await _repository.CreateAsync(productDto, userId);
     if (result == null)
     {
       throw new BadHttpRequestException("Error al crear el producto.");
@@ -115,15 +115,29 @@ public class ProductService : IProductService
   ///     Retorna un <see cref="ApiResponse{ProductDto}"/> con los datos del producto actualizado.
   ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo actualizar el producto.
   /// </returns>
-  public async Task<ApiResponse<ProductDto>> UpdateProductAsync(ProductDto productDto)
+  public async Task<ApiResponse<ProductDto>> UpdateProductAsync(UpdateProductDto productDto, string userId)
   {
-    var result = await _repository.UpdateAsync(productDto);
+    var result = await _repository.UpdateAsync(productDto, userId);
     if (result == null)
     {
       throw new BadHttpRequestException("Error al actualizar el producto.");
     }
     ApiResponse<ProductDto> response = new ApiResponse<ProductDto>(
       message: "Producto actualizado exitosamente",
+      data: result,
+      totalRecords: 1
+    );
+    return response;
+  }
+  public async Task<ApiResponse<ProductDto>> SellProductAsync(SellProductDto sellProductDto, string userId)
+  {
+    var result = await _repository.SellProductAsync(sellProductDto, userId);
+    if (result == null)
+    {
+      throw new BadHttpRequestException("Error al vender el producto.");
+    }
+    ApiResponse<ProductDto> response = new ApiResponse<ProductDto>(
+      message: "Producto vendido exitosamente",
       data: result,
       totalRecords: 1
     );
@@ -138,9 +152,9 @@ public class ProductService : IProductService
   ///     Retorna un <see cref="ApiResponse{bool}"/> con el resultado de la operación.
   ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo eliminar el producto.
   /// </returns>
-  public async Task<ApiResponse<bool>> DeleteProductAsync(int id)
+  public async Task<ApiResponse<bool>> DeleteProductAsync(int id, string userId)
   {
-    var result = await _repository.DeleteAsync(id);
+    var result = await _repository.DeleteAsync(id, userId);
     if (!result)
     {
       throw new BadHttpRequestException("Error al eliminar el producto.");

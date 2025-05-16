@@ -189,6 +189,9 @@ namespace Backend.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<string>("ImageDeleteHash")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("MachineName")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -203,6 +206,9 @@ namespace Backend.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<long>("Stock")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -210,6 +216,57 @@ namespace Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("Backend.ProductLoggerEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("AuditableDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MachineName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValueSql("HOST_NAME()");
+
+                    b.Property<int>("ProductFk")
+                        .HasColumnType("int");
+
+                    b.Property<long>("QuantityAfter")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("QuantityBefore")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("UserFk")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductFk");
+
+                    b.HasIndex("UserFk");
+
+                    b.ToTable("ProductLogs");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -354,6 +411,25 @@ namespace Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Occupation");
+                });
+
+            modelBuilder.Entity("Backend.ProductLoggerEntity", b =>
+                {
+                    b.HasOne("Backend.ProductEntity", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductFk")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Backend.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserFk")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
