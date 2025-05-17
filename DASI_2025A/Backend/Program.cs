@@ -40,6 +40,7 @@ builder.Services.AddScoped<IProductLoggerService, ProductLoggerService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IImgurService, ImgurService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 
 // Controllers
