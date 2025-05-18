@@ -382,7 +382,7 @@ namespace Backend.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasDefaultValueSql("HOST_NAME()");
 
-                    b.Property<int>("OrderId")
+                    b.Property<int?>("OrderId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -595,9 +595,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.OrderEntity", "Order")
                         .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OrderId");
 
                     b.Navigation("Order");
                 });

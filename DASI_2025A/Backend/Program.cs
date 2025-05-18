@@ -34,16 +34,16 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductLoggerRepository, ProductLoggerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductLoggerService, ProductLoggerService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IImgurService, ImgurService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-
+builder.Services.AddScoped<IWalletService, WalletService>();
 
 // Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -67,7 +67,7 @@ builder.Services.AddSwaggerGen(c =>
 	c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
 	{
 		Name = "Authorization",
-		Description = "Ingrese el token JWT con el prefijo 'Bearer '",
+		Description = "Ingrese el token JWT:",
 		In = Microsoft.OpenApi.Models.ParameterLocation.Header,
 		Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
 		Scheme = "Bearer"
@@ -128,6 +128,18 @@ builder.Services.AddAuthentication(options =>
 
 	options.Events = new JwtBearerEvents
 	{
+		OnMessageReceived = context =>
+		{
+			if (context.Request.Headers.TryGetValue("Authorization", out var authHeader))
+			{
+				var token = authHeader.ToString();
+				if (!token.StartsWith("Bearer "))
+				{
+					context.Request.Headers["Authorization"] = "Bearer " + token;
+				}
+			}
+			return Task.CompletedTask;
+		},
 		OnChallenge = context =>
 		{
 			context.HandleResponse();

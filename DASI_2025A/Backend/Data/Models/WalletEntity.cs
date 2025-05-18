@@ -17,7 +17,7 @@ public class WalletEntity : AuditableEntity
 	[Range(-10, 1000)]
 	public decimal Amount { get; set; } // Amount of money added or removed	
 	[ForeignKey("OrderFk")]
-	public int OrderId { get; set; }
+	public int? OrderId { get; set; }
 	public OrderEntity? Order { get; set; }
 	public string UserId { get; set; } = null!;
 }

@@ -224,4 +224,36 @@ public class OrderRepository : IOrderRepository
 			throw;
 		}
 	}
+	/// <summary>
+	/// Crea una orden específica para recargas de saldo
+	/// </summary>
+	public async Task<OrderDto> CreateTopUpOrderAsync(decimal amount, string userId, string description)
+	{
+		// Crear la entidad de orden para recarga
+		var orderEntity = new OrderEntity
+		{
+			OrderNote = "Recarga de Saldo desde: " + description,
+			OrderDate = DateTime.Now,
+			TotalAmount = amount,
+			Status = "Completado",
+			UserId = userId,
+			Details = new List<OrderDetailEntity>() // Sin detalles de productos
+		};
+
+		// Agregar la orden al contexto
+		_context.Orders.Add(orderEntity);
+		await _context.SaveChangesAsync();
+
+		// Mapear a DTO y devolver
+		return new OrderDto
+		{
+			Id = orderEntity.Id,
+			OrderNote = orderEntity.OrderNote,
+			OrderDate = orderEntity.OrderDate,
+			TotalAmount = orderEntity.TotalAmount,
+			Status = orderEntity.Status,
+			UserId = orderEntity.UserId,
+			Details = new List<OrderDetailDto>() // Sin detalles
+		};
+	}
 }

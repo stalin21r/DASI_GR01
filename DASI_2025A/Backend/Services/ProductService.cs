@@ -194,10 +194,6 @@ public class ProductService : IProductService
 		var walletTransaction = await _walletRepository.RegisterSaleTransactionAsync(
 			order.Id,
 			order.TotalAmount, userId);
-		// Verifica que el saldo total sea mayor a -10
-		var totalAmount = await _walletRepository.GetUserBalanceAsync(userId);
-		if(totalAmount < -10)
-			throw new InvalidOperationException("Saldo insuficiente en la wallet para realizar la venta.");
 		// Realizar la venta
 		var saleResult = await _productRepository.RegisterSellProductAsync(
 			sellProductDto,

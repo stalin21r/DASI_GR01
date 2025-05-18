@@ -10,7 +10,7 @@ public class WalletDto
 	public string Status { get; set; }
 	[Range(-10, 1000)]
 	public decimal Amount { get; set; }
-	public int OrderId { get; set; }
+	public int? OrderId { get; set; }
 	public DateTime AuditableDate { get; set; }
 	public string UserId { get; set; } = null!;
 }

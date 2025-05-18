@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250518135836_WalletControl")]
+    [Migration("20250518154645_WalletControl")]
     partial class WalletControl
     {
         /// <inheritdoc />
@@ -385,7 +385,7 @@ namespace Backend.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasDefaultValueSql("HOST_NAME()");
 
-                    b.Property<int>("OrderId")
+                    b.Property<int?>("OrderId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -598,9 +598,7 @@ namespace Backend.Migrations
                 {
                     b.HasOne("Backend.OrderEntity", "Order")
                         .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OrderId");
 
                     b.Navigation("Order");
                 });

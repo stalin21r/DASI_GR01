@@ -189,8 +189,6 @@ namespace Backend
 				// Obtener el saldo actualizado del usuario
 				var updatedBalance = await _walletRepository.GetUserBalanceAsync(userId);
 
-				// No intentamos modificar la respuesta API directamente,
-				// simplemente devolvemos la respuesta original
 				return Ok(response);
 			}
 			catch (UnauthorizedAccessException ex)

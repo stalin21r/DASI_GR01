@@ -9,4 +9,5 @@ public interface IOrderRepository
 	Task<OrderDto?> GetAsync(int id);
 	Task<IEnumerable<OrderDto>> GetByUserIdAsync(string userId);
 	Task<OrderDto> CreateSaleOrderAsync(int productId, uint quantity, string userId);
+	Task<OrderDto> CreateTopUpOrderAsync(decimal amount, string userId, string description);
 }

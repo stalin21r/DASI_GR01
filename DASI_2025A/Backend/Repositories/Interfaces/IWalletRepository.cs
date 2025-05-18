@@ -10,4 +10,5 @@ public interface IWalletRepository
 	Task<IEnumerable<WalletDto>> GetByUserIdAsync(string userId);
 	Task<decimal> GetUserBalanceAsync(string userId);
 	Task<WalletDto> RegisterSaleTransactionAsync(int orderId, decimal amount, string userId);
+	Task<WalletDto> CreateTopUpTransactionAsync(int orderId, decimal amount, string userId);
 }

@@ -86,7 +86,8 @@ public class WalletRepository : IWalletRepository
 				Status = join.Wallet.Status,
 				Amount = join.Wallet.Amount,
 				OrderId = join.Wallet.OrderId,
-				AuditableDate = join.Wallet.AuditableDate
+				AuditableDate = join.Wallet.AuditableDate,
+				UserId = join.Wallet.UserId
 			})
 			.ToListAsync();
 	}
@@ -135,7 +136,10 @@ public class WalletRepository : IWalletRepository
 		// Validar que el monto sea positivo
 		if (amount <= 0)
 			throw new ArgumentException("El monto debe ser positivo", nameof(amount));
-
+		// Verifica que el saldo total sea mayor a -10
+		var totalAmount = await GetUserBalanceAsync(userId);
+		if (totalAmount < -10)
+			throw new InvalidOperationException("Saldo insuficiente en la wallet para realizar la venta.");
 		// Crear la transacción con monto negativo (descuento del balance)
 		var walletDto = new WalletDto
 		{
@@ -146,5 +150,40 @@ public class WalletRepository : IWalletRepository
 			UserId = userId
 		};
 		return await CreateAsync(walletDto);
+	}
+	/// <summary>
+	/// Crea una transacción específica para recargas de saldo
+	/// </summary>
+	public async Task<WalletDto> CreateTopUpTransactionAsync(int orderId, decimal amount, string userId)
+	{
+		// Validar el monto
+		if (amount <= 0)
+			throw new ArgumentException("El monto debe ser positivo", nameof(amount));
+
+		// Crear la entidad de transacción de wallet
+		var walletEntity = new WalletEntity
+		{
+			Action = "Recarga",
+			Status = "Completado",
+			Amount = amount, // Positivo para indicar ingreso
+			OrderId = orderId,
+			UserId = userId
+		};
+
+		// Agregar al contexto
+		_context.Wallets.Add(walletEntity);
+		await _context.SaveChangesAsync();
+
+		// Mapear a DTO y devolver
+		return new WalletDto
+		{
+			Id = walletEntity.Id,
+			Action = walletEntity.Action,
+			Status = walletEntity.Status,
+			Amount = walletEntity.Amount,
+			OrderId = walletEntity.OrderId,
+			AuditableDate = walletEntity.AuditableDate,
+			UserId = walletEntity.UserId
+		};
 	}
 }
