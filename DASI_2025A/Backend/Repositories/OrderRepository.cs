@@ -132,73 +132,6 @@ public class OrderRepository : IOrderRepository
 	}
 
 	/// <summary>
-	/// Actualiza el estado de una orden existente.
-	/// </summary>
-	/// <param name="id">ID de la orden a actualizar.</param>
-	/// <param name="status">Nuevo estado de la orden.</param>
-	/// <returns>La orden actualizada si existe, null en caso contrario.</returns>
-	public async Task<OrderDto?> UpdateStatusAsync(int id, string status)
-	{
-		var order = await _context.Orders.FindAsync(id);
-		if (order == null)
-		{
-			return null;
-		}
-
-		order.Status = status;
-		await _context.SaveChangesAsync();
-
-		return await GetAsync(id);
-	}
-
-	/// <summary>
-	/// Cancela una orden y revierte el stock de los productos.
-	/// </summary>
-	/// <param name="id">ID de la orden a cancelar.</param>
-	/// <returns>True si la orden fue cancelada, false en caso contrario.</returns>
-	public async Task<bool> CancelOrderAsync(int id)
-	{
-		using var transaction = await _context.Database.BeginTransactionAsync();
-
-		try
-		{
-			var order = await _context.Orders
-				.Include(o => o.Details)
-				.FirstOrDefaultAsync(o => o.Id == id);
-
-			if (order == null || order.Status == "Cancelled")
-			{
-				return false;
-			}
-
-			// Restaurar stock de productos
-			foreach (var detail in order.Details)
-			{
-				var product = await _context.Products.FindAsync(detail.ProductId);
-				if (product != null)
-				{
-					product.Stock += detail.Quantity;
-				}
-			}
-
-			// Actualizar estado de la orden
-			order.Status = "Cancelled";
-			await _context.SaveChangesAsync();
-
-			// Confirmar transacción
-			await transaction.CommitAsync();
-
-			return true;
-		}
-		catch (Exception)
-		{
-			// Si algo falla, revertir la transacción
-			await transaction.RollbackAsync();
-			throw;
-		}
-	}
-
-	/// <summary>
 	/// Convierte una entidad de orden a su DTO correspondiente.
 	/// </summary>
 	private OrderDto MapEntityToDto(OrderEntity entity)
@@ -231,5 +164,64 @@ public class OrderRepository : IOrderRepository
 				} : null
 			}).ToList()
 		};
+	}
+	/// <summary>
+	/// Crea una orden para la venta de un producto específico
+	/// </summary>
+	public async Task<OrderDto> CreateSaleOrderAsync(int productId, uint quantity, string userId)
+	{
+		using var transaction = await _context.Database.BeginTransactionAsync();
+
+		try
+		{
+			// Obtener el producto
+			var product = await _context.Products.FindAsync(productId);
+			if (product == null)
+				throw new KeyNotFoundException($"No se encontró el producto con ID {productId}");
+
+			if (!product.Active)
+				throw new InvalidOperationException("No se puede vender un producto inactivo");
+
+			if (product.Stock < quantity)
+				throw new InvalidOperationException($"Stock insuficiente para {product.Name}. Disponible: {product.Stock}, Solicitado: {quantity}");
+
+			// Reducir el stock del producto
+			/*product.Stock -= quantity;*/
+
+			// Crear la entidad de orden
+			var orderEntity = new OrderEntity
+			{
+				OrderNote = $"Venta-{Guid.NewGuid()}",
+				OrderDate = DateTime.Now,
+				TotalAmount = product.Price * quantity,
+				Status = "Confirmado",
+				UserId = userId,
+				Details = new List<OrderDetailEntity>
+			{
+				new OrderDetailEntity
+				{
+					ProductId = productId,
+					Quantity = quantity,
+					UnitPrice = product.Price
+				}
+			}
+			};
+
+			// Guardar cambios
+			_context.Orders.Add(orderEntity);
+			await _context.SaveChangesAsync();
+
+			// Confirmar transacción
+			await transaction.CommitAsync();
+
+			// Mapear a DTO
+			return MapEntityToDto(orderEntity);
+		}
+		catch (Exception)
+		{
+			// Si algo falla, revertir la transacción
+			await transaction.RollbackAsync();
+			throw;
+		}
 	}
 }

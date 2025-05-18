@@ -1,8 +1,13 @@
-﻿namespace Backend;
-	public interface IWalletRepository
-	{
-		Task<WalletEntity> GetByIdAsync(int id);
-		Task<List<WalletEntity>> GetByOrderIdAsync(int orderId);
-		Task<List<WalletEntity>> GetByUserIdAsync(string userId);
-		Task<WalletEntity> CreateAsync(WalletEntity wallet);
-	}
+﻿using Shared;
+
+namespace Backend;
+
+public interface IWalletRepository
+{
+	Task<WalletDto> CreateAsync(WalletDto walletDto);
+	Task<WalletDto?> GetAsync(int id);
+	Task<IEnumerable<WalletDto>> GetByOrderIdAsync(int orderId);
+	Task<IEnumerable<WalletDto>> GetByUserIdAsync(string userId);
+	Task<decimal> GetUserBalanceAsync(string userId);
+	Task<WalletDto> RegisterSaleTransactionAsync(int orderId, decimal amount, string userId);
+}

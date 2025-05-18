@@ -19,4 +19,5 @@ public class WalletEntity : AuditableEntity
 	[ForeignKey("OrderFk")]
 	public int OrderId { get; set; }
 	public OrderEntity? Order { get; set; }
+	public string UserId { get; set; } = null!;
 }
