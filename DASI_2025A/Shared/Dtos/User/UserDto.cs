@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Shared;
+
 public class UserDto
 {
   public string? Id { get; set; }
@@ -39,4 +40,14 @@ public class UserDto
   public int OccupationFk { get; set; }
 
   public OccupationDto? Occupation { get; set; }
+
+  public override bool Equals(object? obj)
+  {
+    return obj is UserDto dto && Id == dto.Id;
+  }
+
+  public override int GetHashCode()
+  {
+    return Id != null ? Id.GetHashCode() : 0;
+  }
 }

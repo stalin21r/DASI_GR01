@@ -33,6 +33,12 @@ builder.Services.AddScoped<IProductService>(sp =>
   var httpClient = clientFactory.CreateClient("AuthorizedClient");
   return new ProductService(httpClient);
 });
+builder.Services.AddScoped<IUsersService>(sp =>
+{
+  var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
+  var httpClient = clientFactory.CreateClient("AuthorizedClient");
+  return new UsersService(httpClient);
+});
 
 await builder.Build().RunAsync();
 
