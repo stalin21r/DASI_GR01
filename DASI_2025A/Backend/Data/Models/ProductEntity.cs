@@ -26,7 +26,7 @@ public class ProductEntity : AuditableEntity
   [StringLength(500)]
   public string? Image { get; set; }
 
-  public bool Active { get; set; } = true;
+  public bool IsActive { get; set; } = true;
 
   [Required]
   public ProductType Type { get; set; } 
