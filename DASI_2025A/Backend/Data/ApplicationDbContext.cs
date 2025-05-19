@@ -1,4 +1,3 @@
-// Backend/Data/ApplicationDbContext.cs
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,8 +12,12 @@ namespace Backend
     public DbSet<OccupationEntity> Occupations { get; set; }
     public DbSet<ProductEntity> Products { get; set; }
     public DbSet<ProductLoggerEntity> ProductLogs { get; set; }
+    public DbSet<OrderEntity> Orders { get; set; }
+    public DbSet<OrderDetailEntity> OrderDetails { get; set; }
+    public DbSet<WalletEntity> Wallets { get; set; }
+    public DbSet<WalletTransactionEntity> WalletTransactions { get; set; }
 
-		protected override void OnModelCreating(ModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       base.OnModelCreating(modelBuilder);
 
@@ -45,6 +48,32 @@ namespace Backend
 
       // Mapear el ProductType como string
       modelBuilder.Entity<ProductEntity>().Property(p => p.Type).HasConversion<string>();
+      
+      // Para consultad que involucren UserId y OrderDate
+      modelBuilder.Entity<OrderEntity>().HasIndex(o => new { o.UserId, o.OrderDate });
+      // Restringe valores de Quantity < 0
+      modelBuilder.Entity<OrderDetailEntity>(entity =>
+      {
+        entity.ToTable(tb => tb.HasCheckConstraint("CK_OrderDetail_Quantity", "[Quantity] > 0"));
+      });
+      // Convertir enum en string para guardar en la BD
+      modelBuilder.Entity<OrderEntity>().Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+      // Restringe TotalAmount >= 0
+      modelBuilder.Entity<OrderEntity>(entity =>
+      {
+          entity.ToTable(tb => tb.HasCheckConstraint("CK_Order_TotalAmount_Positive", "[TotalAmount] >= 0"));
+      });
+      // Columna Subtotal calculada
+      modelBuilder.Entity<OrderDetailEntity>()
+        .Property(e => e.SubTotal)
+        .HasColumnType("decimal(18,2)")
+        .ValueGeneratedOnAddOrUpdate()
+        .HasComputedColumnSql("[Quantity] * [UnitPrice]");
+
+      // Muestra registros activos
+      modelBuilder.Entity<OrderEntity>().HasQueryFilter(e => e.IsActive);
+      modelBuilder.Entity<OrderDetailEntity>().HasQueryFilter(e => e.IsActive);
+      modelBuilder.Entity<WalletEntity>().HasQueryFilter(e => e.IsActive);
     }
 
   }
