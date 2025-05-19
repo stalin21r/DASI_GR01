@@ -901,9 +901,6 @@
   .rounded-2xl {
     border-radius: var(--radius-2xl);
   }
-  .rounded-3xl {
-    border-radius: var(--radius-3xl);
-  }
   .rounded-full {
     border-radius: calc(infinity * 1px);
   }
@@ -952,10 +949,6 @@
     --tw-border-style: dashed;
     border-style: dashed;
   }
-  .border-dotted {
-    --tw-border-style: dotted;
-    border-style: dotted;
-  }
   .border-none {
     --tw-border-style: none;
     border-style: none;
@@ -971,9 +964,6 @@
   }
   .border-gray-400 {
     border-color: var(--color-gray-400);
-  }
-  .border-gray-800 {
-    border-color: var(--color-gray-800);
   }
   .border-gray-800\/50 {
     border-color: color-mix(in srgb, oklch(27.8% 0.033 256.848) 50%, transparent);
@@ -1027,12 +1017,6 @@
     background-color: color-mix(in srgb, oklch(44.6% 0.03 256.802) 20%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-gray-600) 20%, transparent);
-    }
-  }
-  .bg-gray-600\/50 {
-    background-color: color-mix(in srgb, oklch(44.6% 0.03 256.802) 50%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-gray-600) 50%, transparent);
     }
   }
   .bg-green-700 {
