@@ -70,6 +70,7 @@ obj/
 # Ignora el appsettings que seria nuestro .env
 /DASI_2025A/Backend/appsettings.json
 appsettings.json
+appsettings.Development.json
 
 
 # Ignorar el .editorconfig dentro de DASI_2025A
