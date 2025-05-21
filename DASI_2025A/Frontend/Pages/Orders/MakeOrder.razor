@@ -1,23 +1,134 @@
 @page "/Realizar_Orden"
+@inject NavigationManager NavigationManager
+@inject IUsersService _userService
+@inject SweetAlertService _sw
 
 <title>Realizar Orden</title>
 
-<div class="space-y-4 w-full">
-  <BodyHeader title="Realizar Orden"></BodyHeader>
+<div class="w-full">
+  <BodyHeader title="Realizar Orden" />
 
-  <section class="w-full flex justify-between items-center px-4">
-    <h1 class="text-4xl font-bold text-[#427500]">Realizar Orden</h1>
-  </section>
+  <div class="@((step == 1) ? "grid grid-cols-3 gap-4" : "w-full space-y-4")">
+    <div class="@((step == 1) ? "col-span-2 space-y-4" : "")">
+      @switch (step)
+      {
+        case 0:
+          <FirstStep OnUserSelected="HandleSelectUser" SelectedUser="selectedUser" />
+          break;
+        case 1:
+          <SecondStep OnProductSelected="AddToCart" />
+          break;
+      }
 
-  //seccion de pasos
-  <section></section>
+      <section>
+        @if (selectedUser != null)
+        {
+          <p class="text-green-700 font-semibold">Usuario seleccionado: @selectedUser.FirstName @selectedUser.LastName</p>
+        }
+        else
+        {
+          <p class="text-gray-500">Ningún usuario seleccionado aún.</p>
+        }
+      </section>
 
-  //seccion de carrito
-  <section></section>
+      <section class="flex justify-between items-center gap-4 px-10 w-full">
+        <button disabled="@(step == 0)" @onclick="HandlePreviousStep"
+          class=" w-20 bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-xl border border-white/30 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+          Atrás
+        </button>
+        <button @onclick="HandleNextStep"
+          class="w-20 bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-xl border border-white/30 transition duration-200">
+          Siguiente
+        </button>
+      </section>
 
+    </div>
+
+    @if (step == 1)
+    {
+      <div class="col-start-3 space-y-2 bg-gray-500/10 border border-black/10 p-4 rounded-lg h-fit">
+        <h2 class="text-lg font-semibold text-gray-500 border-b border-black/50 pb-2">Detalle de Orden</h2>
+        @if (cartItems.Count == 0)
+        {
+          <p class="text-gray-400">No hay productos en el carrito.</p>
+        }
+        else
+        {
+          <ul class="space-y-1 text-sm text-white">
+            @foreach (var item in cartItems)
+            {
+              <li class="flex justify-between border-b border-black/50 py-1 text-gray-600">
+                <span>@item.Name</span>
+                <span>$ @item.Price</span>
+              </li>
+            }
+          </ul>
+          <div class="mt-2 font-bold text-right text-green-700">
+            Total: $ @cartItems.Sum(p => p.Price).ToString("0.00")
+          </div>
+        }
+      </div>
+    }
+  </div>
 </div>
 
 @code
 {
+  private UserDto? selectedUser = null;
+  private string? errorMessage;
+  private int step = 0;
+  private List<ProductDto> cartItems = new List<ProductDto>();
 
+  private async void HandleNextStep()
+  {
+    if (selectedUser is not null)
+    {
+      step++;
+    }
+    else
+    {
+      await _sw.FireAsync(new SweetAlertOptions
+      {
+        Title = "Advertencia",
+        Text = "Debe seleccionar un usuario.",
+        Icon = SweetAlertIcon.Warning
+      });
+
+    }
+  }
+  private void HandlePreviousStep()
+  {
+    if (step > 0)
+    {
+      step--;
+      StateHasChanged();
+    }
+  }
+  private void HandleSelectUser(UserDto user)
+  {
+    selectedUser = user;
+    StateHasChanged(); // Forzar actualización
+  }
+  private async void AddToCart(ProductDto product)
+  {
+    try
+    {
+      cartItems.Add(product);
+      await _sw.FireAsync(new SweetAlertOptions
+      {
+        Title = "Producto agregado",
+        Text = "El producto se ha agregado al carrito.",
+        Icon = SweetAlertIcon.Success
+      });
+    }
+    catch (Exception ex)
+    {
+      await _sw.FireAsync(new SweetAlertOptions
+      {
+        Title = "Error",
+        Text = ex.Message,
+        Icon = SweetAlertIcon.Error
+      });
+    }
+  }
 }

@@ -1,4 +1,3 @@
-/* NavMenu.razor.css */
 .container-fluid {
     display: flex;
     justify-content: space-between;
@@ -31,7 +30,6 @@
     }
 
     .hidden {
-        /* Nunca colapsar la barra lateral en pantallas anchas */
         display: block;
     }
 
