@@ -1,0 +1,130 @@
+@namespace Frontend.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject IUsersService _userService
+
+<section class="w-full flex justify-between items-center px-4">
+	<h1 class="text-4xl font-bold text-[#427500]">Escoger Usuario</h1>
+</section>
+
+@if (users == null && string.IsNullOrEmpty(errorMessage))
+{
+	<h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+	<h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
+}
+else
+{
+	<section>
+		<div class="p-6">
+			<div class="flex justify-end w-full px-6 py-2">
+				<nav class="inline-flex space-x-1">
+					<button @onclick="() => GoToPage(currentPage - 1)"
+						class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+						disabled="@(@currentPage == 1)"><i class="fa-solid fa-chevron-left"></i></button>
+
+					@for (int i = 1; i <= totalPages; i++)
+					{
+						<button @onclick="() => GoToPage(i)"
+							class="w-7 h-7 font-bold text-center rounded-full @(i == currentPage ? "bg-blue-500/80 text-white" : "bg-white hover:bg-gray-300/80 cursor-pointer") text-xs">
+							@i
+						</button>
+					}
+
+					<button @onclick="() => GoToPage(currentPage + 1)"
+						class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+						disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i></button>
+				</nav>
+			</div>
+			<div class="overflow-hidden rounded-lg shadow-2xl">
+				<table class="w-full">
+					<thead class="bg-gray-200 font-bold">
+						@{
+							var headers = new List<string> { "#", "Nombre", "Apellido", "Correo", "Acciones" };
+						}
+						<tr>
+							@foreach (var header in headers)
+							{
+								<th class="px-6 py-3 text-left text-sm uppercase tracking-wider">@header</th>
+							}
+						</tr>
+
+					</thead>
+					<tbody class="bg-white divide-y divide-gray-200">
+						@foreach (var (user, index) in pagedUsers.Select((u, i) => (u, i)))
+						{
+							<tr @key="user.Id"
+								class="@(index % 2 == 0 ? "bg-white" : "bg-gray-100") hover:bg-gray-50 hover:cursor-pointer transition-colors duration-150">
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@((currentPage - 1) * pageSize + index + 1)
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@user.FirstName</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@user.LastName</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@user.Email</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+									<button @onclick="@(() => SelectUserAsync(user))"
+										class="@(SelectedUser?.Id == user.Id ? "bg-green-500" : "bg-blue-500 hover:bg-blue-700") text-white font-bold py-2 px-4 rounded-lg cursor-pointer">
+										<span>
+											@(SelectedUser?.Id == user.Id ? "Seleccionado" : "Seleccionar")
+										</span>
+
+									</button>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</section>
+}
+
+
+
+@code
+{
+	[Parameter] public EventCallback<UserDto> OnUserSelected { get; set; }
+	[Parameter] public UserDto? SelectedUser { get; set; }
+
+
+	private IEnumerable<UserDto>? users;
+	private string? errorMessage;
+	private int currentPage = 1;
+	private int pageSize = 5;
+	private int totalPages = 1;
+
+	private IEnumerable<UserDto> pagedUsers =>
+	users?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<UserDto>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		var response = await _userService.GetAllUsersAsync();
+		if (response.data is null)
+		{
+			errorMessage = response.message;
+		}
+		else
+		{
+			users = response.data.Where(u => u.Active).ToList();
+			totalPages = (int)Math.Ceiling((double)users.Count() / pageSize);
+		}
+	}
+
+	private void GoToPage(int page)
+	{
+		if (page >= 1 && page <= totalPages)
+		{
+			currentPage = page;
+		}
+	}
+	private async Task SelectUserAsync(UserDto user)
+	{
+		// Siempre actualiza el usuario seleccionado
+		SelectedUser = user;
+		await OnUserSelected.InvokeAsync(user);
+
+		// Forzar una nueva renderización
+		StateHasChanged();
+	}
+
+}

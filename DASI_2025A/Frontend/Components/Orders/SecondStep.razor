@@ -1,0 +1,117 @@
+@namespace Frontend.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject IProductService _productService
+
+<secrion class="w-full flex justify-between items-center px-4">
+  <h1 class="text-4xl font-bold text-[#427500]">Agregar Productos</h1>
+</secrion>
+
+@if (products == null && string.IsNullOrEmpty(errorMessage))
+{
+  <h1 class="text-sm font-bold text-[#427500]">Cargando ...</h1>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+  <h1 class="text-sm font-bold text-red">@errorMessage</h1>
+}
+else
+{
+  <section>
+    <div class="p-6 col-span-2">
+      <div class="flex justify-end w-full px-6 py-2">
+        <nav class="inline-flex space-x-1">
+          <button @onclick="() => GoToPage(currentPage - 1)"
+            class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+            disabled="@(@currentPage == 1)"><i class="fa-solid fa-chevron-left"></i></button>
+
+          @for (int i = 1; i <= totalPages; i++)
+          {
+            <button @onclick="() => GoToPage(i)"
+              class="w-7 h-7 font-bold text-center rounded-full @(i == currentPage ? "bg-blue-500/80 text-white" : "bg-white hover:bg-gray-300/80 cursor-pointer") text-xs">
+              @i
+            </button>
+          }
+          <button @onclick="() => GoToPage(currentPage + 1)"
+            class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+            disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i></button>
+        </nav>
+      </div>
+      <section class="flex gap-4 justify-around items-center">
+        <button @onclick="() => productType = 0"
+          class="w-[150px] bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">Lunch</button>
+        <button @onclick="() => productType = 1"
+          class="w-[150px] bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">General</button>
+      </section>
+      <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-2 px-4 mt-4">
+        @if (productType == 0)
+        {
+          @foreach (var product in pagedProducts.Where(p => p.Type == ProductType.Lunch))
+          {
+            <div class="flex flex-col justify-center items-center px-4 space-y-1">
+              <div class="hover:scale-105 transition-all duration-300">
+                <ProductCard product="product" />
+              </div>
+              <button @onclick="() => OnProductSelected.InvokeAsync(product)"
+                class="w-2/3 flex gap-1 text-xs bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
+                <i class="fa-solid fa-cart-shopping"></i>
+                Agregar
+              </button>
+            </div>
+
+          }
+        }
+        else
+        {
+          @foreach (var product in pagedProducts.Where(p => p.Type == ProductType.General))
+          {
+            <div class="flex flex-col justify-center items-center px-4 space-y-1">
+              <div class="hover:scale-105 transition-all duration-300">
+                <ProductCard product="product" />
+              </div>
+              <button @onclick="() => OnProductSelected.InvokeAsync(product)"
+                class="w-2/3 flex gap-1 text-xs bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
+                <i class="fa-solid fa-cart-shopping"></i>
+                Agregar
+              </button>
+            </div>
+          }
+        }
+      </section>
+    </div>
+  </section>
+}
+
+
+
+@code
+{
+  [Parameter] public EventCallback<ProductDto> OnProductSelected { get; set; }
+  private IEnumerable<ProductDto>? products;
+  private string? errorMessage;
+  private int currentPage = 1;
+  private int pageSize = 5;
+  private int totalPages = 1;
+  private int productType = 0;
+  private IEnumerable<ProductDto> pagedProducts => products?.Skip((currentPage - 1) * pageSize).Take(pageSize) ??
+  Enumerable.Empty<ProductDto>();
+
+  protected override async Task OnInitializedAsync()
+  {
+    var response = await _productService.GetAllProductsAsync();
+    if (response.data is null)
+    {
+      errorMessage = response.message;
+    }
+    else
+    {
+      products = response.data.Where(p => p.Active).ToList();
+      totalPages = (int)Math.Ceiling((double)products.Count() / pageSize);
+    }
+  }
+  private void GoToPage(int page)
+  {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+  }
+
+}

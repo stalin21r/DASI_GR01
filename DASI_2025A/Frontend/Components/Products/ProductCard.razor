@@ -1,0 +1,29 @@
+@namespace Frontend.Components
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="overflow-hidden flex flex-col rounded-2xl bg-gray-800/20 hover:bg-gray-800/50">
+  <section class="w-full h-[150px] p-4 flex items-center justify-center">
+    <img src="@(product?.Image ?? "/Assets/Images/noImage.webp")" alt="@product?.Description"
+      class="max-h-full max-w-full object-contain" />
+  </section>
+
+  <div class="border-b border-green-500/50 mx-4"></div>
+
+  <section class="flex flex-col items-center justify-center px-4 py-3 space-y-1 text-gray-700">
+    <span class="text-sm font-semibold text-center">@product?.Name</span>
+    @if (product?.Type == ProductType.Lunch)
+    {
+      <span class="text-xs font-semibold">@product?.Description</span>
+    }
+    <span class="text-base font-semibold">$ @product?.Price</span>
+
+  </section>
+</div>
+
+
+
+@code
+{
+  [Parameter] public ProductDto? product { get; set; }
+
+}

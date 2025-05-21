@@ -23,9 +23,29 @@ public class UsersService : IUsersService
     throw new NotImplementedException();
   }
 
-  public Task<ApiResponse<IEnumerable<UserDto>>> GetAllUsersAsync()
+  public async Task<ApiResponse<IEnumerable<UserDto>>> GetAllUsersAsync()
   {
-    throw new NotImplementedException();
+    try
+    {
+      var response = await _http.GetAsync("api/v1/User");
+      if (!response.IsSuccessStatusCode)
+      {
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+        return errorResponse != null
+          ? new ApiResponse<IEnumerable<UserDto>>(errorResponse.message)
+          : new ApiResponse<IEnumerable<UserDto>>("Error al obtener los usuarios.");
+      }
+
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<UserDto>>>();
+
+      return result!;
+
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex);
+      return new ApiResponse<IEnumerable<UserDto>>("Error desconocido al obtener los usuarios.");
+    }
   }
 
   public Task<ApiResponse<UserDto>> GetUserByIdAsync(int id)
