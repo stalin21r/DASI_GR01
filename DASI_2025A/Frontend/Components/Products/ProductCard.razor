@@ -11,7 +11,12 @@
 
   <section class="flex flex-col items-center justify-center px-4 py-3 space-y-1 text-gray-700">
     <span class="text-sm font-semibold text-center">@product?.Name</span>
+    @if (product?.Type == ProductType.Lunch)
+    {
+      <span class="text-xs font-semibold">@product?.Description</span>
+    }
     <span class="text-base font-semibold">$ @product?.Price</span>
+
   </section>
 </div>
 
