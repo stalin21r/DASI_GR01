@@ -9,7 +9,7 @@ using System.Timers;
 
 namespace Shared
 {
-    internal class OrderDto
+    public class OrderDto
     {
         public int? Id { get; set; }
         public string OrderNote { get; set; } = string.Empty;
@@ -18,7 +18,7 @@ namespace Shared
         public Status Status { get; set; } = Status.Pending;
         public bool? IsActive { get; set; } = true;
         public bool? IsReverted { get; set; } = false;
-        public string? UserId { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
 
         public List<OrderDetailDto> Details { get; set; } = new(); // DTO anidado para detalles
 
