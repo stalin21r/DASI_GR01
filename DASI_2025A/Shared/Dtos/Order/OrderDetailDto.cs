@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Shared
 {
-    internal class OrderDetailDto
+    public class OrderDetailDto
     {
         public int Id { get; set; }
         public int Quantity { get; set; }
@@ -14,6 +14,7 @@ namespace Shared
         public decimal SubTotal { get; set; }
         public bool IsActive { get; set; }
 
+        public int OrderId { get; set; }
         public int ProductId { get; set; }
         public string ProductName { get; set; } = string.Empty;
     }
