@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -16,6 +17,10 @@ public class ApplicationUser : IdentityUser
 
   [Required]
   public required string ScoutUniqueId { get; set; }
+
+    [Required]
+    [Precision(18, 4)]
+    public required decimal AccountBalance { get; set; }
 
   [Required]
   [EmailAddress]
