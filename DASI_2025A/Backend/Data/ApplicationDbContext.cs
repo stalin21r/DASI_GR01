@@ -14,8 +14,6 @@ namespace Backend
     public DbSet<ProductLoggerEntity> ProductLogs { get; set; }
     public DbSet<OrderEntity> Orders { get; set; }
     public DbSet<OrderDetailEntity> OrderDetails { get; set; }
-    public DbSet<WalletEntity> Wallets { get; set; }
-    public DbSet<WalletTransactionEntity> WalletTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,7 +55,8 @@ namespace Backend
         entity.ToTable(tb => tb.HasCheckConstraint("CK_OrderDetail_Quantity", "[Quantity] > 0"));
       });
       // Convertir enum en string para guardar en la BD
-      modelBuilder.Entity<OrderEntity>().Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+      modelBuilder.Entity<PaymentEntity>().Property(o => o.PaymentMethod).HasConversion<string>().HasMaxLength(20);
+            modelBuilder.Entity<OrderEntity>().Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
       // Restringe TotalAmount >= 0
       modelBuilder.Entity<OrderEntity>(entity =>
       {
@@ -73,7 +72,6 @@ namespace Backend
       // Muestra registros activos
       modelBuilder.Entity<OrderEntity>().HasQueryFilter(e => e.IsActive);
       modelBuilder.Entity<OrderDetailEntity>().HasQueryFilter(e => e.IsActive);
-      modelBuilder.Entity<WalletEntity>().HasQueryFilter(e => e.IsActive);
     }
 
   }
