@@ -22,6 +22,9 @@ public class UserDto
   [MaxLength(50)]
   public string ScoutUniqueId { get; set; } = default!;
 
+    [Required]
+    public decimal AccountBalance { get; set; }
+
   [Required]
   [EmailAddress]
   public string? Email { get; set; }
