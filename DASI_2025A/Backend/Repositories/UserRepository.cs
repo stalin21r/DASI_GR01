@@ -70,6 +70,7 @@ public class UserRepository : IUserRepository
       LastName = userDto.LastName,
       DateOfBirth = userDto.DateOfBirth,
       ScoutUniqueId = userDto.ScoutUniqueId,
+      AccountBalance = userDto.AccountBalance,
       Active = userDto.Active,
       OccupationFk = userDto.OccupationFk,
     };
