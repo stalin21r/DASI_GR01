@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Shared;
 
 namespace Backend
 {
@@ -19,7 +20,7 @@ namespace Backend
         [Column(TypeName = "decimal(18,2)")]
         public required decimal TotalAmount { get; set; }
 
-        public OrderStatus Status { get; set; } = OrderStatus.Pending; // Tipo enum OrderStatus
+         public Status Status { get; set; } = Status.Pending; // Tipo enum OrderStatus
 
         public bool IsActive { get; set; } = true;
 
@@ -27,6 +28,9 @@ namespace Backend
         public string UserId { get; set; } = null!;
         [ForeignKey("UserFk")]
         public ApplicationUser? User { get; set; }
+
+        // Reversiones / anulaciones
+        public bool IsReverted { get; set; } = false;
 
         public List<OrderDetailEntity> Details { get; set; } = new List<OrderDetailEntity>();
 
