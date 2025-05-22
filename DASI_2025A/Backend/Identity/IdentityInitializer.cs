@@ -37,6 +37,7 @@ public class IdentityInitializer
         UserName = superadminEmail,
         ScoutUniqueId = "Aquiles123",
         DateOfBirth = new DateTime(1990, 1, 1),
+        AccountBalance = 0,
         OccupationFk = 1, // Jefe
         Active = true
       };
