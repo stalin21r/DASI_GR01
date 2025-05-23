@@ -4,7 +4,7 @@ using Shared;
 
 namespace Backend
 {
-    public class OrderEntity : AuditableEntity
+    public class OrderEntity : AuditableEntity, ISoftDelete
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
