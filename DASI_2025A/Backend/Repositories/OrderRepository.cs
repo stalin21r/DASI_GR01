@@ -79,8 +79,11 @@ namespace Backend
             // Faltan validaciones
             var entity = await _context.Orders.Include(o => o.Details).FirstOrDefaultAsync(o => o.Id == id);
 
-            if (entity == null) return null;
-            
+            if (entity == null)
+            {
+                throw new KeyNotFoundException("No se encontró la orden");
+            }
+
             var order = new OrderDto
             {
                 Id = entity.Id,
@@ -104,19 +107,59 @@ namespace Backend
         } 
 
         // Actualizar una orden
-        public async Task<OrderDto> UpDateAsync()
+        public async Task UpDateAsync(int orderId)
         {
-            // Si el status de la orden es Pendiente, actualizar.
-            // Si el status de la orden es Pagada, crear una nueva.
+            // Solo actualizar si el estado de la orden es Pendiente
+            var entity = await _context.Orders.FindAsync(orderId);
+            if (entity == null)
+            {
+                throw new KeyNotFoundException("No se encontró la orden");
+            }
 
-            return null;
+            if (entity.Status == Status.Paid)
+            {
+                throw new InvalidOperationException("No se puede modificar una orden que ya fue pagada");
+            }
+
+            // Falta la logica para actualizar
+
+            // return null;
+        }
+
+        // Metodo CancelOrderAync para poder cancelar una orden
+        public async Task CancelOrderAsync(int orderId)
+        {
+            var entity = await _context.Orders.FindAsync(orderId);
+            if (entity == null)
+            {
+                throw new KeyNotFoundException("No se encontró la orden");
+            }
+
+            if (entity.Status == Status.Paid)
+            {
+                throw new InvalidOperationException("No se puede cancelar una orden que ya fue pagada");
+            }
+
+            entity.Status = Status.Cancelled;
+            await _context.SaveChangesAsync();
         }
 
         // Eliminar una orden
-        public async Task<bool> DeleteAsync(int orderId)
+        public async Task SoftDeleteAsync(int orderId)
         {
-            // Cambiar la variable IsActive como falsa
-            return false;
+            var entity = await _context.Orders.FindAsync(orderId);
+            if (entity == null)
+            {
+                throw new KeyNotFoundException("No se encontró la orden.");
+            }
+
+            if (entity.Status == Status.Paid)
+            {
+                throw new InvalidOperationException("No se puede eliminar una orden que ya fue pagada");
+            }
+
+            entity.IsActive = false;
+            await _context.SaveChangesAsync();
         }
     }
 }
