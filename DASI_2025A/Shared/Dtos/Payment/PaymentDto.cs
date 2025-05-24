@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Shared
 {
-    internal class PaymentDto
+    public class PaymentDto
     {
         public int Id { get; set; }
 
@@ -16,10 +16,10 @@ namespace Shared
 
         public Status Status { get; set; } = Status.Pending;  
 
-        public DateTime? PaidAt { get; set; }
+        public DateTime IssuedAt { get; set; }
 
         public string? ComprobanteUrl { get; set; }
 
-        public int? ParentOrderId { get; set; }
+        public int? OrderId { get; set; }
     }
 }
