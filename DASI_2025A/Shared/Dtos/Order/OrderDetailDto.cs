@@ -12,7 +12,7 @@ namespace Shared
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal SubTotal { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
 
         public int OrderId { get; set; }
         public int ProductId { get; set; }
