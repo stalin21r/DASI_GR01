@@ -21,14 +21,15 @@ namespace Backend
         [Required]
         public Status Status { get; set; } = Status.Pending;
 
-        public DateTime? PaidAt { get; set; } // Fecha de pago
+        [Required]
+        public DateTime IssuedAt { get; set; } = DateTime.UtcNow; // Fecha de emision del pago
 
         public string? ComprobanteUrl { get; set; }
 
         // Reversiones / anulaciones
         // public bool IsReverted { get; set; } = false;
-        public int? ParentOrderId { get; set; }
-        [ForeignKey(nameof(ParentOrderId))]
-        public OrderEntity? ParentOrder { get; set; }
+        public int? OrderId { get; set; }
+        [ForeignKey(nameof(OrderId))]
+        public OrderEntity? Order { get; set; }
     }
 }
