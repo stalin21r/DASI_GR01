@@ -28,6 +28,7 @@ namespace Backend
         public int ProductId { get; set; }
         [ForeignKey(nameof(ProductId))]
         public ProductEntity Product { get; set; } = null!;
+        public string ProductName { get; set; } = string.Empty;
 
         // OrderId y ProductId pueden tener ids duplicados
 
