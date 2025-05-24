@@ -14,6 +14,7 @@ namespace Backend
     public DbSet<ProductLoggerEntity> ProductLogs { get; set; }
     public DbSet<OrderEntity> Orders { get; set; }
     public DbSet<OrderDetailEntity> OrderDetails { get; set; }
+        public DbSet<PaymentEntity> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
