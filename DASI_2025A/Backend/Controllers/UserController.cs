@@ -30,7 +30,7 @@ namespace Backend
     [HttpPost]
     [Authorize(Policy = "SuperadminOnly")]
     public async Task<IActionResult> CreateUser([FromBody] UserDto userDto)
-    {
+    { 
       try
       {
         var response = await _userService.CreateAsync(userDto);

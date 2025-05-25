@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shared;
 
+
 namespace Backend;
 public class UserRepository : IUserRepository
 {
@@ -79,7 +80,7 @@ public class UserRepository : IUserRepository
     {
       throw new ArgumentException("Password cannot be null or empty.", nameof(userDto.Password));
     }
-    var result = await _userManager.CreateAsync(user, userDto.Password);
+        var result = await _userManager.CreateAsync(user, userDto.Password);
     if (!result.Succeeded)
     {
       throw new BadHttpRequestException("Error al crear usuario. Puede que el usuario ya este registrado.");

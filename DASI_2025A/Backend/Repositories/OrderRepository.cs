@@ -13,8 +13,6 @@ namespace Backend
             _context = context;
         }
 
-        //  ===== Metodos de Orden ====
-
         // Crear una orden
         public async Task<OrderDto> CreateAsync(OrderDto orderDto)
         {
