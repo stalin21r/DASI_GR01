@@ -20,6 +20,6 @@ namespace Shared
 
         public string? ComprobanteUrl { get; set; }
 
-        public int? OrderId { get; set; }
+        public int OrderId { get; set; }
     }
 }
