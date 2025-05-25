@@ -28,7 +28,7 @@ namespace Backend
 
         // Reversiones / anulaciones
         // public bool IsReverted { get; set; } = false;
-        public int? OrderId { get; set; }
+        public int OrderId { get; set; }
         [ForeignKey(nameof(OrderId))]
         public OrderEntity? Order { get; set; }
     }
