@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Shared;
 
 namespace Backend;
+
 public class UserRepository : IUserRepository
 {
   private readonly UserManager<ApplicationUser> _userManager;
-  private readonly RoleManager<IdentityRole> _roleManager;
   private readonly ApplicationDbContext _context;
 
   /// <summary>
@@ -19,12 +19,10 @@ public class UserRepository : IUserRepository
 
   public UserRepository(
     UserManager<ApplicationUser> userManager,
-    RoleManager<IdentityRole> roleManager,
     ApplicationDbContext context
     )
   {
     _userManager = userManager;
-    _roleManager = roleManager;
     _context = context;
   }
   /// <summary>
@@ -171,7 +169,7 @@ public class UserRepository : IUserRepository
     .AsNoTracking()
     .FirstOrDefaultAsync(u => u.Id == id);
 
-    if (user == null)
+    if (user == null || user.Active == false)
     {
       throw new KeyNotFoundException("No se encontraron Usuarios.");
     }
@@ -295,6 +293,197 @@ public class UserRepository : IUserRepository
     user.Active = false;
     var result = await _userManager.UpdateAsync(user);
     return result.Succeeded;
+  }
+
+  public async Task<UserTransactionsDto> GetUserTransactionsAsync(string userId)
+  {
+    var user = await _userManager.FindByIdAsync(userId);
+    if (user == null)
+    {
+      throw new KeyNotFoundException("No se encontraron Usuarios.");
+    }
+    var transactions = await _context.BalanceTransactions.
+    Where(t => t.UserId == userId).ToListAsync();
+    UserTransactionsDto userTransactionsDto = new UserTransactionsDto
+    {
+      UserId = user.Id,
+      FirstName = user.FirstName,
+      LastName = user.LastName,
+      Balance = user.Balance,
+      Transactions = transactions.Select(t => new BalanceTransactionDto
+      {
+        Id = t.Id,
+        Amount = t.Amount,
+        Type = t.Type,
+        BalanceAfter = t.BalanceAfter,
+        Description = t.Description,
+        AuditableDate = t.AuditableDate
+      }).ToList()
+    };
+    return userTransactionsDto;
+  }
+
+  public async Task<TopUpRequestResponseDto> CreateTopUpRequestAsync(TopUpRequestCreateDto topUpRequestDto)
+  {
+    var user = _userManager.Users.FirstOrDefault(u => u.Id == topUpRequestDto.TargetUserId);
+    if (user == null || !user.Active)
+    {
+      throw new KeyNotFoundException("No se encontró el usuario destinatario.");
+    }
+    var TopUpRequest = new TopUpRequestEntity
+    {
+      Amount = topUpRequestDto.Amount,
+      Type = topUpRequestDto.Type,
+      TargetUserId = topUpRequestDto.TargetUserId,
+      RequestedByUserId = topUpRequestDto.RequestedByUserId
+    };
+
+    if (topUpRequestDto.Receipt != null)
+    {
+      var imageData = Convert.FromBase64String(topUpRequestDto.Receipt);
+      var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "Comprobantes");
+      if (!Directory.Exists(folderPath))
+      {
+        Directory.CreateDirectory(folderPath);
+      }
+      var fileName = $"{Guid.NewGuid()}.png";
+      var filePath = Path.Combine(folderPath, fileName);
+      using (var stream = new FileStream(filePath, FileMode.Create))
+      {
+        await stream.WriteAsync(imageData, 0, imageData.Length);
+      }
+      TopUpRequest.Receipt = filePath;
+    }
+    _context.TopUpRequests.Add(TopUpRequest);
+    var result = await _context.SaveChangesAsync();
+    if (result == 0)
+    {
+      throw new Exception("No se pudo insertar la solicitud de recarga.");
+    }
+    var insertedRequest = await _context.TopUpRequests
+    .Include(r => r.RequestedByUser)
+    .Include(r => r.TargetUser).FirstOrDefaultAsync(r => r.Id == TopUpRequest.Id);
+
+    return new TopUpRequestResponseDto
+    {
+      Id = insertedRequest!.Id,
+      Amount = insertedRequest.Amount,
+      Type = insertedRequest.Type,
+      TargetUser = insertedRequest.TargetUser!.FirstName + " " + insertedRequest.TargetUser.LastName,
+      RequestedByUser = insertedRequest.RequestedByUser!.FirstName + " " + insertedRequest.RequestedByUser.LastName,
+      Receipt = insertedRequest.Receipt
+    };
+  }
+
+  public async Task<TopUpRequestResponseDto> AproveOrRejectTopUpAsync(TopUpRequestUpdateDto topUpRequestDto)
+  {
+    var topUpRequest = await _context.TopUpRequests
+        .Include(r => r.RequestedByUser)
+        .Include(r => r.TargetUser)
+        .Include(r => r.AuthorizedByUser)
+        .FirstOrDefaultAsync(r => r.Id == topUpRequestDto.Id);
+
+    if (topUpRequest == null)
+    {
+      throw new KeyNotFoundException("No se encontró la solicitud de recarga.");
+    }
+
+    if (!string.Equals(topUpRequest.Status, "PENDIENTE", StringComparison.OrdinalIgnoreCase))
+    {
+      throw new InvalidOperationException("Solo se pueden aprobar o rechazar solicitudes con estado PENDIENTE.");
+    }
+
+    topUpRequest.Status = topUpRequestDto.Status;
+    topUpRequest.AuthorizedByUserId = topUpRequestDto.AuthorizedByUserId;
+
+    if (topUpRequestDto.Status == "APROBADO")
+    {
+      var user = await _userManager.FindByIdAsync(topUpRequest.TargetUserId);
+      if (user == null)
+      {
+        throw new KeyNotFoundException("No se encontró el usuario destinatario.");
+      }
+
+      user.Balance += topUpRequest.Amount;
+      var updateResult = await _userManager.UpdateAsync(user);
+      if (!updateResult.Succeeded)
+      {
+        throw new Exception("No se pudo actualizar el saldo del usuario.");
+      }
+    }
+
+    var result = await _context.SaveChangesAsync();
+    if (result == 0)
+    {
+      throw new Exception("No se pudo actualizar la solicitud de recarga.");
+    }
+
+    return new TopUpRequestResponseDto
+    {
+      Id = topUpRequest.Id,
+      Amount = topUpRequest.Amount,
+      Type = topUpRequest.Type,
+      TargetUser = $"{topUpRequest.TargetUser?.FirstName ?? ""} {topUpRequest.TargetUser?.LastName ?? ""}".Trim(),
+      RequestedByUser = $"{topUpRequest.RequestedByUser?.FirstName ?? ""} {topUpRequest.RequestedByUser?.LastName ?? ""}".Trim(),
+      Receipt = topUpRequest.Receipt,
+      Status = topUpRequest.Status,
+      AuthorizedByUser = $"{topUpRequest.AuthorizedByUser?.FirstName ?? ""} {topUpRequest.AuthorizedByUser?.LastName ?? ""}".Trim()
+    };
+  }
+
+  public async Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsAsync()
+  {
+    var results = await _context.TopUpRequests
+    .Include(r => r.RequestedByUser)
+    .Include(r => r.TargetUser)
+    .Include(r => r.AuthorizedByUser)
+    .ToListAsync();
+    if (results == null)
+    {
+      throw new KeyNotFoundException("No se encontraron solicitudes de recarga.");
+    }
+    var requests = results.Select(request => new TopUpRequestResponseDto
+    {
+      Id = request.Id,
+      Amount = request.Amount,
+      Type = request.Type,
+      TargetUser = $"{request.TargetUser!.FirstName} {request.TargetUser.LastName}",
+      RequestedByUser = $"{request.RequestedByUser!.FirstName} {request.RequestedByUser.LastName}",
+      Receipt = request.Receipt,
+      Status = request.Status,
+      AuthorizedByUser = $"{request.AuthorizedByUser!.FirstName} {request.AuthorizedByUser.LastName}"
+    }).ToList();
+
+    return requests;
+  }
+
+  public async Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsByUserIdAsync(string userId)
+  {
+    var results = await _context.TopUpRequests
+        .Include(r => r.RequestedByUser)
+        .Include(r => r.TargetUser)
+        .Include(r => r.AuthorizedByUser)
+        .Where(r => r.RequestedByUserId == userId)
+        .ToListAsync();
+
+    if (results == null || results.Count == 0)
+    {
+      throw new KeyNotFoundException($"No se encontraron solicitudes de recarga para el usuario con ID '{userId}'.");
+    }
+
+    var requests = results.Select(request => new TopUpRequestResponseDto
+    {
+      Id = request.Id,
+      Amount = request.Amount,
+      Type = request.Type,
+      TargetUser = $"{request.TargetUser?.FirstName ?? ""} {request.TargetUser?.LastName ?? ""}".Trim(),
+      RequestedByUser = $"{request.RequestedByUser?.FirstName ?? ""} {request.RequestedByUser?.LastName ?? ""}".Trim(),
+      Receipt = request.Receipt,
+      Status = request.Status,
+      AuthorizedByUser = $"{request.AuthorizedByUser?.FirstName ?? ""} {request.AuthorizedByUser?.LastName ?? ""}".Trim()
+    }).ToList();
+
+    return requests;
   }
 
 }

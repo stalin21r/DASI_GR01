@@ -1,25 +1,31 @@
-﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend;
+
 public class OrderEntity : AuditableEntity
 {
-	[Key]
-	[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-	public int Id { get; set; }
-	[Required]
-	public required string OrderNote { get; set; }
-	[Required]
-	public required DateTime OrderDate { get; set; }
-	[Required]
-	[Column(TypeName = "decimal(18,2)")]
-	public required decimal TotalAmount { get; set; }
-	[Required]
-	public string? Status { get; set; } = null!;
-	[Required]
-	public string UserId { get; set; } = null!;
-	[ForeignKey("UserFk")]
-	public ApplicationUser? User { get; set; }
-	public List<OrderDetailEntity> Details { get; set; } = new List<OrderDetailEntity>();
+  [Key]
+  [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+  public int Id { get; set; }
+
+  // FK: User who buys
+  [Required]
+  public string BuyerId { get; set; } = null!;
+
+  [ForeignKey("BuyerId")]
+  public ApplicationUser? Buyer { get; set; }
+
+  // FK: User who sells
+  [Required]
+  public string SellerId { get; set; } = null!;
+
+  [ForeignKey("SellerId")]
+  public ApplicationUser? Seller { get; set; }
+
+  [Required]
+  [Column(TypeName = "decimal(18,2)")]
+  public decimal Total { get; set; }
+
+  public ICollection<OrderDetailEntity> OrderDetails { get; set; } = new List<OrderDetailEntity>();
 }
