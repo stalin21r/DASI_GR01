@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend;
+
 public class ApplicationUser : IdentityUser
 {
   [Required]
@@ -29,6 +30,9 @@ public class ApplicationUser : IdentityUser
       base.UserName = value; // Establecer el email como UserName
     }
   }
+
+  [Required]
+  public decimal Balance { get; set; } = 0;
 
   [Required]
   public bool Active { get; set; }

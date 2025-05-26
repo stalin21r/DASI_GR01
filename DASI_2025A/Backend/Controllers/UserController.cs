@@ -200,5 +200,121 @@ namespace Backend
         return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
       }
     }
+
+    [HttpGet]
+    [Route("transactions/{id}")]
+    [Authorize]
+    public async Task<IActionResult> GetUserTransactions([FromRoute] string id)
+    {
+      try
+      {
+        var response = await _userService.GetUserTransactionsAsync(id);
+        return Ok(response);
+      }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(new { message = ex.Message }); ;
+      }
+      catch (Exception)
+      {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+      }
+    }
+
+    [HttpPost]
+    [Route("topuprequest/create")]
+    [Authorize]
+    public async Task<IActionResult> CreateTopUpRequest([FromBody] TopUpRequestCreateDto topUpRequestDto)
+    {
+      try
+      {
+        var response = await _userService.CreateTopUpRequestAsync(topUpRequestDto);
+        return Created(string.Empty, response);
+      }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(new { message = ex.Message });
+      }
+      catch (BadHttpRequestException ex)
+      {
+        return BadRequest(new { message = ex.Message });
+      }
+      catch (Exception)
+      {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+      }
+    }
+
+    [HttpPut]
+    [Route("topuprequest/aprobe")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> AproveOrRejectTopUp([FromBody] TopUpRequestUpdateDto topUpRequestDto)
+    {
+      try
+      {
+        var response = await _userService.AproveOrRejectTopUpAsync(topUpRequestDto);
+        return Ok(response);
+      }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(new { message = ex.Message });
+      }
+      catch (BadHttpRequestException ex)
+      {
+        return BadRequest(new { message = ex.Message });
+      }
+      catch (Exception)
+      {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+      }
+    }
+
+    [HttpGet]
+    [Route("topuprequest")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> GetAllTopUpRequests()
+    {
+      try
+      {
+        var response = await _userService.GetTopUpRequestsAsync();
+        return Ok(response);
+      }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(new { message = ex.Message });
+      }
+      catch (BadHttpRequestException ex)
+      {
+        return BadRequest(new { message = ex.Message });
+      }
+      catch (Exception)
+      {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+      }
+    }
+
+    [HttpGet]
+    [Route("topuprequest/{id}")]
+    [Authorize]
+    public async Task<IActionResult> GetTopUpRequestById([FromRoute] string id)
+    {
+      try
+      {
+        var response = await _userService.GetTopUpRequestsByUserIdAsync(id);
+        return Ok(response);
+      }
+      catch (KeyNotFoundException ex)
+      {
+        return NotFound(new { message = ex.Message });
+      }
+      catch (BadHttpRequestException ex)
+      {
+        return BadRequest(new { message = ex.Message });
+      }
+      catch (Exception)
+      {
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+      }
+    }
   }
 }

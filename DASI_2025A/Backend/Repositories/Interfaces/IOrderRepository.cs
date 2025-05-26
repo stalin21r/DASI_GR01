@@ -1,13 +1,10 @@
-﻿using Shared;
-
+using Shared;
 namespace Backend;
 
 public interface IOrderRepository
 {
-	Task<OrderDto> CreateAsync(OrderDto orderDto, string userId);
-	Task<IEnumerable<OrderDto>> GetAllAsync();
-	Task<OrderDto?> GetAsync(int id);
-	Task<IEnumerable<OrderDto>> GetByUserIdAsync(string userId);
-	Task<OrderDto> CreateSaleOrderAsync(int productId, uint quantity, string userId);
-	Task<OrderDto> CreateTopUpOrderAsync(decimal amount, string userId, string description);
+  Task<OrderResponseDto> CreateOrderAsync(OrderCreateDto order);
+  Task<IEnumerable<OrderResponseDto>> GetOrdersByBuyerIdAsync(string userId);
+  Task<IEnumerable<OrderResponseDto>> GetOrdersBySellerIdAsync(string userId);
+  Task<IEnumerable<OrderResponseDto>> GetAllOrdersAsync();
 }
