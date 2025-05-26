@@ -1,6 +1,7 @@
 ﻿using Shared;
 
 namespace Backend;
+
 public class UserService : IUserService
 {
   private readonly IUserRepository _userRepository;
@@ -147,6 +148,81 @@ public class UserService : IUserService
       message: "Usuario eliminado exitosamente",
       data: result,
       totalRecords: 0
+    );
+    return response;
+  }
+
+  public async Task<ApiResponse<UserTransactionsDto>> GetUserTransactionsAsync(string userId)
+  {
+    var result = await _userRepository.GetUserTransactionsAsync(userId);
+    if (result == null)
+    {
+      throw new KeyNotFoundException("Usuario no encontrado.");
+    }
+    ApiResponse<UserTransactionsDto> response = new ApiResponse<UserTransactionsDto>(
+      message: "Transacciones obtenidas exitosamente",
+      data: result,
+      totalRecords: 1
+    );
+    return response;
+  }
+
+  public async Task<ApiResponse<TopUpRequestResponseDto>> CreateTopUpRequestAsync(TopUpRequestCreateDto topUpRequestDto)
+  {
+    var result = await _userRepository.CreateTopUpRequestAsync(topUpRequestDto);
+    if (result == null)
+    {
+      throw new BadHttpRequestException("Error al crear la solicitud de recarga.");
+    }
+    ApiResponse<TopUpRequestResponseDto> response = new ApiResponse<TopUpRequestResponseDto>(
+      message: "Solicitud de recarga creada exitosamente",
+      data: result,
+      totalRecords: 1
+    );
+    return response;
+  }
+
+  public async Task<ApiResponse<TopUpRequestResponseDto>> AproveOrRejectTopUpAsync(TopUpRequestUpdateDto topUpRequestDto)
+  {
+    var result = await _userRepository.AproveOrRejectTopUpAsync(topUpRequestDto);
+    if (result == null)
+    {
+      throw new BadHttpRequestException("Error al actualizar la solicitud de recarga.");
+    }
+    ApiResponse<TopUpRequestResponseDto> response = new ApiResponse<TopUpRequestResponseDto>(
+      message: "Solicitud de recarga actualizada exitosamente",
+      data: result,
+      totalRecords: 1
+    );
+    return response;
+  }
+
+  public async Task<ApiResponse<IEnumerable<TopUpRequestResponseDto>>> GetTopUpRequestsAsync()
+  {
+    var result = await _userRepository.GetTopUpRequestsAsync();
+    if (result == null)
+    {
+      throw new KeyNotFoundException("No se encontraron solicitudes de recarga.");
+    }
+    ApiResponse<IEnumerable<TopUpRequestResponseDto>> response = new ApiResponse<IEnumerable<TopUpRequestResponseDto>>(
+      message: "Solicitudes de recarga obtenidas exitosamente",
+      data: result,
+      totalRecords: result.Count()
+    );
+    return response;
+  }
+
+  public async Task<ApiResponse<IEnumerable<TopUpRequestResponseDto>>> GetTopUpRequestsByUserIdAsync(string userId)
+  {
+    var result = await _userRepository.GetTopUpRequestsByUserIdAsync(userId);
+    if (result == null)
+    {
+      throw new KeyNotFoundException("No se encontraron solicitudes de recarga.");
+    }
+    ApiResponse<IEnumerable<TopUpRequestResponseDto>> response = new ApiResponse<IEnumerable<TopUpRequestResponseDto>>(
+      message: "Solicitudes de recarga obtenidas exitosamente",
+      data: result,
+      totalRecords: result.Count()
     );
     return response;
   }

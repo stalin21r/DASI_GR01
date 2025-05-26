@@ -10,5 +10,5 @@ public interface IProductRepository
   Task<ProductDto?> GetAsync(int id);
   Task<ProductDto?> UpdateAsync(UpdateProductDto productDto, string userId);
   Task<bool> DeleteAsync(int id, string userId);
-  Task<ProductDto?> RegisterSellProductAsync(SellProductDto sellProductDto, string userId);
+  Task<bool> RegisterSellProductAsync(OrderCreateDto order, string sellerId);
 }
