@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
-using Microsoft.JSInterop;
 using Blazored.LocalStorage;
+using System.Security.Claims;
 using Shared;
 
 namespace Frontend;

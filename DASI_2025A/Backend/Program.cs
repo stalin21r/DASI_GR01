@@ -30,20 +30,19 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// Repositorios y Servicios
+// Repositorios
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductLoggerRepository, ProductLoggerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<IWalletRepository, WalletRepository>();
+// Servicios
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductLoggerService, ProductLoggerService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IImgurService, ImgurService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IWalletService, WalletService>();
 
 // Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>

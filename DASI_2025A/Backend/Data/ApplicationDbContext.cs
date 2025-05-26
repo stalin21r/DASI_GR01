@@ -13,9 +13,10 @@ namespace Backend
     public DbSet<OccupationEntity> Occupations { get; set; }
     public DbSet<ProductEntity> Products { get; set; }
     public DbSet<ProductLoggerEntity> ProductLogs { get; set; }
+    public DbSet<BalanceTransactionsEntity> BalanceTransactions { get; set; }
     public DbSet<OrderEntity> Orders { get; set; }
     public DbSet<OrderDetailEntity> OrderDetails { get; set; }
-    public DbSet<WalletEntity> Wallets { get; set; }
+    public DbSet<TopUpRequestEntity> TopUpRequests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,7 +49,36 @@ namespace Backend
 
       // Mapear el ProductType como string
       modelBuilder.Entity<ProductEntity>().Property(p => p.Type).HasConversion<string>();
-    }
 
+      modelBuilder.Entity<OrderEntity>()
+          .HasOne<ApplicationUser>(o => o.Buyer)
+          .WithMany()
+          .HasForeignKey(o => o.BuyerId)
+          .OnDelete(DeleteBehavior.Cascade); // Opcional: dejar este si quieres cascada
+
+      modelBuilder.Entity<OrderEntity>()
+          .HasOne<ApplicationUser>(o => o.Seller)
+          .WithMany()
+          .HasForeignKey(o => o.SellerId)
+          .OnDelete(DeleteBehavior.Restrict); // Este desactiva la cascada para evitar el error
+
+      modelBuilder.Entity<TopUpRequestEntity>()
+          .HasOne<ApplicationUser>(t => t.AuthorizedByUser)
+          .WithMany()
+          .HasForeignKey(t => t.AuthorizedByUserId)
+          .OnDelete(DeleteBehavior.Restrict); // o NoAction
+
+      modelBuilder.Entity<TopUpRequestEntity>()
+          .HasOne<ApplicationUser>(t => t.RequestedByUser)
+          .WithMany()
+          .HasForeignKey(t => t.RequestedByUserId)
+          .OnDelete(DeleteBehavior.Restrict); // Cambiado de Cascade a Restrict
+
+      modelBuilder.Entity<TopUpRequestEntity>()
+          .HasOne<ApplicationUser>(t => t.TargetUser)
+          .WithMany()
+          .HasForeignKey(t => t.TargetUserId)
+          .OnDelete(DeleteBehavior.Restrict); // Cambiado de Cascade a Restrict
+    }
   }
 }
