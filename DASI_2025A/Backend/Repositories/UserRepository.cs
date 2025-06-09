@@ -189,6 +189,7 @@ public class UserRepository : IUserRepository
       DateOfBirth = user.DateOfBirth,
       ScoutUniqueId = user.ScoutUniqueId,
       Active = user.Active,
+      Balance = user.Balance,
       Role = role.FirstOrDefault(),
       OccupationFk = user.OccupationFk,
       Occupation = user.Occupation != null ? new OccupationDto
@@ -475,6 +476,11 @@ public class UserRepository : IUserRepository
 
   public async Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsByUserIdAsync(string userId)
   {
+    var user = await _userManager.FindByIdAsync(userId);
+    if (user == null)
+    {
+      throw new KeyNotFoundException("No se encontró el usuario..");
+    }
     var results = await _context.TopUpRequests
         .Include(r => r.RequestedByUser)
         .Include(r => r.TargetUser)
@@ -484,7 +490,7 @@ public class UserRepository : IUserRepository
 
     if (results == null || results.Count == 0)
     {
-      throw new KeyNotFoundException($"No se encontraron solicitudes de recarga para el usuario con ID '{userId}'.");
+      throw new KeyNotFoundException($"No se encontraron solicitudes de recarga para el usuario {user.FirstName + " " + user.LastName}.");
     }
 
     var requests = results.Select(request => new TopUpRequestResponseDto
