@@ -82,3 +82,7 @@ appsettings.Development.json
 # Ignorar package-lock.json en Frontend
 /DASI_2025A/Frontend/package-lock.json
 
+#Ignorar
+/DASI_2025A/Backend/Comprobantes
+/DASI_2025A/Backend/Comprobantes
+DASI_2025A/Backend/Comprobantes
