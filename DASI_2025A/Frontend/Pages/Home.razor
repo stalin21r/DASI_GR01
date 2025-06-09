@@ -1,31 +1,86 @@
-﻿@page "/home"
+﻿@attribute [Authorize]
+@page "/home"
+@using System.Security.Claims;
+@inject IUsersService _userService
+@inject SweetAlertService _sw
+@inject IOrderService _orderService
+@inject NavigationManager Nav
+@inject ILocalStorageService _localStorage
 
 <PageTitle>Home</PageTitle>
 
-<section class="bg-white px-6 py-10 max-w-4xl mx-auto text-center">
-<div class="bg-[#ffffff] flex items-start justify-center p-6">
-  <div class="space-y-4">
+<BodyHeader title="Bienvenido" />
 
-    <!-- Tarjeta de saldo -->
-    <div class="bg-gradient-to-b from-blue-900 to-green-500 text-white px-6 py-4 rounded shadow w-64">
-      <p class="text-sm">Saldo</p>
-      <p class="text-2xl font-bold">USD$ 29,20</p>
+<section class="bg-white px-6 py-10 max-w-6xl mx-auto">
+  <div class="flex flex-col md:flex-row justify-between gap-8">
+    <!-- Columna izquierda -->
+    <div class="space-y-6 flex-1">
+      <!-- Tarjeta de saldo -->
+      <div class="bg-gradient-to-b from-blue-900 to-green-500 text-white px-6 py-4 rounded shadow w-full max-w-xs">
+        <p class="text-sm">Saldo</p>
+        <p class="text-2xl font-bold">$@userDto.Balance.ToString("0.00")</p>
+      </div>
+
+      <!-- Tarjeta de última compra -->
+      <div class="bg-white px-6 py-4 rounded shadow w-full max-w-xs h-40">
+        <p class="font-semibold">Última compra</p>
+        <!-- Aquí puedes mostrar más información si lo deseas -->
+      </div>
     </div>
 
-    <!-- Tarjeta de última compra -->
-    <div class="bg-white px-6 py-4 rounded shadow w-64 h-40">
-      <p class="font-semibold">Última compra</p>
-      <!-- Aquí puedes mostrar más información si lo deseas -->
+    <!-- Columna derecha -->
+    <div class="flex-1">
+      <div class="bg-gray-100 p-6 rounded shadow h-full">
+        <h2 class="text-xl font-semibold mb-4">Mis transacciones</h2>
+        <!-- Lista de transacciones de ejemplo -->
+        <ul class="space-y-3 text-left">
+          <li class="border-b pb-2">Compra en tienda - USD$ 12,00</li>
+          <li class="border-b pb-2">Compra en tienda - USD$ 5,00</li>
+          <li class="border-b pb-2">Recarga - USD$ 2,00</li>
+        </ul>
+      </div>
     </div>
-
   </div>
-</div>
 
   <!-- Redes sociales -->
-  <a>Contactanos</a>
-  <div class="flex justify-center space-x-6 mt-4">
-    <a href="https://www.facebook.com/g18rumipamba" target="_blank" class="text-blue-700 hover:underline">Facebook</a>
-    <a href="https://instagram.com/tu-grupo-scout" target="_blank" class="text-pink-600 hover:underline">Instagram</a>
-    <a href="https://wa.me/5939XXXXXXXX" target="_blank" class="text-green-600 hover:underline">WhatsApp</a>
+  <div class="text-center mt-10">
+    <p class="mb-2">Contáctanos</p>
+    <div class="flex justify-center space-x-6">
+      <a href="https://www.facebook.com/g18rumipamba" target="_blank"
+        class="text-blue-700 hover:text-blue-500 transition duration-200">
+        <i class="fab fa-facebook fa-2x"></i>
+      </a>
+      <a href="https://instagram.com/tu-grupo-scout" target="_blank"
+        class="text-pink-600 hover:text-pink-400 transition duration-200">
+        <i class="fab fa-instagram fa-2x"></i>
+      </a>
+      <a href="https://wa.me/5939XXXXXXXX" target="_blank"
+        class="text-green-600 hover:text-green-400 transition duration-200">
+        <i class="fab fa-whatsapp fa-2x"></i>
+      </a>
+    </div>
   </div>
 </section>
+
+@code
+{
+  private UserDto userDto = new UserDto();
+
+  protected override async Task OnInitializedAsync()
+  {
+    var token = await _localStorage.GetItemAsync<string>("token");
+    if (token is null)
+    {
+      Nav.NavigateTo("/Login");
+      return;
+    }
+    var userId = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
+    var response = await _userService.GetUserByIdAsync(userId);
+    if (response.data is null)
+    {
+      await _sw.FireAsync("Error", "No se encontró este Usuario.", SweetAlertIcon.Error);
+      return;
+    }
+    userDto = response.data;
+  }
+}

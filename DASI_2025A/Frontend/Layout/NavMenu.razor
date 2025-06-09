@@ -1,4 +1,8 @@
-﻿<div class="bg-[rgba(0,0,0,0.4)] flex items-center justify-between px-3 h-29">
+﻿@using System.Security.Claims;
+@inject ILocalStorageService _localStorage
+@inject NavigationManager Nav
+
+<div class="bg-[rgba(0,0,0,0.4)] flex items-center justify-between px-3 h-29">
     <div class="container-fluid flex justify-between w-full">
         <img src="/Assets/Images/LogoScouts1.webp" alt="Logo" class="h-26 mx-auto" />
         <button title="Navigation menu" class="bg-[rgba(255,255,255,0.1)] p-2 rounded block sm:hidden"
@@ -19,49 +23,89 @@
                 Home
             </NavLink>
         </div>
+        <!-- Visible para Superadmin y Admin -->
+        @if (userRole == "Superadmin" || userRole == "Admin")
+        {
+            <!-- Productos -->
+            <div class="py-2 px-3">
+                <NavLink class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3"
+                         href="/Productos" Match="NavLinkMatch.All">
+                    <i class="fa-solid fa-burger mr-3 w-5 h-5 custom-icon"></i>
+                    Productos
+                </NavLink>
+            </div>
 
-        <!-- Productos -->
+            <!-- Ordenes -->
+            <div class="py-2 px-3">
+                <NavLink class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3"
+                         href="/Ordenes" Match="NavLinkMatch.All">
+                    <i class="fa-solid fa-basket-shopping mr-3 w-5 h-5 custom-icon"></i>
+                    Ordenes
+                </NavLink>
+            </div>
+
+            <!-- Realizar Orden -->
+            <div class="py-2 px-3">
+                <NavLink class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3"
+                         href="/Ordenes/Realizar_Orden" Match="NavLinkMatch.All">
+                    <i class="fa-solid fa-cart-shopping mr-3 w-5 h-5 custom-icon"></i>
+                    Realizar Orden
+                </NavLink>
+            </div>
+        }
+
+        <!-- Visible solo para Superadmin -->
+        @if (userRole == "Superadmin")
+        {
+            <!-- Usuarios -->
+            <div class="py-2 px-3">
+                <NavLink class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3"
+                         href="/Usuarios" Match="NavLinkMatch.All">
+                    <i class="fa-solid fa-users mr-3 w-5 h-5 custom-icon"></i>
+                    Usuarios
+                </NavLink>
+            </div>
+
+            <!-- Administrar Recargas -->
+            <div class="py-2 px-3">
+                <NavLink class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3"
+                         href="/Usuarios/Recargas" Match="NavLinkMatch.All">
+                    <i class="fa-solid fa-money-check mr-3 w-5 h-5 custom-icon"></i>
+                    Administrar Recargas
+                </NavLink>
+            </div>
+
+            <!-- Menú desplegable -->
+            <div class="py-2 px-3">
+                <button class="flex items-center justify-between w-full text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3 cursor-pointer"
+                        @onclick="ToggleDropdown">
+                    Más opciones
+                    <span class="transition duration-200 transform @(showDropdown ? "rotate-90" : "rotate-0") flex justify-center items-center">
+                        <i class="fas fa-chevron-right mr-3 w-5 h-5 custom-icon"></i>
+                    </span>
+                </button>
+                @if (showDropdown)
+                {
+                    <div class="ml-8 mt-2">
+                        <NavLink class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-10 px-3"
+                                 href="/Productos/Historial">
+                            <i class="fas fa-clock mr-3 w-5 h-5 custom-icon"></i>
+                            Historial Productos
+                        </NavLink>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Visible para todos los usuarios -->
         <div class="py-2 px-3">
-            <NavLink
-                class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3"
-                href="/Productos" Match="NavLinkMatch.All">
-                <i class="fa-solid fa-burger mr-3 w-5 h-5 custom-icon"></i>
-                Productos
+            <NavLink class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3"
+                     href="/Recargas" Match="NavLinkMatch.All">
+                <i class="fa-solid fa-money-check mr-3 w-5 h-5 custom-icon"></i>
+                Mis Recargas
             </NavLink>
         </div>
 
-        <!-- Realizar Orden -->
-        <div class="py-2 px-3">
-            <NavLink
-                class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3"
-                href="/Realizar_Orden" Match="NavLinkMatch.All">
-                <i class="fa-solid fa-cart-shopping mr-3 w-5 h-5 custom-icon"></i>
-                Realizar Orden
-            </NavLink>
-        </div>
-        <!-- Menú desplegable -->
-        <div class="py-2 px-3">
-            <button
-                class="flex items-center justify-between w-full text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-12 px-3 cursor-pointer"
-                @onclick="ToggleDropdown">
-                Más opciones
-                <span
-                    class="transition duration-200 transform @(showDropdown ? "rotate-90" : "rotate-0") flex justify-center items-center">
-                    <i class="fas fa-chevron-right mr-3 w-5 h-5 custom-icon"></i>
-                </span>
-            </button>
-            @if (showDropdown)
-            {
-                <div class="ml-8 mt-2">
-                    <NavLink
-                        class="flex items-center text-white hover:bg-[rgba(255,255,255,0.1)] hover:text-white rounded h-10 px-3"
-                        href="/Productos/Historial">
-                        <i class="fas fa-clock mr-3 w-5 h-5 custom-icon"></i>
-                        Historial Productos
-                    </NavLink>
-                </div>
-            }
-        </div>
     </nav>
 </div>
 
@@ -69,6 +113,20 @@
 {
     private bool collapseNavMenu = false;
     private bool showDropdown = false;
+    private string? userRole;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await _localStorage.GetItemAsync<string>("token");
+        if (token is null)
+        {
+            Nav.NavigateTo("/Login");
+            return;
+        }
+        var Role = JwtHelper.GetClaim(token, ClaimTypes.Role);
+        userRole = Role.ToString();
+        Console.WriteLine("Rol actual: " + Role);
+    }
 
     private void ToggleNavMenu()
     {

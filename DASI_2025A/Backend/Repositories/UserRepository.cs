@@ -35,21 +35,25 @@ public class UserRepository : IUserRepository
   /// <exception cref="BadHttpRequestException">Si no se pudo asignar el rol.</exception>
   public async Task<bool> AssignRoleAsync(ApplicationUser user, string roleName)
   {
-    if (!string.IsNullOrEmpty(roleName))
-    {
-      var result = await _userManager.AddToRoleAsync(user, roleName);
-      if (!result.Succeeded)
-      {
-        await _userManager.DeleteAsync(user);
-        throw new BadHttpRequestException("Error al crear usuario, no se pudo asignar el rol.");
-      }
-      return true;
-    }
-    else
+    if (string.IsNullOrEmpty(roleName))
     {
       throw new ArgumentException("El rol es requerido.");
     }
+    var roles = await _userManager.GetRolesAsync(user);
+    // Elimina todos los roles actuales
+    if (roles.Any())
+    {
+      var removeResult = await _userManager.RemoveFromRolesAsync(user, roles);
+      if (!removeResult.Succeeded)
+      {
+        return false;
+      }
+    }
+    // Asigna el nuevo rol
+    var addResult = await _userManager.AddToRoleAsync(user, roleName);
+    return addResult.Succeeded;
   }
+
 
 
   /// <summary>
@@ -61,6 +65,7 @@ public class UserRepository : IUserRepository
   /// <exception cref="BadHttpRequestException">Si no se pudo crear el usuario.</exception>
   public async Task<UserDto> CreateAsync(UserDto userDto)
   {
+    Console.WriteLine("UsuarioDto:\n " + userDto);
     var user = new ApplicationUser
     {
       Email = userDto.Email,
@@ -137,6 +142,7 @@ public class UserRepository : IUserRepository
         Active = user.Active,
         Role = roles.FirstOrDefault(), // Tomamos el primer rol si hay múltiples
         OccupationFk = user.OccupationFk,
+        Balance = user.Balance,
         Occupation = user.Occupation != null ? new OccupationDto
         {
           Id = user.Occupation.Id,
@@ -183,6 +189,7 @@ public class UserRepository : IUserRepository
       DateOfBirth = user.DateOfBirth,
       ScoutUniqueId = user.ScoutUniqueId,
       Active = user.Active,
+      Balance = user.Balance,
       Role = role.FirstOrDefault(),
       OccupationFk = user.OccupationFk,
       Occupation = user.Occupation != null ? new OccupationDto
@@ -266,7 +273,7 @@ public class UserRepository : IUserRepository
     user.ScoutUniqueId = userDto.ScoutUniqueId;
     user.Active = userDto.Active;
     user.OccupationFk = userDto.OccupationFk;
-    var resultRole = await AssignRoleAsync(user, userDto.Role ?? "");
+    var resultRole = await AssignRoleAsync(user, string.IsNullOrWhiteSpace(userDto.Role) ? "User" : userDto.Role);
     if (!resultRole)
     {
       throw new BadHttpRequestException("Error al actualizar el usuario, no se pudo asignar el rol.");
@@ -285,13 +292,17 @@ public class UserRepository : IUserRepository
   /// </returns>
   public async Task<bool> DeleteAsync(string id)
   {
+
+    Console.WriteLine("llega aqui: ");
     var user = await _userManager.FindByIdAsync(id);
     if (user == null)
     {
       throw new KeyNotFoundException("No se encontraron Usuarios.");
     }
     user.Active = false;
+
     var result = await _userManager.UpdateAsync(user);
+    Console.WriteLine("llega aqui, success: " + result.Succeeded);
     return result.Succeeded;
   }
 
@@ -393,7 +404,7 @@ public class UserRepository : IUserRepository
       throw new InvalidOperationException("Solo se pueden aprobar o rechazar solicitudes con estado PENDIENTE.");
     }
 
-    topUpRequest.Status = topUpRequestDto.Status;
+    topUpRequest.Status = topUpRequestDto.Status!;
     topUpRequest.AuthorizedByUserId = topUpRequestDto.AuthorizedByUserId;
 
     if (topUpRequestDto.Status == "APROBADO")
@@ -408,26 +419,22 @@ public class UserRepository : IUserRepository
       var updateResult = await _userManager.UpdateAsync(user);
       if (!updateResult.Succeeded)
       {
-        throw new Exception("No se pudo actualizar el saldo del usuario.");
+        throw new BadHttpRequestException("No se pudo actualizar el saldo del usuario.");
       }
     }
 
     var result = await _context.SaveChangesAsync();
-    if (result == 0)
-    {
-      throw new Exception("No se pudo actualizar la solicitud de recarga.");
-    }
 
     return new TopUpRequestResponseDto
     {
       Id = topUpRequest.Id,
       Amount = topUpRequest.Amount,
       Type = topUpRequest.Type,
-      TargetUser = $"{topUpRequest.TargetUser?.FirstName ?? ""} {topUpRequest.TargetUser?.LastName ?? ""}".Trim(),
-      RequestedByUser = $"{topUpRequest.RequestedByUser?.FirstName ?? ""} {topUpRequest.RequestedByUser?.LastName ?? ""}".Trim(),
+      TargetUser = topUpRequest.TargetUser != null ? $"{topUpRequest.TargetUser.FirstName} {topUpRequest.TargetUser.LastName}" : "Desconocido",
+      RequestedByUser = topUpRequest.RequestedByUser != null ? $"{topUpRequest.RequestedByUser.FirstName} {topUpRequest.RequestedByUser.LastName}" : "Desconocido",
       Receipt = topUpRequest.Receipt,
       Status = topUpRequest.Status,
-      AuthorizedByUser = $"{topUpRequest.AuthorizedByUser?.FirstName ?? ""} {topUpRequest.AuthorizedByUser?.LastName ?? ""}".Trim()
+      AuthorizedByUser = topUpRequest.AuthorizedByUser != null ? $"{topUpRequest.AuthorizedByUser.FirstName} {topUpRequest.AuthorizedByUser.LastName}" : null,
     };
   }
 
@@ -447,11 +454,21 @@ public class UserRepository : IUserRepository
       Id = request.Id,
       Amount = request.Amount,
       Type = request.Type,
-      TargetUser = $"{request.TargetUser!.FirstName} {request.TargetUser.LastName}",
-      RequestedByUser = $"{request.RequestedByUser!.FirstName} {request.RequestedByUser.LastName}",
-      Receipt = request.Receipt,
       Status = request.Status,
-      AuthorizedByUser = $"{request.AuthorizedByUser!.FirstName} {request.AuthorizedByUser.LastName}"
+      Receipt = request.Receipt != null
+        ? $"data:image/png;base64,{Convert.ToBase64String(File.ReadAllBytes(request.Receipt))}"
+        : null,
+      TargetUser = request.TargetUser != null
+    ? $"{request.TargetUser.FirstName} {request.TargetUser.LastName}"
+    : "Desconocido",
+      RequestedByUser = request.RequestedByUser != null
+    ? $"{request.RequestedByUser.FirstName} {request.RequestedByUser.LastName}"
+    : "Desconocido",
+      AuthorizedByUser = request.AuthorizedByUser != null
+    ? $"{request.AuthorizedByUser.FirstName} {request.AuthorizedByUser.LastName}"
+    : null,
+      AuditableDate = request.AuditableDate, // asumiendo que viene de AuditableEntity
+      MachineName = request.MachineName  // idem
     }).ToList();
 
     return requests;
@@ -459,16 +476,21 @@ public class UserRepository : IUserRepository
 
   public async Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsByUserIdAsync(string userId)
   {
+    var user = await _userManager.FindByIdAsync(userId);
+    if (user == null)
+    {
+      throw new KeyNotFoundException("No se encontró el usuario..");
+    }
     var results = await _context.TopUpRequests
         .Include(r => r.RequestedByUser)
         .Include(r => r.TargetUser)
         .Include(r => r.AuthorizedByUser)
-        .Where(r => r.RequestedByUserId == userId)
+        .Where(r => r.TargetUserId == userId)
         .ToListAsync();
 
     if (results == null || results.Count == 0)
     {
-      throw new KeyNotFoundException($"No se encontraron solicitudes de recarga para el usuario con ID '{userId}'.");
+      throw new KeyNotFoundException($"No se encontraron solicitudes de recarga para el usuario {user.FirstName + " " + user.LastName}.");
     }
 
     var requests = results.Select(request => new TopUpRequestResponseDto
@@ -478,8 +500,11 @@ public class UserRepository : IUserRepository
       Type = request.Type,
       TargetUser = $"{request.TargetUser?.FirstName ?? ""} {request.TargetUser?.LastName ?? ""}".Trim(),
       RequestedByUser = $"{request.RequestedByUser?.FirstName ?? ""} {request.RequestedByUser?.LastName ?? ""}".Trim(),
-      Receipt = request.Receipt,
+      Receipt = request.Receipt != null
+        ? $"data:image/png;base64,{Convert.ToBase64String(File.ReadAllBytes(request.Receipt))}"
+        : null,
       Status = request.Status,
+      AuditableDate = request.AuditableDate,
       AuthorizedByUser = $"{request.AuthorizedByUser?.FirstName ?? ""} {request.AuthorizedByUser?.LastName ?? ""}".Trim()
     }).ToList();
 

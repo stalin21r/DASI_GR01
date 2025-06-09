@@ -256,68 +256,56 @@ public class ProductRepository : IProductRepository
   /// </remarks>
   public async Task<bool> RegisterSellProductAsync(OrderCreateDto order, string sellerId)
   {
-    // La validación básica ya está en el DTO con las anotaciones
     using var transaction = await _context.Database.BeginTransactionAsync();
 
     try
     {
-
-      order.OrderDetails.ForEach(async detail =>
+      foreach (var detail in order.OrderDetails)
       {
-        var product = await this.GetAsync(detail.ProductId);
-        if (product == null || !product.Active)
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == detail.ProductId && p.Active);
+        if (product == null)
         {
-          throw new KeyNotFoundException("No se encontró este producto.");
+          await transaction.RollbackAsync();
+          return false; // producto no existe o no está activo
         }
-        uint finalQuantity = product.Stock - detail.Quantity;
-        if (finalQuantity < 0)
-        {
-          throw new BadHttpRequestException("No hay stock suficiente para el producto " + product.Name + ".");
-        }
-      });
 
-      order.OrderDetails.ForEach(async detail =>
-      {
-        var product = await this.GetAsync(detail.ProductId);
-        uint QuantityBefore = product!.Stock;
-        uint finalQuantity = product!.Stock - detail.Quantity;
-        product!.Stock = finalQuantity;
-        var logEntry = new ProductLoggerEntity
+        if (product.Stock < detail.Quantity)
         {
-          Action = "Venta de Producto",
-          Description = $"Venta de {detail.Quantity} unidades del producto '{product.Name}'",
-          QuantityBefore = QuantityBefore,
-          QuantityAfter = finalQuantity,
-          ProductFk = product.Id,
-          UserFk = sellerId
+          await transaction.RollbackAsync();
+          return false; // stock insuficiente
+        }
+
+        uint stockBefore = product.Stock;
+        product.Stock -= detail.Quantity;
+
+        _context.Products.Update(product);
+
+        var log = new ProductLoggerDto
+        {
+          ProductId = product.Id,
+          UserId = sellerId,
+          Action = "Venta de producto",
+          Description = $"Venta de {detail.Quantity} unidades",
+          QuantityBefore = stockBefore,
+          QuantityAfter = product.Stock
         };
 
-        _context.ProductLogs.Add(logEntry);
-        await _context.SaveChangesAsync();
-      });
-      // Confirmar la transacción
+        await _logger.CreateAsync(log);
+      }
+
+      await _context.SaveChangesAsync();
       await transaction.CommitAsync();
+
       return true;
-    }
-    catch (KeyNotFoundException ex)
-    {
-      // Si algo falla, revertir la transacción
-      await transaction.RollbackAsync();
-      throw new KeyNotFoundException(ex.Message);
-    }
-    catch (BadHttpRequestException ex)
-    {
-      // Si algo falla, revertir la transacción
-      await transaction.RollbackAsync();
-      throw new BadHttpRequestException(ex.Message);
     }
     catch (Exception ex)
     {
-      // Si algo falla, revertir la transacción
       await transaction.RollbackAsync();
-      throw new Exception(ex.Message);
+      Console.WriteLine($"Error al registrar venta: {ex.Message}");
+      return false;
     }
   }
+
   /// <summary>
   ///   Elimina un producto existente en la base de datos, solo lo desactiva.
   /// </summary>

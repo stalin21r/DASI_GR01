@@ -6,6 +6,7 @@ using System.Text;
 using Shared;
 
 namespace Backend;
+
 public class AuthService : IAuthService
 {
   private readonly UserManager<ApplicationUser> _userManager;
@@ -72,7 +73,7 @@ public class AuthService : IAuthService
     var claims = new List<Claim>
     {
       new Claim(ClaimTypes.NameIdentifier, user.Id),
-    new Claim(ClaimTypes.Name, user.UserName ?? string.Empty),
+    new Claim(ClaimTypes.Name, (user.FirstName + " " + user.LastName) ?? string.Empty),
     new Claim(ClaimTypes.Email, user.Email ?? string.Empty)
     };
 

@@ -1,0 +1,168 @@
+@attribute [Authorize(Roles = "Superadmin")]
+@page "/Usuarios"
+@using System.Text.Json
+@inject NavigationManager Nav
+@inject IUsersService _userService
+@inject SweetAlertService _sw
+
+<PageTitle>Gestionar Usuarios</PageTitle>
+
+<div class="space-y-4 w-full">
+  <BodyHeader title="Gestionar Usuarios" />
+
+  <section class="w-full flex justify-between items-center px-4">
+    <h1 class="text-4xl font-bold text-[#427500]">Usuarios</h1>
+    <div class="flex gap-4">
+      <NavLink href="/Usuarios/Crear"
+        class="hover:bg-green-600 bg-green-800  text-white text-lg font-bold px-4 py-2 rounded-full w-10 h-10 flex justify-center items-center transition duration-300 cursor-pointer">
+        <i class="fa-solid fa-plus"></i>
+      </NavLink>
+    </div>
+  </section>
+  @if (users == null && string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
+  }
+  else if (!string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
+  }
+  else
+  {
+    <section>
+      <div class="p-2">
+        <div class="flex justify-end w-full px-6 py-2">
+          <nav class="inline-flex space-x-1">
+            <button @onclick="() => GoToPage(currentPage - 1)"
+              class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+              disabled="@(@currentPage == 1)"><i class="fa-solid fa-chevron-left"></i>
+            </button>
+
+            @for (int i = 1; i <= totalPages; i++)
+            {
+              <button @onclick="() => GoToPage(i)"
+                class="w-7 h-7 font-bold text-center rounded-full @(i == currentPage ? "bg-blue-500/80 text-white" : "bg-white hover:bg-gray-300/80 cursor-pointer") text-xs">
+                @i
+              </button>
+            }
+
+            <button @onclick="() => GoToPage(currentPage + 1)"
+              class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+              disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </nav>
+        </div>
+        <div class="overflow-x-auto rounded-lg shadow-2xl">
+          <table class="w-full">
+            <thead class="bg-gray-200 font-bold">
+              @{
+                var headers = new List<string> { "Usuario", "Nombre", "N. Único", "Ocupación", "Rol", "Balance",
+                        "Acciones" };
+              }
+              <tr>
+                <th class="w-5">#</th>
+                @foreach (var header in headers)
+                {
+                  <th class="px-6 py-3 text-left text-sm uppercase tracking-wider">@header</th>
+                }
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              @foreach (var (user, index) in PagedUsers.Select((p, i) => (p, i)))
+              {
+
+                <tr class="@(user.Active ? "hover:bg-gray-50" : "bg-red-50") transition-colors duration-150">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@((currentPage - 1) * pageSize + index + 1)
+                  </td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-xs text-gray-900">@user.Email</td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">@user.FirstName @user.LastName
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">@user.ScoutUniqueId</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Occupation?.Name</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Role?.ToString()</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">$@user.Balance.ToString()</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <NavLink href=@{
+                    $"/Usuarios/Recargar/{user.Id}"
+                                  }
+                    class="hover:bg-green-600 bg-green-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                  </NavLink>
+                  <NavLink href=@{
+                  $"/Usuarios/Editar/{user.Id}"
+                                }
+                  class="hover:bg-blue-600 bg-blue-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </NavLink>
+                <button @onclick="() => OnDeleteUser(user.Id!)"
+                  class="hover:bg-red-600 bg-red-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+                        }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+    }
+</div>
+
+@code
+{
+  private IEnumerable<UserDto>? users;
+  private string? errorMessage;
+  private string? serverMessage;
+  private int currentPage = 1;
+  private int pageSize = 5;
+  private int totalPages = 1;
+  private IEnumerable<UserDto> PagedUsers =>
+  users?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<UserDto>();
+
+  protected override async Task OnInitializedAsync()
+  {
+    var response = await _userService.GetAllUsersAsync();
+
+    if (response.data is null)
+    {
+      errorMessage = response.message;
+    }
+    else
+    {
+      users = response.data.Where(p => p.Active).ToList();
+      totalPages = (int)Math.Ceiling((double)users.Count() / pageSize);
+    }
+  }
+
+  private async Task OnDeleteUser(string id)
+  {
+    var result = await _sw.FireAsync(new SweetAlertOptions
+    {
+      Title = "¿Estás seguro?",
+      Text = "Esta acción no se puede deshacer.",
+      Icon = SweetAlertIcon.Warning,
+      ShowCancelButton = true,
+      ConfirmButtonText = "Sí, eliminar",
+      CancelButtonText = "No"
+    });
+    if (!string.IsNullOrEmpty(result.Value)) // El usuario hizo clic en "Sí, eliminar"
+    {
+      var response = await _userService.DeleteUserAsync(id);
+      serverMessage = response.message;
+      if (!response.data)
+      {
+        await _sw.FireAsync("Error", serverMessage, SweetAlertIcon.Error);
+        return;
+      }
+      await _sw.FireAsync("Eliminado", serverMessage, SweetAlertIcon.Success);
+      await OnInitializedAsync();
+    }
+  }
+
+  private void GoToPage(int page)
+  {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+  }
+}

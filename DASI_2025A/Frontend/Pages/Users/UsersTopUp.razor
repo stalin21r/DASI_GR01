@@ -1,0 +1,197 @@
+@attribute [Authorize(Roles = "Superadmin")]
+@page "/Usuarios/Recargar/{id}"
+@using System.Security.Claims;
+@inject IUsersService _userService
+@inject NavigationManager Nav
+@inject SweetAlertService _sw
+@inject ILocalStorageService _localStorage
+
+<PageTitle>Recargar Usuarios</PageTitle>
+
+<div class="space-y-4 w-full">
+  <BodyHeader title="Recargar Saldo" />
+  <section class="w-full flex justify-between items-center px-4">
+    <h1 class="text-4xl font-bold text-[#427500]">Recargar Saldo</h1>
+    <div class="flex gap-4">
+      <NavLink href="/Usuarios"
+        class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i>Atrás
+      </NavLink>
+    </div>
+  </section>
+  @if (userDto == null && string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
+  }
+  else if (!string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
+  }
+  else
+  {
+    <section class="w-full flex justify-center items-center">
+      <EditForm Model="topUpRequestCreateDto" OnSubmit="HandleSubmit"
+        class="p-10 w-3/6 rounded-2xl border border-gray-300/50 shadow-2xl">
+        <div class="grid grid-cols-2 grid-rows-3 gap-4 space-y-4">
+          <DataAnnotationsValidator />
+          <div>
+            <div>
+              <FloatingLabelInput Label="Monto" Name="Amount" Type="number" LabelColor="blue"
+                Value="@topUpRequestCreateDto.Amount.ToString()" step="any"
+                OnChange="(e) => { var input = e.Value?.ToString(); if (decimal.TryParse(input, out var value)) { topUpRequestCreateDto.Amount = value; } else { topUpRequestCreateDto.Amount = 0; } }">
+              </FloatingLabelInput>
+              <ValidationMessage For="@(() => topUpRequestCreateDto.Amount)" />
+            </div>
+          </div>
+          <div class="col-start-1 row-start-2">
+            <div>
+              <FloatingLabelSelect Label="Tipo" Name="Type" LabelColor="blue" SelectedValue="@topUpRequestCreateDto.Type"
+                SelectedValueChanged="(value) => topUpRequestCreateDto.Type = value" Placeholder="Tipo">
+                <option value="Efectivo" selected>Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+              </FloatingLabelSelect>
+              <ValidationMessage For="@(() => topUpRequestCreateDto.Type)" />
+            </div>
+          </div>
+          <div class="col-start-1 row-start-3">
+            <div>
+              <FloatingLabelInput disabled="true" Label="Beneficiario" Name="targetUser" Type="text" LabelColor="blue"
+                Value="@(userDto?.FirstName + " " + userDto?.LastName)" />
+            </div>
+          </div>
+          <div class="row-span-2 col-start-2 row-start-1 flex flex-col justify-center items-center">
+            <div
+              class="flex-3 flex h-[200px] w-[200px] justify-center px-2 items-center rounded-lg border-2 border-gray-800/50 border-dashed">
+              <!-- Aqui va  la preview de  la imagen -->
+              @if (!string.IsNullOrEmpty(previewUrl))
+              {
+                <img src="@previewUrl" alt="Vista previa" class="h-[150px] w-[150px] object-contain rounded shadow" />
+              }
+            </div>
+            <div class="flex flex-col justify-center items-center flex-1 w-full mt-2">
+              <label for="fileInput" accept="image/jpeg,image/jpg,image/png"
+                class="text-sm inline-block px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 text-center w-3/4">
+                Seleccionar archivo
+              </label>
+              <InputFile id="fileInput" OnChange="HandleFileSelected" class="hidden" />
+            </div>
+          </div>
+          <div class="col-start-2 row-start-3 flex justify-center items-start">
+            <button type="submit"
+              class="bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
+              Recargar
+            </button>
+          </div>
+        </div>
+      </EditForm>
+    </section>
+  }
+</div>
+
+@code
+{
+  [Parameter] public string? id { get; set; }
+  private UserDto userDto = new UserDto();
+  private TopUpRequestCreateDto topUpRequestCreateDto = new TopUpRequestCreateDto();
+  private TopUpRequestUpdateDto topUpRequestUpdateDto = new TopUpRequestUpdateDto();
+  private string errorMessage = "";
+  private string serverMessage = "";
+  private string? previewUrl;
+
+
+  protected override async Task OnInitializedAsync()
+  {
+    if (!string.IsNullOrEmpty(id))
+    {
+      var response = await _userService.GetUserByIdAsync(id);
+      if (response.data is null)
+      {
+        errorMessage = response.message;
+        return;
+      }
+      userDto = response.data;
+      return;
+    }
+    errorMessage = "No se encontró este Usuario.";
+  }
+
+  private async Task HandleSubmit()
+  {
+    var token = await _localStorage.GetItemAsync<string>("token");
+    if (token is null)
+    {
+      Nav.NavigateTo("/Login");
+      return;
+    }
+    var requestedByUserId = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
+    topUpRequestCreateDto.RequestedByUserId = requestedByUserId;
+    topUpRequestCreateDto.TargetUserId = userDto.Id!;
+    var response = await _userService.CreateTopUpRequestAsync(topUpRequestCreateDto);
+    serverMessage = response.message;
+    if (response.data is null)
+    {
+      await _sw.FireAsync("Error", serverMessage, SweetAlertIcon.Error);
+      return;
+    }
+    await _sw.FireAsync("Solicitud creada", serverMessage, SweetAlertIcon.Success);
+    topUpRequestUpdateDto.AuthorizedByUserId = topUpRequestCreateDto.RequestedByUserId;
+    topUpRequestUpdateDto.Id = response.data.Id;
+    topUpRequestUpdateDto.Status = "APROBADO";
+    var result = await _userService.AproveOrRejectTopUpAsync(topUpRequestUpdateDto);
+    serverMessage = result.message;
+    if (result.data is null)
+    {
+      await _sw.FireAsync("Error", serverMessage + "\nPruebe aprobar desde el panel.", SweetAlertIcon.Error);
+      Nav.NavigateTo("/Usuarios/Recargas");
+      return;
+    }
+    await _sw.FireAsync("Solicitud aprobada", serverMessage, SweetAlertIcon.Success);
+    Nav.NavigateTo("/Usuarios/Recargas");
+  }
+
+  private async Task HandleFileSelected(InputFileChangeEventArgs e)
+  {
+    try
+    {
+      var file = e.File;
+
+      if (file != null)
+      {
+        if (!file.ContentType.Contains("image/jpeg") &&
+        !file.ContentType.Contains("image/jpg") &&
+        !file.ContentType.Contains("image/png")
+        )
+        {
+          await _sw.FireAsync("Error", "Debe seleccionar un archivo con formato de imagen", SweetAlertIcon.Error);
+          return;
+        }
+
+        if (file.Size > 20 * 1024 * 1024)
+        {
+          await _sw.FireAsync("Error", "El archivo es demasiado grande, máximo permitido 5mb", SweetAlertIcon.Error);
+          return;
+        }
+
+        using var stream = file.OpenReadStream(20 * 1024 * 1024); // 20 MB
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var imageBytes = ms.ToArray();
+
+        previewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
+        topUpRequestCreateDto.Receipt = Convert.ToBase64String(imageBytes);
+      }
+    }
+    catch (IOException ex)
+    {
+      if (ex.Message.Contains("exceeds the maximum"))
+      {
+        Console.WriteLine(ex.Message);
+        await _sw.FireAsync("Error", "El archivo es demasiado grande, máximo permitido 5mb", SweetAlertIcon.Error);
+      }
+      else
+      {
+        await _sw.FireAsync("Error", "Error al leer el archivo", SweetAlertIcon.Error);
+      }
+    }
+  }
+}

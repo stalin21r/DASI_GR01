@@ -1,19 +1,23 @@
 @attribute [Authorize(Roles = "Superadmin, Admin")]
-@page "/Productos/Historial"
-@using System.Text.Json
-@inject NavigationManager NavigationManager
-@inject IProductService _productService
+@page "/Ordenes"
+@using System.Security.Claims;
+@inject NavigationManager Nav
+@inject SweetAlertService _sw
+@inject IOrderService _orderService
 
-<PageTitle>Gestionar Productos</PageTitle>
-
-<div class="space-y-4 w-full">
-  <BodyHeader title="Historial de Cambios del Producto" />
-
+<title>Ordenes</title>
+<div class="w-full">
+  <BodyHeader title="Ordenes" />
   <section class="w-full flex justify-between items-center px-4">
-    <h1 class="text-4xl font-bold text-[#427500]">Historial de Productos</h1>
+    <h1 class="text-4xl font-bold text-[#427500]">Ordenes</h1>
+    <div class="flex gap-4">
+      <NavLink href="/Ordenes/Realizar_Orden"
+        class="hover:bg-green-600 bg-green-800  text-white text-lg font-bold px-4 py-2 rounded-full w-10 h-10 flex justify-center items-center transition duration-300 cursor-pointer">
+        <i class="fa-solid fa-plus"></i>
+      </NavLink>
+    </div>
   </section>
-
-  @if (products == null && string.IsNullOrEmpty(errorMessage))
+  @if (orders == null && string.IsNullOrEmpty(errorMessage))
   {
     <h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
   }
@@ -24,7 +28,7 @@
   else
   {
     <section>
-      <div class="p-6">
+      <div class="p-2">
         <div class="flex justify-end w-full px-6 py-2">
           <nav class="inline-flex space-x-1">
             <button @onclick="() => GoToPage(currentPage - 1)"
@@ -38,20 +42,19 @@
                 @i
               </button>
             }
-
             <button @onclick="() => GoToPage(currentPage + 1)"
               class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
               disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i></button>
           </nav>
         </div>
-        <div class="overflow-auto rounded-lg shadow-2xl">
+        <div class="overflow-x-auto rounded-lg shadow-2xl">
           <table class="w-full">
             <thead class="bg-gray-200 font-bold">
               @{
-                var headers = new List<string> { "#", "Producto", "Acción", "Descripción", "Usuario", "Cant. Antes", "Cant. Después",
-                        "Fecha"};
+                var headers = new List<string> { "Vendedor", "Comprador", "Monto", "Fecha" };
               }
               <tr>
+                <th class="w-5">#</th>
                 @foreach (var header in headers)
                 {
                   <th class="px-6 py-3 text-left text-sm uppercase tracking-wider">@header</th>
@@ -59,23 +62,19 @@
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              @foreach (var (product, index) in PagedProducts.Select((p, i) => (p, i)))
+              @foreach (var (order, index) in pagedOrders.Select((p, i) => (p, i)))
               {
 
                 <tr class="hover:bg-gray-50 transition-colors duration-150">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@((currentPage - 1) * pageSize + index + 1)</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@product.ProductName</td>
-                  <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">@product.Action</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@product.Description</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    @product.UserName
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@((currentPage - 1) * pageSize + index + 1)
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@product.QuantityBefore</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@product.QuantityAfter</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@product.AuditableDate</td>
-
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">@order.SellerFullName</td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">@order.BuyerFullName</td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">$@order.Total.ToString("0.00")
+                  </td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">
+                    @order.CreatedAt.ToString("dd/MM/yyyy")</td>
                 </tr>
-
               }
             </tbody>
           </table>
@@ -84,31 +83,28 @@
     </section>
   }
 </div>
+
 @code
 {
-  private IEnumerable<ProductLoggerDto>? products;
+  private IEnumerable<OrderResponseDto>? orders;
   private string? errorMessage;
-
   private int currentPage = 1;
   private int pageSize = 5;
   private int totalPages = 1;
-
-  private IEnumerable<ProductLoggerDto> PagedProducts =>
-  products?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<ProductLoggerDto>();
+  private IEnumerable<OrderResponseDto> pagedOrders =>
+  orders?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<OrderResponseDto>();
 
   protected override async Task OnInitializedAsync()
   {
-    var response = await _productService.GetAllProductsLoggerAsync();
-
-
+    var response = await _orderService.GetAllOrdersAsync();
     if (response.data is null)
     {
       errorMessage = response.message;
     }
     else
     {
-      products = response.data.ToList();
-      totalPages = (int)Math.Ceiling((double)products.Count() / pageSize);
+      orders = response.data;
+      totalPages = (int)Math.Ceiling((double)orders.Count() / pageSize);
     }
   }
 
@@ -117,5 +113,4 @@
     if (page < 1 || page > totalPages) return;
     currentPage = page;
   }
-
 }

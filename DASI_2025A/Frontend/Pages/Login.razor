@@ -1,7 +1,9 @@
 @page "/login"
 @layout NoLayout
 @inject IAuthService authService
+@inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorage
 
 <PageTitle>Login</PageTitle>
 
@@ -15,7 +17,7 @@
     <section
       class="backdrop-blur-xs bg-white/50 border border-white/30 rounded-2xl shadow-2xl p-8 w-3/4 sm:w-2/3 lg:1/2 max-w-md">
       <h1 class="text-3xl font-bold text-[#5E9E0C] mb-6 pb-2 border-b border-white/30 text-center font-outline-white text-outline-white">Inicio de sesión</h1>
-      <EditForm Model="loginDto" OnValidSubmit="handleSubmit" class="flex flex-col space-y-8">
+      <EditForm Model="loginDto" OnValidSubmit="handleSubmit" autocomplete="off" class="flex flex-col space-y-8">
         <DataAnnotationsValidator />
         <div class="mt-4">
           <FloatingLabelInput Label="Correo electrónico" Name="email" Type="email" LabelColor="blue"
@@ -55,6 +57,15 @@
   private string serverMessage = string.Empty;
   private string serverMessageColor = "bg-sky-500";
 
+  protected override async Task OnInitializedAsync()
+  {
+    var token = await LocalStorage.GetItemAsync<string>("token");
+    if (token is not null)
+    {
+      await LocalStorage.RemoveItemAsync("token");    
+    }
+  }
+  
   private async Task handleSubmit()
   {
     serverMessage = "";
@@ -74,6 +85,4 @@
   {
     serverMessage = string.Empty;
   }
-
-
 }

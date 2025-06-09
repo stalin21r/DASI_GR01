@@ -1,0 +1,54 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
+@namespace Frontend.Components
+
+<AuthorizeRouteView RouteData="@RouteData" DefaultLayout="@DefaultLayout">
+  <NotAuthorized>
+    @if (isReady)
+    {
+      if (!isAuthenticated)
+      {
+        // No autenticado → redirigir al login
+        Nav.NavigateTo("/login", true);
+      }
+      else
+      {
+        // Autenticado pero sin autorización → redirigir al home
+        Nav.NavigateTo("/home", true);
+      }
+    }
+    else
+    {
+      <p>Verificando autenticación...</p>
+    }
+  </NotAuthorized>
+  <Authorizing>
+    <p>Verificando autenticación...</p>
+  </Authorizing>
+</AuthorizeRouteView>
+
+@code
+{
+  [CascadingParameter]
+  private Task<AuthenticationState>? context { get; set; }
+
+  [Parameter]
+  public RouteData? RouteData { get; set; }
+
+  [Parameter]
+  public Type? DefaultLayout { get; set; }
+
+  private bool isAuthenticated;
+  private bool isReady;
+
+  protected override async Task OnParametersSetAsync()
+  {
+    if (context != null)
+    {
+      var authState = await context;
+      isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+      isReady = true;
+    }
+  }
+}
+  
