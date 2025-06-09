@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Frontend;
 using CurrieTechnologies.Razor.SweetAlert2;
 using Blazored.LocalStorage;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -11,6 +12,13 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 // Servicios comunes
 builder.Services.AddSweetAlert2();
 builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+builder.Services.AddScoped<CustomAuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
+    provider.GetRequiredService<CustomAuthStateProvider>());
+
+
 
 // HttpClient público (sin token) - debe estar antes de usarlo en otros servicios
 builder.Services.AddScoped(sp => new HttpClient
@@ -38,6 +46,18 @@ builder.Services.AddScoped<IUsersService>(sp =>
   var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
   var httpClient = clientFactory.CreateClient("AuthorizedClient");
   return new UsersService(httpClient);
+});
+builder.Services.AddScoped<IOccupationService>(sp =>
+{
+  var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
+  var httpClient = clientFactory.CreateClient("AuthorizedClient");
+  return new OccupationService(httpClient);
+});
+builder.Services.AddScoped<IOrderService>(sp =>
+{
+  var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
+  var httpClient = clientFactory.CreateClient("AuthorizedClient");
+  return new OrderService(httpClient);
 });
 
 await builder.Build().RunAsync();

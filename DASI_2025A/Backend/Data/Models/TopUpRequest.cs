@@ -22,10 +22,10 @@ public class TopUpRequestEntity : AuditableEntity
   // Estado de la recarga: Pendiente, Aprobado, Rechazado
   [Required]
   [MaxLength(20)]
-  public string Status { get; set; } = "Pendiente";
+  public string Status { get; set; } = "PENDIENTE";
 
   // Comprobante opcional
-  [MaxLength(255)]
+  [MaxLength(255, ErrorMessage = "La descripcion debe tener menos de 255 caracteres")]
   public string? Receipt { get; set; }
 
   // Usuario beneficiario (al que se le recarga el saldo)

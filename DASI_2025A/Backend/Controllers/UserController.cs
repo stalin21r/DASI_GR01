@@ -241,13 +241,13 @@ namespace Backend
       }
       catch (Exception)
       {
-        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear solicitud." });
       }
     }
 
     [HttpPut]
     [Route("topuprequest/aprobe")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize]
     public async Task<IActionResult> AproveOrRejectTopUp([FromBody] TopUpRequestUpdateDto topUpRequestDto)
     {
       try
@@ -263,15 +263,16 @@ namespace Backend
       {
         return BadRequest(new { message = ex.Message });
       }
-      catch (Exception)
+      catch (Exception ex)
       {
-        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+        Console.WriteLine(ex);
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al aprobar solicitud.\n" + ex.Message });
       }
     }
 
     [HttpGet]
     [Route("topuprequest")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = "SuperadminOnly")]
     public async Task<IActionResult> GetAllTopUpRequests()
     {
       try
@@ -287,9 +288,9 @@ namespace Backend
       {
         return BadRequest(new { message = ex.Message });
       }
-      catch (Exception)
+      catch (Exception ex)
       {
-        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al Obtener recargas.\n" + ex.Message });
       }
     }
 

@@ -43,7 +43,7 @@ namespace Backend
     }
 
     [HttpGet]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = "SuperadminOnly")]
     public async Task<IActionResult> GetAllOrdersAsync()
     {
       try
