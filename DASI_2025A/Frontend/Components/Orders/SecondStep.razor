@@ -2,9 +2,9 @@
 @using Microsoft.AspNetCore.Components.Web
 @inject IProductService _productService
 
-<secrion class="w-full flex justify-between items-center px-4">
+<section class="w-full flex justify-between items-center px-4">
   <h1 class="text-4xl font-bold text-[#427500]">Agregar Productos</h1>
-</secrion>
+</section>
 
 @if (products == null && string.IsNullOrEmpty(errorMessage))
 {
@@ -38,9 +38,9 @@ else
       </div>
       <section class="flex gap-4 justify-around items-center">
         <button @onclick="() => productType = 0"
-          class="w-[150px] bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">Lunch</button>
+          class=" @(productType == 1 ? "bg-gray-500" : "bg-green-700") w-[150px] hover:bg-green-400 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">Lunch</button>
         <button @onclick="() => productType = 1"
-          class="w-[150px] bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">General</button>
+          class="@(productType == 0 ? "bg-gray-500" : "bg-green-700") w-[150px] hover:bg-green-400 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">General</button>
       </section>
       <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-2 px-4 mt-4">
         @if (productType == 0)
@@ -104,7 +104,7 @@ else
     }
     else
     {
-      products = response.data.Where(p => p.Active).ToList();
+      products = response.data.Where(p => p.Active);
       totalPages = (int)Math.Ceiling((double)products.Count() / pageSize);
     }
   }

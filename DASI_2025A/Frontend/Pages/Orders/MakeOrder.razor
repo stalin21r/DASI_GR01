@@ -1,7 +1,11 @@
-@page "/Realizar_Orden"
-@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Superadmin, Admin")]
+@page "/Ordenes/Realizar_Orden"
+@using System.Security.Claims;
 @inject IUsersService _userService
 @inject SweetAlertService _sw
+@inject IOrderService _orderService
+@inject NavigationManager Nav
+@inject ILocalStorageService _localStorage
 
 <title>Realizar Orden</title>
 
@@ -31,44 +35,66 @@
         }
       </section>
 
-      <section class="flex justify-between items-center gap-4 px-10 w-full">
+      <section class="flex justify-between items-center gap-2 px-10 w-full">
         <button disabled="@(step == 0)" @onclick="HandlePreviousStep"
-          class=" w-20 bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-xl border border-white/30 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+          class="w-30 bg-green-700 hover:bg-green-500 text-white text-xs font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+          <i class="fa-solid fa-arrow-left mr-2"></i>
           Atrás
         </button>
         <button @onclick="HandleNextStep"
-          class="w-20 bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-xl border border-white/30 transition duration-200">
-          Siguiente
+          class="w-30 bg-green-700 hover:bg-green-500 text-white text-xs font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
+          @(step == 1 ? "$ Pagar" : "Siguiente")
+          <i class="fa-solid fa-arrow-right ml-2"></i>
         </button>
       </section>
 
     </div>
 
-    @if (step == 1)
-    {
-      <div class="col-start-3 space-y-2 bg-gray-500/10 border border-black/10 p-4 rounded-lg h-fit">
-        <h2 class="text-lg font-semibold text-gray-500 border-b border-black/50 pb-2">Detalle de Orden</h2>
-        @if (cartItems.Count == 0)
-        {
-          <p class="text-gray-400">No hay productos en el carrito.</p>
-        }
-        else
-        {
-          <ul class="space-y-1 text-sm text-white">
-            @foreach (var item in cartItems)
-            {
-              <li class="flex justify-between border-b border-black/50 py-1 text-gray-600">
-                <span>@item.Name</span>
-                <span>$ @item.Price</span>
-              </li>
-            }
-          </ul>
-          <div class="mt-2 font-bold text-right text-green-700">
-            Total: $ @cartItems.Sum(p => p.Price).ToString("0.00")
-          </div>
-        }
-      </div>
-    }
+  @if (step == 1)
+  {
+    <div class="col-start-3 space-y-2 bg-gray-500/10 border border-black/10 p-4 rounded-lg h-fit">
+      <h2 class="text-lg font-semibold text-gray-500 border-b border-black/50 pb-2">Detalle de Orden</h2>
+      <ul class="space-y-2 text-sm text-white">
+        <li class="grid grid-cols-6 gap-2 items-center border-b border-black/50 py-1 text-gray-600">
+          <span class="col-span-2">Producto</span>
+          <span class="text-center">cant.</span>
+          <span class="text-center">precio</span>
+          <span class="text-center">subtotal</span> 
+        </li>
+      </ul>
+
+      @if (order.OrderDetails.Count == 0)
+      {
+        <p class="text-gray-400">No hay productos en el carrito.</p>
+      }
+      else
+      {
+        <ul class="space-y-2 text-sm text-white">
+          @foreach (var item in order.OrderDetails)
+          {
+            <li class="grid grid-cols-6 gap-2 items-center border-b border-black/50 py-1 text-gray-600">
+              <span class="col-span-2 font-semibold">@item.ProductName</span>
+              <span class="text-center">@item.Quantity x</span>
+              <span class="text-center">$ @item.UnitPrice.ToString("0.00")</span>
+              <span class="text-center">$ @item.Subtotal.ToString("0.00")</span>
+              <span class="flex gap-1 justify-end">
+                <button class="px-2 py-1 bg-green-200 text-green-800 rounded hover:bg-green-300 cursor-pointer" @onclick="() => plusProductQuantity(item)">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <button class="px-2 py-1 bg-red-200 text-red-800 rounded hover:bg-red-300 cursor-pointer" @onclick="() => minusProductQuantity(item)">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </span>
+            </li>
+          }
+        </ul>
+
+        <div class="mt-4 text-right text-green-700 font-bold border-t border-black/20 pt-2">
+          Total: $ @order.OrderDetails.Sum(p => p.Subtotal).ToString("0.00")
+        </div>
+      }
+    </div>
+  }
   </div>
 </div>
 
@@ -76,14 +102,34 @@
 {
   private UserDto? selectedUser = null;
   private string? errorMessage;
+  private string? serverMessage;
   private int step = 0;
-  private List<ProductDto> cartItems = new List<ProductDto>();
+  private OrderCreateDto order = new OrderCreateDto();
 
   private async void HandleNextStep()
   {
     if (selectedUser is not null)
     {
-      step++;
+      if (step == 1 && order.OrderDetails.Count == 0)
+      {
+        await _sw.FireAsync(new SweetAlertOptions
+        {
+          Title = "Advertencia",
+          Text = "Debe agregar al menos un producto al carrito.",
+          Icon = SweetAlertIcon.Warning
+        });
+      }
+      else
+      {
+        if (step == 0)
+        {
+          step++;
+        }
+        else if (step == 1)
+        {
+          await HandlePay();
+        }
+      }
     }
     else
     {
@@ -93,7 +139,6 @@
         Text = "Debe seleccionar un usuario.",
         Icon = SweetAlertIcon.Warning
       });
-
     }
   }
   private void HandlePreviousStep()
@@ -113,7 +158,26 @@
   {
     try
     {
-      cartItems.Add(product);
+      var detalleExistente = order.OrderDetails.FirstOrDefault(d => d.ProductId == product.Id);
+      if (detalleExistente != null)
+      {
+        detalleExistente.Quantity++;
+        detalleExistente.Subtotal = detalleExistente.Quantity * detalleExistente.UnitPrice;
+      }
+      else
+      {
+        order.OrderDetails.Add(
+        new OrderDetailCreateDto
+        {
+          ProductId = product.Id,
+          Quantity = 1,
+          UnitPrice = product.Price,
+          ProductName = product.Name,
+          Subtotal = product.Price
+        }
+        );
+      }
+
       await _sw.FireAsync(new SweetAlertOptions
       {
         Title = "Producto agregado",
@@ -122,6 +186,80 @@
       });
     }
     catch (Exception ex)
+    {
+      await _sw.FireAsync(new SweetAlertOptions
+      {
+        Title = "Error",
+        Text = ex.Message,
+        Icon = SweetAlertIcon.Error
+      });
+    }
+  }
+
+  private async void plusProductQuantity(OrderDetailCreateDto detalle)
+  {
+    try
+    {
+      detalle.Quantity++;
+      detalle.Subtotal = detalle.Quantity * detalle.UnitPrice;
+    }
+    catch (Exception ex)
+    {
+      await _sw.FireAsync(new SweetAlertOptions
+      {
+        Title = "Error",
+        Text = ex.Message,
+        Icon = SweetAlertIcon.Error
+      });
+    }
+  }
+
+  private async void minusProductQuantity(OrderDetailCreateDto detalle)
+  {
+    try
+    {
+      if (detalle.Quantity > 1)
+      {
+        detalle.Quantity--;
+        detalle.Subtotal = detalle.Quantity * detalle.UnitPrice;
+      }
+      else
+      {
+        order.OrderDetails.Remove(detalle);
+      }
+    }
+    catch (Exception ex)
+    {
+      await _sw.FireAsync(new SweetAlertOptions
+      {
+        Title = "Error",
+        Text = ex.Message,
+        Icon = SweetAlertIcon.Error
+      });
+    }
+  }
+
+  private async Task HandlePay(){
+    try{
+      var token = await _localStorage.GetItemAsync<string>("token");
+      if (token is null)
+      {
+        Nav.NavigateTo("/Login");
+        return;
+      }
+      var requestedByUserId = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
+      order.SellerId = requestedByUserId;
+      order.BuyerId = selectedUser?.Id!;
+      order.Total = order.OrderDetails.Sum(p => p.Subtotal);
+      var response = await _orderService.CreateOrderAsync(order);
+      serverMessage = response.message;
+      if(response.data is null){
+        await _sw.FireAsync("Error", serverMessage, SweetAlertIcon.Error);
+        return;
+      }
+      await _sw.FireAsync("Orden Pagada\nDespacho Autorizado", serverMessage, SweetAlertIcon.Success);
+      Nav.NavigateTo("/Ordenes");
+    } catch (Exception ex)
     {
       await _sw.FireAsync(new SweetAlertOptions
       {

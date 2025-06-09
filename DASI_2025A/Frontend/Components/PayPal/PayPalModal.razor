@@ -1,0 +1,127 @@
+@* PayPalModal.razor *@
+@namespace Frontend.Components
+
+@if (IsVisible)
+{
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @onclick="CloseModal">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" @onclick:stopPropagation="true">
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 border-b">
+        <div class="flex items-center space-x-2">
+          <div class="text-blue-600 font-bold text-xl">PayPal</div>
+          <div class="text-sm text-gray-600">Checkout</div>
+        </div>
+        <button @onclick="CloseModal" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Amount -->
+      <div class="text-center py-4 border-b">
+        <div class="text-2xl font-bold text-blue-600">$@Amount.ToString("F2") USD</div>
+      </div>
+
+      <!-- Payment Methods Section -->
+      <div class="p-6">
+        <h3 class="text-lg font-semibold mb-4">Pagar con</h3>
+
+        <!-- PayPal Option -->
+        <div class="mb-4">
+          <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input type="radio" name="paymentMethod" value="paypal" class="mr-3" checked />
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center mr-3">
+                <span class="text-xs font-bold">PP</span>
+              </div>
+              <div>
+                <div class="font-medium">PayPal Credit</div>
+                <div class="text-sm text-gray-600">Cargo ●●●●●●●●●0123</div>
+              </div>
+            </div>
+            <div class="ml-auto text-right">
+              <div class="font-bold">$@Amount.ToString("F2")</div>
+              <div class="text-sm text-gray-600">USD</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Credit Card Option -->
+        <div class="mb-4">
+          <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input type="radio" name="paymentMethod" value="card" class="mr-3" />
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-gray-800 text-white rounded flex items-center justify-center mr-3">
+                <span class="text-xs">💳</span>
+              </div>
+              <div>
+                <div class="font-medium">Visa</div>
+                <div class="text-sm text-gray-600">●●●●1234</div>
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Add Credit Card -->
+        <button class="text-blue-600 font-medium mb-6 flex items-center">
+          <span class="mr-2">+</span> Agregar tarjeta de crédito
+        </button>
+
+        <!-- Checkbox -->
+        <div class="mb-6">
+          <label class="flex items-start">
+            <input type="checkbox" class="mt-1 mr-2" />
+            <span class="text-sm text-gray-600">Convertir en mi forma de pago preferida</span>
+          </label>
+        </div>
+
+        <!-- Complete Purchase Button -->
+        <button @onclick="CompletePurchase"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 mb-3">
+          Completar compra
+        </button>
+
+        <!-- Cancel Link -->
+        <div class="text-center">
+          <button @onclick="CloseModal" class="text-blue-600 hover:underline text-sm">
+            Cancelar y volver a Scouts #18
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 bg-gray-50 rounded-b-lg">
+        <div class="flex items-center justify-center text-xs text-gray-600">
+          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+              clip-rule="evenodd"></path>
+          </svg>
+          PayPal keeps your information and payment safe
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@code
+{
+  [Parameter] public bool IsVisible { get; set; } = false;
+  [Parameter] public decimal Amount { get; set; } = 0;
+  [Parameter] public EventCallback<bool> OnPaymentCompleted { get; set; }
+
+  private async Task CompletePurchase()
+  {
+    Console.WriteLine("Aprobado");
+    await OnPaymentCompleted.InvokeAsync(true);
+    IsVisible = false;
+  }
+
+  private async Task CloseModal()
+  {
+    Console.WriteLine("Rechazado");
+    await OnPaymentCompleted.InvokeAsync(false);
+    IsVisible = false;
+  }
+}

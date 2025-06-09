@@ -1,7 +1,9 @@
 @page "/login"
 @layout NoLayout
 @inject IAuthService authService
+@inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorage
 
 <PageTitle>Login</PageTitle>
 
@@ -54,7 +56,7 @@
   private LoginDto loginDto = new();
   private string serverMessage = string.Empty;
   private string serverMessageColor = "bg-sky-500";
-
+  
   private async Task handleSubmit()
   {
     serverMessage = "";
@@ -74,6 +76,4 @@
   {
     serverMessage = string.Empty;
   }
-
-
 }

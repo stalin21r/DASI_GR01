@@ -36,6 +36,7 @@ builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductLoggerRepository, ProductLoggerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOccupationRepository, OccupationRepository>();
 // Servicios
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductLoggerService, ProductLoggerService>();
@@ -43,6 +44,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IImgurService, ImgurService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOccupationService, OccupationService>();
 
 // Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>

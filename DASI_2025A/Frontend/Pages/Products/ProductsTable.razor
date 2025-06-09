@@ -1,3 +1,4 @@
+@attribute [Authorize(Roles = "Superadmin, Admin")]
 @page "/Productos"
 @using System.Text.Json
 @inject NavigationManager NavigationManager
@@ -7,18 +8,7 @@
 <PageTitle>Gestionar Productos</PageTitle>
 
 <div class="space-y-4 w-full">
-  <section class="flex flex-col w-full justify-center items-start">
-    <div class="p-2 flex gap-4 justify-center items-center">
-      <img src="/Assets/Images/mapache.webp" alt="mapache scout SSCC" class="w-auto h-[120px]">
-      <div class="text-center">
-        <div class="flex flex-col">
-          <span class="text-sm font-bold text-[#2b4266]">SS.CC.</span>
-          <span class="text-2xl font-bold text-[#1C328C]">Rumipamba</span>
-        </div>
-        <span class="text-gray-400/90 text-sm font-bold">Gestionar Productos</span>
-      </div>
-    </div>
-  </section>
+  <BodyHeader title="Gestionar Productos" />
 
   <section class="w-full flex justify-between items-center px-4">
     <h1 class="text-4xl font-bold text-[#427500]">Productos</h1>
@@ -28,7 +18,6 @@
         <i class="fa-solid fa-plus"></i>
       </NavLink>
     </div>
-
   </section>
 
   @if (products == null && string.IsNullOrEmpty(errorMessage))
@@ -42,7 +31,7 @@
   else
   {
     <section>
-      <div class="p-6">
+      <div class="p-2">
         <div class="flex justify-end w-full px-6 py-2">
           <nav class="inline-flex space-x-1">
             <button @onclick="() => GoToPage(currentPage - 1)"
@@ -62,14 +51,15 @@
               disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i></button>
           </nav>
         </div>
-        <div class="overflow-hidden rounded-lg shadow-2xl">
+        <div class="overflow-x-auto rounded-lg shadow-2xl">
           <table class="w-full">
             <thead class="bg-gray-200 font-bold">
               @{
-                var headers = new List<string> { "#", "Producto", "Descripción", "Precio", "Stock", "Imagen", "Tipo",
+                var headers = new List<string> { "Producto", "Descripción", "Precio", "Stock", "Imagen", "Tipo",
                         "Acciones"};
               }
               <tr>
+                <th class="w-5">#</th>
                 @foreach (var header in headers)
                 {
                   <th class="px-6 py-3 text-left text-sm uppercase tracking-wider">@header</th>
@@ -83,8 +73,8 @@
                 <tr class="@(product.Active ? "hover:bg-gray-50" : "bg-red-50") transition-colors duration-150">
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@((currentPage - 1) * pageSize + index + 1)
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@product.Name</td>
-                  <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">@product.Description</td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-900">@product.Name</td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">@product.Description</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$@product.Price.ToString("0.00")</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm @(product.Stock == 0 ? "text-red-500" : "text-gray-500")">
                     @product.Stock
@@ -120,11 +110,9 @@
   private IEnumerable<ProductDto>? products;
   private string? errorMessage;
   private string? serverMessage;
-
   private int currentPage = 1;
   private int pageSize = 5;
   private int totalPages = 1;
-
   private IEnumerable<ProductDto> PagedProducts =>
   products?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<ProductDto>();
 

@@ -7,36 +7,38 @@ public class UserDto
 {
   public string? Id { get; set; }
 
-  [Required]
+  [Required(ErrorMessage = "El nombre es requerido.")]
   [MaxLength(100)]
   public string FirstName { get; set; } = default!;
 
-  [Required]
+  [Required(ErrorMessage = "El apellido es requerido.")]
   [MaxLength(100)]
   public string LastName { get; set; } = default!;
 
-  [Required]
+  [Required(ErrorMessage = "La fecha de nacimiento es requerida.")]
   [DataType(DataType.Date)]
   public DateTime DateOfBirth { get; set; }
 
-  [Required]
+  [Required(ErrorMessage = "El número único es requerido.")]
   [MaxLength(50)]
   public string ScoutUniqueId { get; set; } = default!;
 
-  [Required]
+  [Required(ErrorMessage = "El correo es requerido.")]
   [EmailAddress]
   public string? Email { get; set; }
 
-  [Required]
+  [Required(ErrorMessage = "La contraseña es requerida")]
+  [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un carácter especial y un número")]
   public string? Password { get; set; }
 
-  [Required]
-  public bool Active { get; set; }
+  public bool Active { get; set; } = true;
 
-  [Required]
+  public decimal Balance { get; set; }
+
+  [Required(ErrorMessage = "El rol es requerido")]
   public string? Role { get; set; }
 
-  [Required]
+  [Required(ErrorMessage = "La ocupación es requerida")]
   public int OccupationFk { get; set; }
 
   public OccupationDto? Occupation { get; set; }

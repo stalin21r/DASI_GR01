@@ -4,14 +4,17 @@ using System.Security.Claims;
 using Shared;
 
 namespace Frontend;
+
 public class AuthService : IAuthService
 {
   private readonly HttpClient _http;
   private readonly ILocalStorageService _localStorage;
-  public AuthService(HttpClient httpClient, ILocalStorageService localStorage)
+  private readonly CustomAuthStateProvider _authStateProvider;
+  public AuthService(HttpClient httpClient, ILocalStorageService localStorage, CustomAuthStateProvider authStateProvider)
   {
     _http = httpClient;
     _localStorage = localStorage;
+    _authStateProvider = authStateProvider;
   }
 
   public async Task<ApiResponse<AuthDto>> LoginAsync(LoginDto loginDto)
@@ -31,6 +34,7 @@ public class AuthService : IAuthService
       if (result?.data is not null)
       {
         await _localStorage.SetItemAsync("token", result.data.token);
+        _authStateProvider.NotifyUserAuthentication(result.data.token);
       }
       return result!;
     }
@@ -41,8 +45,9 @@ public class AuthService : IAuthService
     }
   }
 
-  public Task LogoutAsync()
+  public async Task LogoutAsync()
   {
-    throw new NotImplementedException();
+    await _localStorage.RemoveItemAsync("token");
+    _authStateProvider.NotifyUserLogout();
   }
 }

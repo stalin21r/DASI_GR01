@@ -17,7 +17,7 @@ public class BalanceTransactionsEntity : AuditableEntity
   [Required]
   [MaxLength(50)]
   public required string Type { get; set; } //RECARGAor o DÉBITO
-  [MaxLength(255)]
+  [MaxLength(255, ErrorMessage = "La descripcion debe tener menos de 255 caracteres")]
   public string? Description { get; set; }
   [Required]
   [Column(TypeName = "decimal(18,2)")]

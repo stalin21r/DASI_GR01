@@ -1,0 +1,159 @@
+@attribute [Authorize(Roles = "Superadmin")]
+@page "/Usuarios/Crear"
+@inject IUsersService _userService
+@inject NavigationManager Nav
+@inject SweetAlertService _sw
+@inject IOccupationService _occupationService
+
+<PageTitle>Crear Usuarios</PageTitle>
+
+<div class="space-y-4 w-full">
+  <BodyHeader title="Crear Usuarios" />
+
+  <section class="w-full flex justify-between items-center px-4">
+    <h1 class="text-4xl font-bold text-[#427500]">Crear Usuarios</h1>
+    <div class="flex gap-4">
+      <NavLink href="/Usuarios"
+        class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i>Atrás
+      </NavLink>
+    </div>
+  </section>
+
+  @if (occupations == null && string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
+  }
+  else if (!string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
+  }
+  else
+  {
+    <section class="w-full flex justify-center items-center">
+      <EditForm Model="userDto" OnValidSubmit="handleSubmit"
+        class="p-10 w-3/4 rounded-2xl border border-gray-300/50 shadow-2xl">
+        <div class="grid grid-cols-3 grid-rows-3 gap-4 space-y-6">
+          <DataAnnotationsValidator />
+          <div>
+            <div>
+              <FloatingLabelInput Label="Nombre" Name="firstName" Type="text" LabelColor="blue" value="@userDto.FirstName"
+                OnChange="(e) => userDto.FirstName = e.Value?.ToString() ?? string.Empty" />
+              <ValidationMessage For="@(() => userDto.FirstName)" />
+            </div>
+          </div>
+          <div>
+            <div>
+              <FloatingLabelInput Label="Apellido" Name="lastName" Type="text" LabelColor="blue" value="@userDto.LastName"
+                OnChange="(e) => userDto.LastName = e.Value?.ToString() ?? string.Empty" />
+              <ValidationMessage For="@(() => userDto.LastName)" />
+            </div>
+          </div>
+          <div>
+            <div>
+              <FloatingLabelInput Label="Fecha de Nacimiento" Name="dateOfBirth" Type="date" LabelColor="blue"
+                value="@userDto.DateOfBirth.ToString("yyyy-MM-dd")"
+                OnChange="(e) => userDto.DateOfBirth = DateTime.TryParse(e.Value?.ToString(), out var date) ? date : userDto.DateOfBirth" />
+
+              <ValidationMessage For="@(() => userDto.DateOfBirth)" />
+            </div>
+          </div>
+          <div>
+            <div>
+              <FloatingLabelInput Label="Numero único" Name="uniqueId" Type="text" LabelColor="blue"
+                value="@userDto.ScoutUniqueId"
+                OnChange="(e) => userDto.ScoutUniqueId = e.Value?.ToString() ?? string.Empty" />
+              <ValidationMessage For="@(() => userDto.ScoutUniqueId)" />
+            </div>
+          </div>
+          <div>
+            <div>
+              <FloatingLabelSelect Label="Ocupación" Name="occupation" LabelColor="blue"
+                SelectedValue="@(userDto.Occupation?.Id.ToString())"
+                SelectedValueChanged="(value) => userDto.Occupation = occupations?.FirstOrDefault(o => o.Id == int.Parse(value))"
+                Placeholder="Ocupación">
+                <option selected></option>
+                @foreach (var occupation in occupations!)
+                {
+                  <option value="@occupation.Id">@occupation.Name</option>
+                }
+              </FloatingLabelSelect>
+              <ValidationMessage For="@(() => userDto.Occupation)" />
+            </div>
+          </div>
+          <div>
+            <div>
+              <FloatingLabelSelect Label="Rol" Name="role" LabelColor="blue" SelectedValue="@userDto.Role"
+                SelectedValueChanged="(value) => userDto.Role = value" Placeholder="Rol">
+                <option selected></option>
+                <option value="User">Usuario</option>
+                <option value="Admin">Admin</option>
+                <option value="Superadmin">Superadmin</option>
+              </FloatingLabelSelect>
+              <ValidationMessage For="@(() => userDto.Role)" />
+            </div>
+          </div>
+          <div>
+            <div>
+              <FloatingLabelInput Label="Contraseña" Name="password" Type="text" LabelColor="blue"
+                value="@userDto.Password" OnChange="(e) => userDto.Password = e.Value?.ToString() ?? string.Empty" />
+              <ValidationMessage For="@(() => userDto.Password)" />
+            </div>
+          </div>
+          <div>
+            <div>
+              <FloatingLabelInput Label="Correo" Name="email" Type="email" LabelColor="blue" value="@userDto.Email"
+                OnChange="(e) => userDto.Email = e.Value?.ToString() ?? string.Empty" />
+              <ValidationMessage For="@(() => userDto.Email)" />
+            </div>
+          </div>
+          <div class="flex justify-center items-start">
+            <button type="submit"
+              class="bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-5 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
+              Crear Usuario
+            </button>
+          </div>
+        </div>
+      </EditForm>
+    </section>
+  }
+</div>
+
+@code
+{
+  private UserDto userDto = new UserDto
+  {
+    DateOfBirth = DateTime.Today // Establece la fecha actual
+  };
+  private IEnumerable<OccupationDto> occupations = new List<OccupationDto>();
+  private string serverMessage = string.Empty;
+  private string errorMessage = string.Empty;
+
+  protected override async Task OnInitializedAsync()
+  {
+    var response = await _occupationService.GetaAllOccupations();
+    if (response.data is null)
+    {
+      errorMessage = response.message;
+    }
+    else
+    {
+      occupations = response.data;
+    }
+  }
+  private async Task handleSubmit()
+  {
+    userDto.OccupationFk = userDto.Occupation?.Id ?? 0;
+
+    Console.WriteLine(userDto.ToString());
+    var result = await _userService.CreateUserAsync(userDto);
+    serverMessage = result.message;
+    if (result.data is null)
+    {
+      await _sw.FireAsync("Error", serverMessage, SweetAlertIcon.Error);
+      return;
+    }
+    await _sw.FireAsync("Usuario creado", serverMessage, SweetAlertIcon.Success);
+    Nav.NavigateTo("/Usuarios");
+  }
+}

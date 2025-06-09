@@ -9,6 +9,6 @@ public class TopUpRequestUpdateDto
   // Solo permitimos actualizar el estado y el autorizador
   [Required]
   [MaxLength(20)]
-  public required string Status { get; set; } // Pendiente, Aprobado, Rechazado
+  public string? Status { get; set; } // Pendiente, Aprobado, Rechazado
   public string? AuthorizedByUserId { get; set; }
 }

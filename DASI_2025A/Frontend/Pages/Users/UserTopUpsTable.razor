@@ -1,0 +1,181 @@
+@attribute [Authorize(Roles = "Superadmin")]
+@page "/Usuarios/Recargas"
+@using System.Security.Claims;
+@using System.Text.Json;
+@inject NavigationManager Nav
+@inject SweetAlertService _sw
+@inject IUsersService _userService
+@inject ILocalStorageService _localStorage
+
+<PageTitle>Administrar Recargas</PageTitle>
+
+<div class="space-y-4 w-full">
+  <BodyHeader title="Administrar Recargas" />
+
+  <section class="w-full flex justify-between items-center px-4">
+    <h1 class="text-4xl font-bold text-[#427500]">Administrar Recargas</h1>
+  </section>
+
+  @if (topUps == null && string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
+  }
+  else if (!string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
+  }
+  else
+  {
+    <section>
+      <div class="p-2">
+        <div class="flex justify-end w-full px-6 py-2">
+          <nav class="inline-flex space-x-1">
+            <button @onclick="() => GoToPage(currentPage - 1)"
+              class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+              disabled="@(@currentPage == 1)"><i class="fa-solid fa-chevron-left"></i></button>
+
+            @for (int i = 1; i <= totalPages; i++)
+            {
+              <button @onclick="() => GoToPage(i)"
+                class="w-7 h-7 font-bold text-center rounded-full @(i == currentPage ? "bg-blue-500/80 text-white" : "bg-white hover:bg-gray-300/80 cursor-pointer") text-xs">
+                @i
+              </button>
+            }
+
+            <button @onclick="() => GoToPage(currentPage + 1)"
+              class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+              disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i></button>
+          </nav>
+        </div>
+        <div class="overflow-x-auto rounded-lg shadow-2xl">
+          <table class="w-full">
+            <thead class="bg-gray-200 font-bold">
+              @{
+                var headers = new List<string> {"Usuario", "Creado por", "Aprobado por", "Tipo","Monto", "Status", "Fecha",
+                        "Comprobante",
+                        "Acciones"};
+              }
+              <tr>
+                <th class="w-5">#</th>
+                @foreach (var header in headers)
+                {
+                  <th class="px-6 py-3 text-left text-sm uppercase tracking-wider">@header</th>
+                }
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              @foreach (var (topUp, index) in PagedTopUps.Select((p, i) => (p, i)))
+              {
+                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@((currentPage - 1) * pageSize + index + 1)
+                  </td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-900">@topUp.TargetUser</td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-900">@topUp.RequestedByUser</td>
+                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-900">@(topUp.AuthorizedByUser is not
+                                    null ? topUp.AuthorizedByUser : "N/A")</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@topUp.Type</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$@topUp.Amount</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <span
+                  class="text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full 
+                                                @(topUp.Status.Equals("PENDIENTE") ? "bg-yellow-100 text-yellow-800" : topUp.Status.Equals("APROBADO") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800") ">
+                  @topUp.Status
+                </span>
+
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@topUp.AuditableDate.ToString("dd/MM/yyyy")
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex justify-center items-center">
+                    <img src="@(topUp.Receipt is not null ? topUp.Receipt : "/Assets/Images/noImage.webp")"
+                      alt="Comprobante de la recarga" class="w-12 h-12">
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <button @onclick='() => OnAproveTopUp(topUp, "APROBADO")'
+                      disabled="@(!topUp.Status.Equals("PENDIENTE"))"
+                      class="text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer
+                                                                               bg-green-500 hover:bg-green-600
+                                                                               disabled:bg-gray-300 disabled:cursor-not-allowed">
+                      <i class="fa-solid fa-check"></i>
+                    </button>
+
+                    <button @onclick='() => OnAproveTopUp(topUp, "RECHAZADO")'
+                      disabled="@(!topUp.Status.Equals("PENDIENTE"))"
+                      class="text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer
+                                                                               bg-red-500 hover:bg-red-700
+                                                                               disabled:bg-gray-300 disabled:cursor-not-allowed">
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </td>
+                </tr>
+                        }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  }
+</div>
+
+
+@code
+{
+  private IEnumerable<TopUpRequestResponseDto>? topUps;
+  private TopUpRequestUpdateDto topUpUpdateDto = new TopUpRequestUpdateDto();
+  private string? errorMessage;
+  private string? serverMessage;
+  private int currentPage = 1;
+  private int pageSize = 5;
+  private int totalPages = 1;
+  private IEnumerable<TopUpRequestResponseDto> PagedTopUps =>
+  topUps?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<TopUpRequestResponseDto>();
+
+  protected override async Task OnInitializedAsync()
+  {
+    var response = await _userService.GetAllTopUpRequestsAsync();
+    if (response.data is null)
+    {
+      errorMessage = response.message;
+      return;
+    }
+    topUps = response.data.ToList();
+    totalPages = (int)Math.Ceiling((double)topUps.Count() / pageSize);
+  }
+
+  private async Task OnAproveTopUp(TopUpRequestResponseDto topUp, string status)
+  {
+    var token = await _localStorage.GetItemAsync<string>("token");
+    if (token is null)
+    {
+      Nav.NavigateTo("/Login");
+      return;
+    }
+    var approveById = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
+    topUpUpdateDto.Id = topUp.Id;
+    topUpUpdateDto.AuthorizedByUserId = approveById;
+    topUpUpdateDto.Status = status;
+
+    var response = await _userService.AproveOrRejectTopUpAsync(topUpUpdateDto);
+    serverMessage = response.message;
+    if (response.data is null)
+    {
+      await _sw.FireAsync("Error", serverMessage, SweetAlertIcon.Error);
+      return;
+    }
+    if (status == "APROBADO")
+    {
+      await _sw.FireAsync("Solicitud aprobada", serverMessage, SweetAlertIcon.Success);
+    }
+    else
+    {
+      await _sw.FireAsync("Solicitud rechazada", serverMessage, SweetAlertIcon.Success);
+    }
+    await OnInitializedAsync();
+
+  }
+
+  private void GoToPage(int page)
+  {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+  }
+}

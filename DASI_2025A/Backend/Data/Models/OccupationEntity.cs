@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend;
+
 public class OccupationEntity : AuditableEntity
 {
   [Key]
@@ -10,6 +11,5 @@ public class OccupationEntity : AuditableEntity
   [Required]
   [MaxLength(50)]
   public string? Name { get; set; }
-
   public ICollection<ApplicationUser>? Users { get; set; }
 }
