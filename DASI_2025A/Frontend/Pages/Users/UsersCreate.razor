@@ -67,7 +67,7 @@
           </div>
           <div>
             <div>
-              <FloatingLabelSelect Label="Ocupación" Name="occupation" LabelColor="blue" type="text"
+              <FloatingLabelSelect Label="Ocupación" Name="occupation" LabelColor="blue"
                 SelectedValue="@(userDto.Occupation?.Id.ToString())"
                 SelectedValueChanged="(value) => userDto.Occupation = occupations?.FirstOrDefault(o => o.Id == int.Parse(value))"
                 Placeholder="Ocupación">
