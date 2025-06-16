@@ -218,4 +218,25 @@ public class UsersService : IUsersService
       return new ApiResponse<TopUpRequestResponseDto>("Error desconocido al aprobar o rechazar la solicitud de recarga.");
     }
   }
+  public async Task<ApiResponse<UserTransactionsDto>> GetUserTransactionsAsync(string userId)
+  {
+    try
+    {
+      var response = await _http.GetAsync($"api/v1/User/transactions/{userId}");
+      if (!response.IsSuccessStatusCode)
+      {
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+        return errorResponse != null
+            ? new ApiResponse<UserTransactionsDto>(errorResponse.message)
+            : new ApiResponse<UserTransactionsDto>("Error al obtener las transacciones del usuario.");
+      }
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<UserTransactionsDto>>();
+      return result!;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex);
+      return new ApiResponse<UserTransactionsDto>("Error desconocido al obtener las transacciones del usuario.");
+    }
+  }
 }

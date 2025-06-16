@@ -9,13 +9,16 @@ namespace Backend
   public class UserController : ControllerBase
   {
     private readonly IUserService _userService;
+    private readonly ILogger<UserController> _logger;
+
 
     /// <summary>
     ///     Controlador para el manejo de usuarios.
     /// </summary>
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, ILogger<UserController> logger)
     {
       _userService = userService;
+      _logger = logger;
     }
 
     /// <summary>
@@ -31,17 +34,21 @@ namespace Backend
     [Authorize(Policy = "SuperadminOnly")]
     public async Task<IActionResult> CreateUser([FromBody] UserDto userDto)
     {
+      _logger.LogInformation("Creando un nuevo usuario");
       try
       {
         var response = await _userService.CreateAsync(userDto);
+        _logger.LogInformation("Usuario creado exitosamente");  
         return Created(string.Empty, response);
       }
       catch (BadHttpRequestException ex)
       {
+        _logger.LogError("Error al crear el usuario: {Message}", ex.Message);
         return BadRequest(new { message = ex.Message });
       }
       catch (Exception)
       {
+        _logger.LogError("Error en el servidor al crear el usuario.");
         return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
       }
     }
@@ -278,6 +285,7 @@ namespace Backend
       try
       {
         var response = await _userService.GetTopUpRequestsAsync();
+        Console.WriteLine(response);
         return Ok(response);
       }
       catch (KeyNotFoundException ex)
@@ -314,7 +322,7 @@ namespace Backend
       }
       catch (Exception)
       {
-        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el usuario." });
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener recargas." });
       }
     }
   }

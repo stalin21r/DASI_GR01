@@ -7,7 +7,8 @@ public class OccupationDto
 
   [Required]
   [MaxLength(50)]
-  public string? Name { get; set; }
+  [RegularExpression(@"^[a-zA-Z\s]+$", ErrorMessage = "El nombre solo puede contener letras y espacios.")]
+  public string Name { get; set; } = "Sin definir";
 
 }
 

@@ -34,7 +34,7 @@
         </div>
         <div>
           <div>
-            <FloatingLabelSelect Label="Tipo" Name="Type" LabelColor="blue"
+            <FloatingLabelSelect Label="Tipo" Name="Type" LabelColor="blue" Type="ProductType"
               SelectedValue="@(productDto.Type.ToString())"
               SelectedValueChanged="(value) => productDto.Type = Enum.Parse<ProductType>(value)" Placeholder="Tipo">
               <option value="General">General</option>
@@ -64,7 +64,7 @@
         </div>
         <div class="col-span-2 row-span-2 col-start-1 row-start-3">
           <div>
-            <FloatingLabelTextArea Label="Descripción" Name="Description" LabelColor="blue"
+            <FloatingLabelTextArea Label="Descripción" Name="Description" LabelColor="blue" type="text"
               Value="@productDto.Description"
               OnChange="(e) => productDto.Description = e.Value?.ToString() ?? string.Empty">
             </FloatingLabelTextArea>
@@ -106,9 +106,7 @@
 
   private async Task handleSubmit()
   {
-    Console.WriteLine(productDto.ToString());
     var result = await _productService.CreateProductAsync(productDto);
-    //Console.WriteLine(result.data);
     serverMessage = result.message;
 
     if (result.data is null)
@@ -151,7 +149,6 @@
     {
       if (ex.Message.Contains("exceeds the maximum"))
       {
-        Console.WriteLine(ex.Message);
         await _sw.FireAsync("Error", "El archivo es demasiado grande, máximo permitido 5mb", SweetAlertIcon.Error);
       }
       else
@@ -160,6 +157,4 @@
       }
     }
   }
-
-
 }

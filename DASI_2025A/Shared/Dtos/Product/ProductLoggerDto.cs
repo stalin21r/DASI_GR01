@@ -17,7 +17,7 @@ namespace Shared
     public string Action { get; set; } = string.Empty;
 
     [StringLength(1000, ErrorMessage = "La descripción debe tener menos de 1000 caracteres")]
-    public string Description { get; set; } = string.Empty;
+    public string Description { get; set; } = "Descripción no proporcionada";
 
     [Required(ErrorMessage = "QuantityBefore es requerido")]
     [Range(0, int.MaxValue, ErrorMessage = "QuantityBefore debe ser mayor o igual a 0")]

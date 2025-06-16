@@ -1,6 +1,11 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Shared;
 public class ImgurUploadResultDto
 {
-  public string? Link { get; set; }
-  public string? DeleteHash { get; set; }
+  [Url(ErrorMessage = "La imagen debe ser una URL válida")]
+  public string? Link { get; set; } = "No disponible";
+
+  [StringLength(100)]
+  public string? DeleteHash { get; set; } = "No disponible";
 }

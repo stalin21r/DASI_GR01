@@ -14,9 +14,7 @@
   <section class="w-full flex justify-between items-center px-4">
     <h1 class="text-4xl font-bold text-[#427500]">Mis Recargas</h1>
     <div class="flex gap-4">
-      <NavLink href=@{
-            $"/Recargas/Solicitud/{userId}"
-            }
+      <NavLink href="@($"/Recargas/Solicitud/{userId}")"
         class="hover:bg-green-600 bg-green-800  text-white text-lg font-bold px-4 py-2 rounded-full w-10 h-10 flex justify-center items-center transition duration-300 cursor-pointer">
         <i class="fa-solid fa-plus"></i>
       </NavLink>

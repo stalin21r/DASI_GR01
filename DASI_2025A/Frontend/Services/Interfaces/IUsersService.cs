@@ -13,5 +13,5 @@ public interface IUsersService
   Task<ApiResponse<IEnumerable<TopUpRequestResponseDto>>> GetAllTopUpRequestsAsync();
   Task<ApiResponse<IEnumerable<TopUpRequestResponseDto>>> GetTopUpRequestsByUserIdAsync(string userId);
   Task<ApiResponse<TopUpRequestResponseDto>> AproveOrRejectTopUpAsync(TopUpRequestUpdateDto topUpRequestDto);
-
+  Task<ApiResponse<UserTransactionsDto>> GetUserTransactionsAsync(string userId);
 }

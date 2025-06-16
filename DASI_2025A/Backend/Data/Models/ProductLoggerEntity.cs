@@ -16,7 +16,8 @@ namespace Backend
 
         [Required]
         [StringLength(1000)] // Debe inicializar con un valor
-        public required string Description { get; set; }
+        [RegularExpression(@"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s'.,-]*$", ErrorMessage = "La descripción contiene caracteres no válidos.")]
+        public required string Description { get; set; } = "Ninguna descripción disponible.";
 
         [Required]
         public required uint QuantityBefore { get; set; }

@@ -13,6 +13,11 @@ var builder = WebApplication.CreateBuilder(args);
 // CONFIGURACIÓN DE SERVICIOS
 // ===============================
 
+// Logging
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
 // DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -96,7 +101,7 @@ builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowBlazorApp", builder =>
 	{
-		builder.WithOrigins("https://localhost:7206")
+		builder.WithOrigins("https://localhost:7206","http://localhost:5007")
 				 .AllowAnyMethod()
 				 .AllowAnyHeader()
 				 .AllowCredentials();

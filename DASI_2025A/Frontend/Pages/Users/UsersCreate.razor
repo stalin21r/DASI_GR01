@@ -54,7 +54,6 @@
               <FloatingLabelInput Label="Fecha de Nacimiento" Name="dateOfBirth" Type="date" LabelColor="blue"
                 value="@userDto.DateOfBirth.ToString("yyyy-MM-dd")"
                 OnChange="(e) => userDto.DateOfBirth = DateTime.TryParse(e.Value?.ToString(), out var date) ? date : userDto.DateOfBirth" />
-
               <ValidationMessage For="@(() => userDto.DateOfBirth)" />
             </div>
           </div>
@@ -68,7 +67,7 @@
           </div>
           <div>
             <div>
-              <FloatingLabelSelect Label="Ocupación" Name="occupation" LabelColor="blue"
+              <FloatingLabelSelect Label="Ocupación" Name="occupation" LabelColor="blue" type="text"
                 SelectedValue="@(userDto.Occupation?.Id.ToString())"
                 SelectedValueChanged="(value) => userDto.Occupation = occupations?.FirstOrDefault(o => o.Id == int.Parse(value))"
                 Placeholder="Ocupación">
@@ -131,21 +130,26 @@
 
   protected override async Task OnInitializedAsync()
   {
-    var response = await _occupationService.GetaAllOccupations();
-    if (response.data is null)
+    try
     {
-      errorMessage = response.message;
+      var response = await _occupationService.GetaAllOccupations();
+      if (response.data is null)
+      {
+        errorMessage = response.message;
+      }
+      else
+      {
+        occupations = response.data;
+      }
     }
-    else
+    catch (Exception)
     {
-      occupations = response.data;
+      errorMessage = "Error al cargar las ocupaciones";
     }
   }
   private async Task handleSubmit()
   {
     userDto.OccupationFk = userDto.Occupation?.Id ?? 0;
-
-    Console.WriteLine(userDto.ToString());
     var result = await _userService.CreateUserAsync(userDto);
     serverMessage = result.message;
     if (result.data is null)
