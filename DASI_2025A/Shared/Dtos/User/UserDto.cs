@@ -7,27 +7,31 @@ public class UserDto
 {
   public string? Id { get; set; }
 
-  [Required(ErrorMessage = "El nombre es requerido.")]
-  [MaxLength(100)]
+  [Required(ErrorMessage = "El nombre es obligatorio")]
+  [StringLength(50, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 50 caracteres")]
+  [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El nombre solo puede contener letras y espacios")]
   public string FirstName { get; set; } = default!;
 
   [Required(ErrorMessage = "El apellido es requerido.")]
-  [MaxLength(100)]
+  [StringLength(100, MinimumLength = 2, ErrorMessage = "El apellido debe tener entre 2 y 100 caracteres")]
+  [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El apellido solo puede contener letras y espacios")]
   public string LastName { get; set; } = default!;
 
-  [Required(ErrorMessage = "La fecha de nacimiento es requerida.")]
+  [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
   [DataType(DataType.Date)]
+  [CustomValidation(typeof(UserDto), nameof(ValidateDateOfBirth))]
   public DateTime DateOfBirth { get; set; }
 
   [Required(ErrorMessage = "El número único es requerido.")]
   [MaxLength(50)]
   public string ScoutUniqueId { get; set; } = default!;
 
-  [Required(ErrorMessage = "El correo es requerido.")]
-  [EmailAddress]
-  public string? Email { get; set; }
+  [Required(ErrorMessage = "El email es obligatorio")]
+  [EmailAddress(ErrorMessage = "Formato de email inválido")]
+  [StringLength(100, ErrorMessage = "El email no puede exceder 100 caracteres")]
+  public string Email { get; set; } = default!;
 
-  [Required(ErrorMessage = "La contraseña es requerida")]
+  [Required(ErrorMessage = "La contraseña es obligatoria")]
   [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un carácter especial y un número")]
   public string? Password { get; set; }
 
@@ -51,5 +55,21 @@ public class UserDto
   public override int GetHashCode()
   {
     return Id != null ? Id.GetHashCode() : 0;
+  }
+
+  // Validación personalizada para fecha de nacimiento
+  public static ValidationResult? ValidateDateOfBirth(DateTime dateOfBirth, ValidationContext context)
+  {
+    var today = DateTime.Today;
+    var minAge = today.AddYears(-150);
+    var maxAge = today.AddYears(-5); // Edad mínima 5 años
+
+    if (dateOfBirth < minAge)
+      return new ValidationResult("La fecha de nacimiento no puede ser anterior a 150 años");
+
+    if (dateOfBirth > maxAge)
+      return new ValidationResult("Debe ser mayor de 5 años");
+
+    return ValidationResult.Success;
   }
 }

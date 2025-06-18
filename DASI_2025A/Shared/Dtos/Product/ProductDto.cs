@@ -9,10 +9,12 @@ public class ProductDto
 
   [Required(ErrorMessage = "El nombre es requerido")]
   [StringLength(200, ErrorMessage = "El nombre debe tener menos de 200 caracteres")]
+  [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s'-]+$", ErrorMessage = "El nombre contiene caracteres no válidos.")]
   public string Name { get; set; } = string.Empty;
 
   [Required(ErrorMessage = "La descripción es requerida")]
   [StringLength(1000, ErrorMessage = "La descripción debe tener menos de 1000 caracteres")]
+  [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s,'-]+$", ErrorMessage = "La descripción contiene caracteres no válidos.")]
   public string Description { get; set; } = string.Empty;
 
   [Required(ErrorMessage = "El precio es requerido")]
@@ -23,7 +25,7 @@ public class ProductDto
   [Range(0, uint.MaxValue, ErrorMessage = "La cantidad debe ser mayor o igual a 0")]
   public uint Stock { get; set; } = 0;
 
-  public string? Image { get; set; }
+  public string? Image { get; set; } = "Imagen no disponible";
 
   [Required(ErrorMessage = "El estado es requerido")]
   public bool Active { get; set; } = true;

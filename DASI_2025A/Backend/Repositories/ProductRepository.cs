@@ -51,7 +51,7 @@ public class ProductRepository : IProductRepository
       Description = productDto.Description,
       Price = productDto.Price,
       Stock = productDto.Stock,
-      Image = imgurLink ?? string.Empty, // o null si tu columna lo permite
+      Image = imgurLink ?? "Imagen no disponible",
       Active = productDto.Active,
       Type = productDto.Type,
       ImageDeleteHash = deleteHash ?? string.Empty
@@ -183,8 +183,8 @@ public class ProductRepository : IProductRepository
 
         // Subir nueva imagen
         var uploadResult = await _imgurService.UploadImageAsync(productDto.Image, productDto.Name);
-        entity.Image = uploadResult.Link;
-        entity.ImageDeleteHash = uploadResult.DeleteHash;
+        entity.Image = uploadResult.Link ?? "Imagen no disponible";
+        entity.ImageDeleteHash = uploadResult.DeleteHash ?? "No disponible";
       }
       catch (Exception ex)
       {
@@ -225,10 +225,10 @@ public class ProductRepository : IProductRepository
     {
       Id = entity.Id,
       Name = entity.Name,
-      Description = entity.Description ?? string.Empty,
+      Description = entity.Description ?? "Ninguna descripción disponible",
       Price = entity.Price,
       Stock = entity.Stock,
-      Image = entity.Image,
+      Image = entity.Image ?? "Imagen no disponible",
       Active = entity.Active,
       Type = entity.Type
     };

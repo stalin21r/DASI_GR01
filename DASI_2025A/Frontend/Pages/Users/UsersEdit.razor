@@ -161,9 +161,7 @@
 
   private async Task handleSubmit()
   {
-    Console.WriteLine("Llega aqui");
     userDto.OccupationFk = userDto.Occupation?.Id ?? 0;
-    userDto.Password = "C0ntr4s3n@";
     var result = await _userService.UpdateUserAsync(userDto);
     serverMessage = result.message;
     if (result.data is null)

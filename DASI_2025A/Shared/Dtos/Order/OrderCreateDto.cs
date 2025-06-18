@@ -11,6 +11,7 @@ public class OrderCreateDto
   public string SellerId { get; set; } = null!;
 
   [Required]
+  
   public decimal Total { get; set; }
 
   [Required]

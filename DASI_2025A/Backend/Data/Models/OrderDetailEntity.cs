@@ -24,6 +24,8 @@ public class OrderDetailEntity
   public ProductEntity? Product { get; set; }
 
   [Required]
+  [Range(1, uint.MaxValue, ErrorMessage = "La cantidad debe ser un número positivo.")]
+  [RegularExpression(@"^\d+$", ErrorMessage = "La cantidad debe ser un número entero positivo.")]
   public uint Quantity { get; set; }
 
   [Required]
