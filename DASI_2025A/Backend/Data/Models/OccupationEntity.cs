@@ -10,6 +10,7 @@ public class OccupationEntity : AuditableEntity
   public int Id { get; set; }
   [Required]
   [MaxLength(50)]
-  public string? Name { get; set; }
+  [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s'-]+$", ErrorMessage = "El nombre contiene caracteres no válidos.")]
+  public string Name { get; set; }
   public ICollection<ApplicationUser>? Users { get; set; }
 }
