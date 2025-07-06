@@ -328,5 +328,36 @@ namespace Backend
         return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener recargas." });
       }
     }
+    /// <summary>
+    ///     Obtiene el perfil del usuario autenticado actualmente.
+    /// </summary>
+    [HttpGet]
+    [Route("profile")]
+    [Authorize]
+    public async Task<IActionResult> GetCurrentUserProfile()
+    {
+      _logger.LogInformation("Obteniendo perfil del usuario autenticado.");
+      try
+      {
+        var response = await _userService.GetCurrentUserProfileAsync();
+        _logger.LogInformation("Perfil del usuario obtenido correctamente.");
+        return Ok(response);
+      }
+      catch (UnauthorizedAccessException ex)
+      {
+        _logger.LogWarning("Usuario no autorizado: {Message}", ex.Message);
+        return Unauthorized(new { message = ex.Message });
+      }
+      catch (KeyNotFoundException ex)
+      {
+        _logger.LogWarning("Perfil no encontrado: {Message}", ex.Message);
+        return NotFound(new { message = ex.Message });
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(ex, "Error inesperado al obtener el perfil del usuario.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener el perfil." });
+      }
+    }
   }
 }

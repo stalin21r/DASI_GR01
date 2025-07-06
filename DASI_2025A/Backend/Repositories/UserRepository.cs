@@ -511,4 +511,38 @@ public class UserRepository : IUserRepository
     return requests;
   }
 
+  public async Task<UserProfileDto?> GetUserProfileAsync(string userId)
+  {
+    var user = await _userManager.FindByIdAsync(userId);
+    if (user == null)
+    {
+      return null;
+    }
+
+    // Obtener la ocupación del usuario
+    var occupation = await _context.Occupations
+      .FirstOrDefaultAsync(o => o.Id == user.OccupationFk);
+
+    // Obtener los roles del usuario
+    var roles = await _userManager.GetRolesAsync(user);
+    var userRole = roles.FirstOrDefault() ?? string.Empty;
+
+    return new UserProfileDto
+    {
+      Id = user.Id,
+      Email = user.Email ?? string.Empty,
+      FirstName = user.FirstName,
+      LastName = user.LastName,
+      DateOfBirth = user.DateOfBirth,
+      ScoutUniqueId = user.ScoutUniqueId,
+      Active = user.Active,
+      Balance = user.Balance,
+      Role = userRole,
+      Occupation = occupation != null ? new OccupationDto
+      {
+        Name = occupation.Name,
+      } : null
+    };
+  }
+
 }

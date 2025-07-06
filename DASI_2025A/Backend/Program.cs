@@ -47,6 +47,8 @@ builder.Services.AddScoped<IProductLoggerRepository, ProductLoggerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOccupationRepository, OccupationRepository>();
 // Servicios
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductLoggerService, ProductLoggerService>();
 builder.Services.AddScoped<IUserService, UserService>();

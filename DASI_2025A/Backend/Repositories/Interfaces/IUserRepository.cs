@@ -16,5 +16,5 @@ public interface IUserRepository
   Task<TopUpRequestResponseDto> AproveOrRejectTopUpAsync(TopUpRequestUpdateDto topUpRequestDto);
   Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsAsync();
   Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsByUserIdAsync(string userId);
-
+  Task<UserProfileDto?> GetUserProfileAsync(string userId);
 }

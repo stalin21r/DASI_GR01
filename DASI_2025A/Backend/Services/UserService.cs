@@ -5,14 +5,17 @@ namespace Backend;
 public class UserService : IUserService
 {
   private readonly IUserRepository _userRepository;
+  private readonly ICurrentUserService _currentUserService;
 
   /// <summary>
   ///     Servicio para el manejo de usuarios.
   /// </summary>
   /// <param name="userRepository">Repositorio de usuarios.</param>
-  public UserService(IUserRepository userRepository)
+  /// <param name="currentUserService">Servicio para obtener información del usuario actual.</param>
+  public UserService(IUserRepository userRepository, ICurrentUserService currentUserService)
   {
     _userRepository = userRepository;
+    _currentUserService = currentUserService;
   }
 
   /// <summary>
@@ -223,6 +226,44 @@ public class UserService : IUserService
       message: "Solicitudes de recarga obtenidas exitosamente",
       data: result,
       totalRecords: result.Count()
+    );
+    return response;
+  }
+
+  /// <summary>
+  ///     Obtiene el perfil del usuario actualmente autenticado.
+  /// </summary>
+  /// <returns>
+  ///     Retorna un <see cref="ApiResponse{UserProfileDto}"/> con el perfil del usuario actual.
+  ///     Lanza una excepción <see cref="UnauthorizedAccessException"/> si el usuario no está autenticado.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontró el usuario.
+  /// </returns>
+  public async Task<ApiResponse<UserProfileDto>> GetCurrentUserProfileAsync()
+  {
+    // Verificar que el usuario esté autenticado
+    if (!_currentUserService.IsAuthenticated())
+    {
+      throw new UnauthorizedAccessException("Usuario no autenticado.");
+    }
+
+    // Obtener el ID del usuario desde el token
+    var currentUserId = _currentUserService.GetUserId();
+    if (string.IsNullOrEmpty(currentUserId))
+    {
+      throw new UnauthorizedAccessException("No se pudo obtener el ID del usuario desde el token.");
+    }
+
+    // Obtener el perfil del usuario
+    var profile = await _userRepository.GetUserProfileAsync(currentUserId);
+    if (profile == null)
+    {
+      throw new KeyNotFoundException("Perfil de usuario no encontrado.");
+    }
+
+    ApiResponse<UserProfileDto> response = new ApiResponse<UserProfileDto>(
+      message: "Perfil de usuario obtenido exitosamente",
+      data: profile,
+      totalRecords: 1
     );
     return response;
   }
