@@ -19,7 +19,7 @@ public class UserDto
 
   [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
   [DataType(DataType.Date)]
-  [CustomValidation(typeof(UserDto), nameof(ValidateDateOfBirth))]
+  
   public DateTime DateOfBirth { get; set; }
 
   [Required(ErrorMessage = "El número único es requerido.")]
@@ -55,21 +55,5 @@ public class UserDto
   public override int GetHashCode()
   {
     return Id != null ? Id.GetHashCode() : 0;
-  }
-
-  // Validación personalizada para fecha de nacimiento
-  public static ValidationResult? ValidateDateOfBirth(DateTime dateOfBirth, ValidationContext context)
-  {
-    var today = DateTime.Today;
-    var minAge = today.AddYears(-150);
-    var maxAge = today.AddYears(-5); // Edad mínima 5 años
-
-    if (dateOfBirth < minAge)
-      return new ValidationResult("La fecha de nacimiento no puede ser anterior a 150 años");
-
-    if (dateOfBirth > maxAge)
-      return new ValidationResult("Debe ser mayor de 5 años");
-
-    return ValidationResult.Success;
   }
 }

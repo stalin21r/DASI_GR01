@@ -540,6 +540,7 @@ public class UserRepository : IUserRepository
       Role = userRole,
       Occupation = occupation != null ? new OccupationDto
       {
+        Id = occupation.Id,
         Name = occupation.Name,
       } : null
     };

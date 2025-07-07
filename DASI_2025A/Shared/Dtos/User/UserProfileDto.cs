@@ -13,5 +13,4 @@ public class UserProfileDto
     public decimal Balance { get; set; }
     public string Role { get; set; } = string.Empty;
     public OccupationDto? Occupation { get; set; }
-    public DateTime? LastLoginDate { get; set; }
 }
