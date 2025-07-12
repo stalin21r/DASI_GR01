@@ -1,9 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Backend;
 
-public class OccupationEntity : AuditableEntity
+public class BranchEntity : AuditableEntity
 {
   [Key]
   [DatabaseGenerated(DatabaseGeneratedOption.Identity)]

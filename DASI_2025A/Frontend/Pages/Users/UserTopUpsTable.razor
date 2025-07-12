@@ -81,28 +81,29 @@
                                                 @(topUp.Status.Equals("PENDIENTE") ? "bg-yellow-100 text-yellow-800" : topUp.Status.Equals("APROBADO") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800") ">
                   @topUp.Status
                 </span>
-
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@topUp.AuditableDate.ToString("dd/MM/yyyy")
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex justify-center items-center">
-                    <img src="@(topUp.Receipt is not null ? topUp.Receipt : "/Assets/Images/noImage.webp")"
-                      alt="Comprobante de la recarga" class="w-12 h-12">
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <button @onclick='() => OnAproveTopUp(topUp, "APROBADO")'
-                      disabled="@(!topUp.Status.Equals("PENDIENTE"))"
-                      class="text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@topUp.AuditableDate.ToString("dd/MM/yyyy")
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex justify-center items-center">
+                <img src="@(topUp.Receipt is not null ? topUp.Receipt : "/Assets/Images/noImage.webp")"
+                  alt="Comprobante de la recarga"
+                  class="w-12 h-12 cursor-pointer hover:opacity-75 transition-opacity duration-200 border border-gray-300 rounded"
+                  @onclick="() => OpenImageModal(topUp.Receipt, topUp.TargetUser, topUp.AuditableDate)">
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <button @onclick='() => OnAproveTopUp(topUp, "APROBADO")'
+                  disabled="@(!topUp.Status.Equals("PENDIENTE"))"
+                  class="text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer
                                                                                bg-green-500 hover:bg-green-600
                                                                                disabled:bg-gray-300 disabled:cursor-not-allowed">
-                      <i class="fa-solid fa-check"></i>
-                    </button>
+                  <i class="fa-solid fa-check"></i>
+                </button>
 
                     <button @onclick='() => OnAproveTopUp(topUp, "RECHAZADO")'
                       disabled="@(!topUp.Status.Equals("PENDIENTE"))"
                       class="text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer
-                                                                               bg-red-500 hover:bg-red-700
-                                                                               disabled:bg-gray-300 disabled:cursor-not-allowed">
+                                                                                   bg-red-500 hover:bg-red-700
+                                                                                   disabled:bg-gray-300 disabled:cursor-not-allowed">
                       <i class="fa-solid fa-xmark"></i>
                     </button>
                   </td>
@@ -116,6 +117,46 @@
   }
 </div>
 
+<!-- Modal para mostrar imagen del comprobante -->
+@if (showImageModal)
+{
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @onclick="CloseImageModal">
+    <div class="bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh] overflow-hidden" @onclick:stopPropagation="true">
+      <div class="bg-gray-100 px-6 py-4 border-b flex justify-between items-center">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">Comprobante de Recarga</h3>
+          <p class="text-sm text-gray-600">Usuario: @selectedImageUser</p>
+          <p class="text-sm text-gray-600">Fecha: @selectedImageDate?.ToString("dd/MM/yyyy HH:mm")</p>
+        </div>
+        <button @onclick="CloseImageModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <i class="fa-solid fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="p-6 flex justify-center items-center">
+        <div class="max-w-full max-h-[60vh] overflow-auto">
+          @if (!string.IsNullOrEmpty(selectedImageUrl) && selectedImageUrl != "/Assets/Images/noImage.webp")
+          {
+            <img src="@selectedImageUrl" alt="Comprobante de recarga" class="max-w-full h-auto shadow-lg rounded"
+              style="max-height: 60vh; object-fit: contain;">
+          }
+          else
+          {
+            <div class="flex flex-col items-center justify-center py-12 text-gray-500">
+              <i class="fa-solid fa-image text-6xl mb-4"></i>
+              <p class="text-lg">No hay comprobante disponible</p>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="bg-gray-100 px-6 py-3 border-t flex justify-end">
+        <button @onclick="CloseImageModal"
+          class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 @code
 {
@@ -128,6 +169,12 @@
   private int totalPages = 1;
   private IEnumerable<TopUpRequestResponseDto> PagedTopUps =>
   topUps?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<TopUpRequestResponseDto>();
+
+  // Variables para el modal de imagen
+  private bool showImageModal = false;
+  private string? selectedImageUrl;
+  private string? selectedImageUser;
+  private DateTime? selectedImageDate;
 
   protected override async Task OnInitializedAsync()
   {
@@ -170,12 +217,28 @@
       await _sw.FireAsync("Solicitud rechazada", serverMessage, SweetAlertIcon.Success);
     }
     await OnInitializedAsync();
-
   }
 
   private void GoToPage(int page)
   {
     if (page < 1 || page > totalPages) return;
     currentPage = page;
+  }
+
+  // Métodos para el modal de imagen
+  private void OpenImageModal(string? imageUrl, string? userName, DateTime date)
+  {
+    selectedImageUrl = imageUrl;
+    selectedImageUser = userName;
+    selectedImageDate = date;
+    showImageModal = true;
+  }
+
+  private void CloseImageModal()
+  {
+    showImageModal = false;
+    selectedImageUrl = null;
+    selectedImageUser = null;
+    selectedImageDate = null;
   }
 }

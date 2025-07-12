@@ -75,6 +75,7 @@ public class UserRepository : IUserRepository
       ScoutUniqueId = userDto.ScoutUniqueId,
       Active = userDto.Active,
       OccupationFk = userDto.OccupationFk,
+      BranchFk = userDto.BranchFk
     };
 
     if (string.IsNullOrEmpty(userDto.Password))
@@ -98,6 +99,12 @@ public class UserRepository : IUserRepository
     {
       Id = occupation.Id,
       Name = occupation.Name
+    } : null;
+    BranchEntity? branch = user.Branch;
+    userDto.Branch = branch != null ? new BranchDto
+    {
+      Id = branch.Id,
+      Name = branch.Name
     } : null;
     return userDto;
   }
@@ -172,6 +179,7 @@ public class UserRepository : IUserRepository
   {
     var user = await _userManager.Users
     .Include(u => u.Occupation)
+    .Include(u => u.Branch)
     .AsNoTracking()
     .FirstOrDefaultAsync(u => u.Id == id);
 
@@ -196,6 +204,12 @@ public class UserRepository : IUserRepository
       {
         Id = user.Occupation.Id,
         Name = user.Occupation.Name
+      } : null,
+      BranchFk = user.BranchFk,
+      Branch = user.Branch != null ? new BranchDto
+      {
+        Id = user.Branch.Id,
+        Name = user.Branch.Name
       } : null
     };
     if (userDto == null)
@@ -219,6 +233,7 @@ public class UserRepository : IUserRepository
   {
     var user = await _userManager.Users
     .Include(u => u.Occupation)
+    .Include(u => u.Branch)
     .AsNoTracking()
     .FirstOrDefaultAsync(u => u.Email == email);
 
@@ -242,14 +257,22 @@ public class UserRepository : IUserRepository
       {
         Id = user.Occupation.Id,
         Name = user.Occupation.Name
+      } : null,
+      BranchFk = user.BranchFk,
+      Branch = user.Branch != null ? new BranchDto
+      {
+        Id = user.Branch.Id,
+        Name = user.Branch.Name
       } : null
     };
+
     if (userDto == null)
     {
       throw new BadHttpRequestException("No se pudo obtener el usuario.");
     }
     return userDto;
   }
+
   /// <summary>
   ///     Actualiza un usuario.
   /// </summary>
@@ -273,6 +296,7 @@ public class UserRepository : IUserRepository
     user.ScoutUniqueId = userDto.ScoutUniqueId;
     user.Active = userDto.Active;
     user.OccupationFk = userDto.OccupationFk;
+    user.BranchFk = userDto.BranchFk;
     var resultRole = await AssignRoleAsync(user, string.IsNullOrWhiteSpace(userDto.Role) ? "User" : userDto.Role);
     if (!resultRole)
     {
@@ -303,6 +327,30 @@ public class UserRepository : IUserRepository
 
     var result = await _userManager.UpdateAsync(user);
     Console.WriteLine("llega aqui, success: " + result.Succeeded);
+    return result.Succeeded;
+  }
+
+  public async Task<bool> ChangePasswordAsync(string userId, ChangePassDto changePassDto)
+  {
+    var user = await _userManager.FindByIdAsync(userId);
+    if (user == null)
+    {
+      throw new BadHttpRequestException("Usuario no registrado.");
+    }
+    if (!user.Active)
+    {
+      throw new BadHttpRequestException("El usuario no esta activo.");
+    }
+    var checkPassword = await _userManager.CheckPasswordAsync(user, changePassDto.OldPassword!);
+    if (!checkPassword)
+    {
+      throw new BadHttpRequestException("La contraseña antigua es incorrecta.");
+    }
+    if (changePassDto.NewPassword != changePassDto.ConfirmNewPassword)
+    {
+      throw new BadHttpRequestException("Las contraseñas no coinciden.");
+    }
+    var result = await _userManager.ChangePasswordAsync(user, changePassDto.OldPassword!, changePassDto.NewPassword!);
     return result.Succeeded;
   }
 

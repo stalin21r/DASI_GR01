@@ -152,6 +152,21 @@ public class UserService : IUserService
     return response;
   }
 
+  public async Task<ApiResponse<bool>> ChangePasswordAsync(string userId, ChangePassDto changePassDto)
+  {
+    var result = await _userRepository.ChangePasswordAsync(userId, changePassDto);
+    if (!result)
+    {
+      throw new BadHttpRequestException("Error al cambiar la contraseña.");
+    }
+    ApiResponse<bool> response = new ApiResponse<bool>(
+      message: "Contraseña cambiada exitosamente",
+      data: result,
+      totalRecords: 0
+    );
+    return response;
+  }
+
   public async Task<ApiResponse<UserTransactionsDto>> GetUserTransactionsAsync(string userId)
   {
     var result = await _userRepository.GetUserTransactionsAsync(userId);

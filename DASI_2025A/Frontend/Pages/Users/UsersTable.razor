@@ -56,7 +56,7 @@
           <table class="w-full">
             <thead class="bg-gray-200 font-bold">
               @{
-                var headers = new List<string> { "Usuario", "Nombre", "N. Único", "Ocupación", "Rol", "Balance",
+                var headers = new List<string> { "Usuario", "Nombre", "N. Único", "Ocupación", "Rama", "Rol", "Balance",
                         "Acciones" };
               }
               <tr>
@@ -79,6 +79,7 @@
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">@user.ScoutUniqueId</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Occupation?.Name</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Branch?.Name</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Role?.ToString()</td>
                   <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">$@user.Balance.ToString()</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

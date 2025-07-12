@@ -19,7 +19,6 @@ public class UserDto
 
   [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
   [DataType(DataType.Date)]
-  [CustomValidation(typeof(UserDto), nameof(ValidateDateOfBirth))]
   public DateTime DateOfBirth { get; set; }
 
   [Required(ErrorMessage = "El número único es requerido.")]
@@ -47,29 +46,9 @@ public class UserDto
 
   public OccupationDto? Occupation { get; set; }
 
-  public override bool Equals(object? obj)
-  {
-    return obj is UserDto dto && Id == dto.Id;
-  }
+  [Required(ErrorMessage = "La rama es requerida")]
+  public int BranchFk { get; set; }
 
-  public override int GetHashCode()
-  {
-    return Id != null ? Id.GetHashCode() : 0;
-  }
+  public BranchDto? Branch { get; set; }
 
-  // Validación personalizada para fecha de nacimiento
-  public static ValidationResult? ValidateDateOfBirth(DateTime dateOfBirth, ValidationContext context)
-  {
-    var today = DateTime.Today;
-    var minAge = today.AddYears(-150);
-    var maxAge = today.AddYears(-5); // Edad mínima 5 años
-
-    if (dateOfBirth < minAge)
-      return new ValidationResult("La fecha de nacimiento no puede ser anterior a 150 años");
-
-    if (dateOfBirth > maxAge)
-      return new ValidationResult("Debe ser mayor de 5 años");
-
-    return ValidationResult.Success;
-  }
 }

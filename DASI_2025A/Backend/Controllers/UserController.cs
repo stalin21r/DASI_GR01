@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
+using System.Security.Claims;
 
 namespace Backend
 {
@@ -186,6 +187,31 @@ namespace Backend
       {
         _logger.LogError(ex, "Error inesperado al eliminar usuario. ID: {Id}", id);
         return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al eliminar el usuario." });
+      }
+    }
+
+    [HttpPatch]
+    [Route("changePassword")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePassDto changePassDto)
+    {
+      try
+      {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        _logger.LogInformation("Usuario {UserId} intentando cambiar la contraseña", userId);
+        var response = await _userService.ChangePasswordAsync(userId!, changePassDto);
+        _logger.LogInformation("Contraseña cambiada correctamente para el usuario con ID: {UserId}", userId);
+        return Ok(response);
+      }
+      catch (BadHttpRequestException ex)
+      {
+        _logger.LogWarning("Error de solicitud al cambiar la contraseña: {Message}", ex.Message);
+        return BadRequest(new { message = ex.Message });
+      }
+      catch (Exception ex)
+      {
+        _logger.LogError(ex, "Error inesperado al cambiar la contraseña.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al cambiar la contraseña." });
       }
     }
 

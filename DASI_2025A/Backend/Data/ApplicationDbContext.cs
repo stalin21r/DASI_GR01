@@ -11,6 +11,7 @@ namespace Backend
     }
 
     public DbSet<OccupationEntity> Occupations { get; set; }
+    public DbSet<BranchEntity> Branches { get; set; }
     public DbSet<ProductEntity> Products { get; set; }
     public DbSet<ProductLoggerEntity> ProductLogs { get; set; }
     public DbSet<BalanceTransactionsEntity> BalanceTransactions { get; set; }
@@ -34,6 +35,19 @@ namespace Backend
         new OccupationEntity { Id = 3, Name = "Scout" }
       );
       modelBuilder.Entity<OccupationEntity>()
+          .HasIndex(o => o.Name)
+          .IsUnique();
+
+      // Seed para Branches
+      modelBuilder.Entity<BranchEntity>().HasData(
+        new BranchEntity { Id = 1, Name = "Jefe Grupal" },
+        new BranchEntity { Id = 2, Name = "Subjefe Grupal" },
+        new BranchEntity { Id = 3, Name = "Manada" },
+        new BranchEntity { Id = 4, Name = "Unidad Scout" },
+        new BranchEntity { Id = 5, Name = "Caminantes" },
+        new BranchEntity { Id = 6, Name = "Rovers" }
+      );
+      modelBuilder.Entity<BranchEntity>()
           .HasIndex(o => o.Name)
           .IsUnique();
 

@@ -58,4 +58,11 @@ public class ApplicationUser : IdentityUser
 
   [ForeignKey("OccupationFk")]
   public OccupationEntity? Occupation { get; set; }
+
+  // FK a Branch
+  [Required]
+  public int BranchFk { get; set; }
+
+  [ForeignKey("OccupationFk")]
+  public BranchEntity? Branch { get; set; }
 }

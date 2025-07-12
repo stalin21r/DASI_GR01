@@ -23,16 +23,16 @@ builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
 // HttpClient público (sin token) - debe estar antes de usarlo en otros servicios
 builder.Services.AddScoped(sp => new HttpClient
 {
-  //BaseAddress = new Uri("https://localhost:7055")
-  BaseAddress = new Uri("http://localhost:5067/")
+  BaseAddress = new Uri("https://localhost:7055")
+  //BaseAddress = new Uri("http://localhost:5067/")
 });
 
 // HttpClient con token
 builder.Services.AddTransient<AuthorizationMessageHandler>();
 builder.Services.AddHttpClient("AuthorizedClient", client =>
 {
-  //client.BaseAddress = new Uri("https://localhost:7055");
-  client.BaseAddress = new Uri("http://localhost:5067/");
+  client.BaseAddress = new Uri("https://localhost:7055");
+  //client.BaseAddress = new Uri("http://localhost:5067/");
 }).AddHttpMessageHandler<AuthorizationMessageHandler>();
 
 // Servicios personalizados
@@ -54,6 +54,12 @@ builder.Services.AddScoped<IOccupationService>(sp =>
   var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
   var httpClient = clientFactory.CreateClient("AuthorizedClient");
   return new OccupationService(httpClient);
+});
+builder.Services.AddScoped<IBranchService>(sp =>
+{
+  var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
+  var httpClient = clientFactory.CreateClient("AuthorizedClient");
+  return new BranchService(httpClient);
 });
 builder.Services.AddScoped<IOrderService>(sp =>
 {

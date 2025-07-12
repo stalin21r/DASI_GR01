@@ -4,6 +4,7 @@
 @inject NavigationManager Nav
 @inject SweetAlertService _sw
 @inject IOccupationService _occupationService
+@inject IBranchService _branchService
 
 <PageTitle>Editar Usuarios</PageTitle>
 
@@ -91,8 +92,16 @@
           </div>
           <div>
             <div>
-              <FloatingLabelInput disabled="true" Label="Contraseña" Name="password" Type="text" LabelColor="blue"
-                value="@userDto?.Password" OnChange="(e) => userDto!.Password = e.Value?.ToString() ?? string.Empty" />
+              <FloatingLabelSelect Label="Rama" Name="branch" LabelColor="blue"
+                SelectedValue="@(userDto?.Branch?.Id.ToString())"
+                SelectedValueChanged="(value) => userDto!.Branch = branches?.FirstOrDefault(o => o.Id == int.Parse(value))"
+                Placeholder="Rama">
+                @foreach (var branch in branches!)
+                {
+                  <option value="@branch.Id">@branch.Name</option>
+                }
+              </FloatingLabelSelect>
+              <ValidationMessage For="@(() => userDto!.Branch)" />
             </div>
           </div>
           <div>
@@ -119,6 +128,7 @@
   [Parameter] public string? id { get; set; }
   private UserDto userDto = new();
   private IEnumerable<OccupationDto> occupations = new List<OccupationDto>();
+  private IEnumerable<BranchDto> branches = new List<BranchDto>();
   private string serverMessage = string.Empty;
   private string errorMessage = string.Empty;
 
@@ -133,6 +143,13 @@
         return;
       }
       occupations = occupationsResponse.data;
+      var branchesResponse = await _branchService.GetAllBranches();
+      if (branchesResponse.data is null)
+      {
+        errorMessage = branchesResponse.message;
+        return;
+      }
+      branches = branchesResponse.data;
 
       var response = await _userService.GetUserByIdAsync(id);
       if (response.data is null)

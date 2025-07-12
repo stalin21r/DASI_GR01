@@ -131,6 +131,28 @@ public class UsersService : IUsersService
     }
   }
 
+  public async Task<ApiResponse<bool>> ChangePasswordAsync(ChangePassDto changePassDto)
+  {
+    try
+    {
+      var response = await _http.PatchAsJsonAsync("/api/v1/User/changePassword", changePassDto);
+      if (!response.IsSuccessStatusCode)
+      {
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+        return errorResponse != null
+          ? new ApiResponse<bool>(errorResponse.message)
+          : new ApiResponse<bool>("Error al cambiar la contraseña.");
+      }
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+      return result!;
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine(ex);
+      return new ApiResponse<bool>("Error desconocido al cambiar la contraseña.");
+    }
+  }
+
   public async Task<ApiResponse<TopUpRequestResponseDto>> CreateTopUpRequestAsync(TopUpRequestCreateDto topUpRequestDto)
   {
     try

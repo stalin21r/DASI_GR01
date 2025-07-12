@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Shared;
 
-public class OccupationDto
+public class BranchDto
 {
   public int? Id { get; set; }
 

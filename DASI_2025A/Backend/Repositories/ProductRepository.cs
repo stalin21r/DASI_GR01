@@ -258,52 +258,44 @@ public class ProductRepository : IProductRepository
   {
     using var transaction = await _context.Database.BeginTransactionAsync();
 
-    try
+    foreach (var detail in order.OrderDetails)
     {
-      foreach (var detail in order.OrderDetails)
+      var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == detail.ProductId && p.Active);
+      if (product == null)
       {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == detail.ProductId && p.Active);
-        if (product == null)
-        {
-          await transaction.RollbackAsync();
-          return false; // producto no existe o no está activo
-        }
-
-        if (product.Stock < detail.Quantity)
-        {
-          await transaction.RollbackAsync();
-          return false; // stock insuficiente
-        }
-
-        uint stockBefore = product.Stock;
-        product.Stock -= detail.Quantity;
-
-        _context.Products.Update(product);
-
-        var log = new ProductLoggerDto
-        {
-          ProductId = product.Id,
-          UserId = sellerId,
-          Action = "Venta de producto",
-          Description = $"Venta de {detail.Quantity} unidades",
-          QuantityBefore = stockBefore,
-          QuantityAfter = product.Stock
-        };
-
-        await _logger.CreateAsync(log);
+        await transaction.RollbackAsync();
+        throw new InvalidOperationException("Producto no encontrado o no activo."); // producto no existe o no está activo
       }
 
-      await _context.SaveChangesAsync();
-      await transaction.CommitAsync();
+      if (product.Stock < detail.Quantity)
+      {
+        await transaction.RollbackAsync();
+        throw new InvalidOperationException("Stock insuficiente."); // stock insuficiente
+      }
 
-      return true;
+      uint stockBefore = product.Stock;
+      product.Stock -= detail.Quantity;
+
+      _context.Products.Update(product);
+
+      var log = new ProductLoggerDto
+      {
+        ProductId = product.Id,
+        UserId = sellerId,
+        Action = "Venta de producto",
+        Description = $"Venta de {detail.Quantity} unidades",
+        QuantityBefore = stockBefore,
+        QuantityAfter = product.Stock
+      };
+
+      await _logger.CreateAsync(log);
     }
-    catch (Exception ex)
-    {
-      await transaction.RollbackAsync();
-      Console.WriteLine($"Error al registrar venta: {ex.Message}");
-      return false;
-    }
+
+    await _context.SaveChangesAsync();
+    await transaction.CommitAsync();
+
+    return true;
+
   }
 
   /// <summary>
