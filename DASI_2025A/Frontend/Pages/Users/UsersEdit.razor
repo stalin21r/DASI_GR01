@@ -93,7 +93,7 @@
           <div>
             <div>
               <FloatingLabelSelect Label="Rama" Name="branch" LabelColor="blue"
-                SelectedValue="@(userDto?.Branch?.Id.ToString())"
+                SelectedValue="@userDto?.Branch?.Id.ToString()"
                 SelectedValueChanged="(value) => userDto!.Branch = branches?.FirstOrDefault(o => o.Id == int.Parse(value))"
                 Placeholder="Rama">
                 @foreach (var branch in branches!)

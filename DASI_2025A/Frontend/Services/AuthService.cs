@@ -50,4 +50,26 @@ public class AuthService : IAuthService
     await _localStorage.RemoveItemAsync("token");
     _authStateProvider.NotifyUserLogout();
   }
+
+  public async Task<ApiResponse<bool>> ActivateAccountAsync(ActivateUserDto activateUserDto)
+  {
+    try
+    {
+      var response = await _http.PutAsJsonAsync("api/v1/User/ActivateUser", activateUserDto);
+      if (!response.IsSuccessStatusCode)
+      {
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+        return errorResponse != null
+            ? new ApiResponse<bool>(errorResponse.message)
+            : new ApiResponse<bool>("Error al activar el usuario.");
+      }
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+      return result!;
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e);
+      return new ApiResponse<bool>("Error desconocido al activar el usuario.");
+    }
+  }
 }

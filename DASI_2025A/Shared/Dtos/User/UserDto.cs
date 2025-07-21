@@ -30,10 +30,6 @@ public class UserDto
   [StringLength(100, ErrorMessage = "El email no puede exceder 100 caracteres")]
   public string Email { get; set; } = default!;
 
-  [Required(ErrorMessage = "La contraseña es obligatoria")]
-  [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un carácter especial y un número")]
-  public string? Password { get; set; }
-
   public bool Active { get; set; } = true;
 
   public decimal Balance { get; set; }

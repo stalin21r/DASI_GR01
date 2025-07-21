@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SS.CC. Rumipamba - Activación de Cuenta</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+
+    .email-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+    }
+
+    .header {
+      background-color: #2E8B57;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .logo-section {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .content {
+      padding: 20px 30px;
+    }
+
+    .button {
+      background-color: #2E8B57;
+      color: white;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 5px;
+      display: inline-block;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    .button:hover {
+      background-color: #228B22;
+    }
+
+    .link-text {
+      font-size: 12px;
+      color: #666;
+      word-break: break-all;
+    }
+
+    .footer {
+      background-color: #f9f9f9;
+      padding: 15px 30px;
+      font-size: 12px;
+      color: #666;
+      border-top: 1px solid #ddd;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    h2 {
+      color: #2E8B57;
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+
+    p {
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f4;">
+    <tr>
+      <td align="center" style="padding: 20px 0;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container">
+          <!-- Header -->
+          <tr>
+            <td class="header">
+              <h1>SS.CC. Rumipamba</h1>
+            </td>
+          </tr>
+
+          <!-- Logo Section -->
+          <tr>
+            <td class="logo-section">
+              <img src="./LogoScouts1.webp" alt="Logo Scouts Topa 13" width="150" height="150"
+                style="border-radius: 10px;">
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td class="content">
+              <h2>¡Te has registrado exitosamente!</h2>
+
+              <p>Estimado/a {{Nombre}},</p>
+
+              <p>Te damos la bienvenida a <strong>SS.CC. Rumipamba</strong>. Tu cuenta ha sido creada exitosamente en
+                nuestro sistema, pero necesitas activarla para poder acceder a todos nuestros servicios y recursos.</p>
+
+              <p>Para completar el proceso de registro y activar tu cuenta, simplemente haz clic en el botón de abajo:
+              </p>
+
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td align="center" style="padding: 20px 0;">
+                    <a href="{{URL}}" class="button" style="color: white; text-decoration: none;">
+                      ACTIVAR MI CUENTA
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p><strong>Si el botón no funciona</strong>, copia y pega el siguiente enlace en tu navegador:</p>
+              <p class="link-text">{{URL}}</p>
+
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td class="footer">
+              <p><strong>¿No solicitaste este registro?</strong></p>
+              <p>Si no te registraste en Scouts Topa 13 o no sabes por qué recibiste este correo, puedes ignorarlo sin
+                problemas. También puedes contactar con nuestra administración escribiendo a: <a
+                  href="mailto:admin@scouts-topa13.com">admin@scouts-topa13.com</a></p>
+
+              <hr style="border: none; border-top: 1px solid #ddd; margin: 15px 0;">
+
+              <p style="text-align: center; margin: 0;">
+                <strong>SS.CC. Rumipamba</strong><br>
+                Siempre listos para servir<br>
+                © 2025 Todos los derechos reservados
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>

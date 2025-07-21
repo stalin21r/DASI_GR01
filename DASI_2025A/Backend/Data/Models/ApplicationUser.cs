@@ -63,6 +63,11 @@ public class ApplicationUser : IdentityUser
   [Required]
   public int BranchFk { get; set; }
 
-  [ForeignKey("OccupationFk")]
+  [ForeignKey("BranchFk")]
   public BranchEntity? Branch { get; set; }
+
+  public override string ToString()
+  {
+    return $"{FirstName} {LastName} ({Email}) {DateOfBirth} {ScoutUniqueId} {Balance} {Active} {OccupationFk} {BranchFk} {Id} {UserName} ";
+  }
 }

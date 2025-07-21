@@ -25,6 +25,7 @@ public class UserRepository : IUserRepository
     _userManager = userManager;
     _context = context;
   }
+
   /// <summary>
   /// Asigna un rol a un usuario.
   /// </summary>
@@ -54,8 +55,6 @@ public class UserRepository : IUserRepository
     return addResult.Succeeded;
   }
 
-
-
   /// <summary>
   /// Crea un nuevo usuario en la base de datos.
   /// </summary>
@@ -63,7 +62,7 @@ public class UserRepository : IUserRepository
   /// <returns>Objeto con los datos del usuario recién creado.</returns>
   /// <exception cref="ArgumentException">Si el password es nulo o vacío.</exception>
   /// <exception cref="BadHttpRequestException">Si no se pudo crear el usuario.</exception>
-  public async Task<UserDto> CreateAsync(UserDto userDto)
+  public async Task<(UserDto userDto, string token)> CreateAsync(UserDto userDto)
   {
     Console.WriteLine("UsuarioDto:\n " + userDto);
     var user = new ApplicationUser
@@ -73,19 +72,19 @@ public class UserRepository : IUserRepository
       LastName = userDto.LastName,
       DateOfBirth = userDto.DateOfBirth,
       ScoutUniqueId = userDto.ScoutUniqueId,
-      Active = userDto.Active,
+      Active = false,
       OccupationFk = userDto.OccupationFk,
       BranchFk = userDto.BranchFk
     };
 
-    if (string.IsNullOrEmpty(userDto.Password))
-    {
-      throw new ArgumentException("Password cannot be null or empty.", nameof(userDto.Password));
-    }
-    var result = await _userManager.CreateAsync(user, userDto.Password);
+    Console.WriteLine("User branch:\n " + user.BranchFk);
+
+    string password = GenerateValidPassword();
+    var result = await _userManager.CreateAsync(user, password);
     if (!result.Succeeded)
     {
-      throw new BadHttpRequestException("Error al crear usuario. Puede que el usuario ya este registrado.");
+      var errors = string.Join(" | ", result.Errors.Select(e => $"{e.Code}: {e.Description}"));
+      throw new BadHttpRequestException($"Error al crear usuario: {errors}");
     }
     var roleResult = await AssignRoleAsync(user, userDto.Role ?? "User");
     if (!roleResult)
@@ -106,7 +105,31 @@ public class UserRepository : IUserRepository
       Id = branch.Id,
       Name = branch.Name
     } : null;
-    return userDto;
+
+    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+    return (userDto, token);
+  }
+
+  /// <summary>
+  /// Activa un usuario, cambia la contraseña por una establecida por el usuario, acepta políticas de privacidad y términos y condiciones(EmailConfirmed).
+  /// </summary>
+  /// <param name="activateUserDto">Objeto que contiene el correo electrónico del usuario, el token de activación y la nueva contraseña.</param>
+  /// <returns>
+  ///     Retorna un <see cref="bool"/> indicando si la operación de activación del usuario fue exitosa.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontró el usuario.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si el usuario ya esta activo, o hubo un error al resetear la contraseña o al actualizar el usuario.
+  /// </returns>
+  public async Task<bool> ActivateUserAsync(ActivateUserDto activateUserDto)
+  {
+    var user = await _userManager.FindByEmailAsync(activateUserDto.Email);
+    if (user == null) throw new KeyNotFoundException("No se encontró este Usuario.");
+    user.Active = true;
+    user.EmailConfirmed = true;
+    var resetPass = await _userManager.ResetPasswordAsync(user, activateUserDto.Token, activateUserDto.NewPassword);
+    if (!resetPass.Succeeded) throw new BadHttpRequestException("Error al activar el usuario.");
+    var result = await _userManager.UpdateAsync(user);
+    if (!result.Succeeded) throw new BadHttpRequestException("Error al activar el usuario.");
+    return true;
   }
 
   /// <summary>
@@ -121,8 +144,15 @@ public class UserRepository : IUserRepository
   {
     var users = await _userManager.Users
     .Include(u => u.Occupation)
+    .Include(u => u.Branch)
     .AsNoTracking()
     .ToListAsync();
+    Console.WriteLine("\n\n\n\n");
+    foreach (var user in users)
+    {
+      Console.WriteLine("user:\n " + user.BranchFk + " userBranch: " + user.Branch + " userBranch: " + user.Branch.Name);
+    }
+    Console.WriteLine("\n\n\n\n");
     if (users == null || users.Count == 0)
     {
       throw new KeyNotFoundException("No se encontraron Usuarios.");
@@ -154,6 +184,12 @@ public class UserRepository : IUserRepository
         {
           Id = user.Occupation.Id,
           Name = user.Occupation.Name
+        } : null,
+        BranchFk = user.BranchFk,
+        Branch = user.Branch != null ? new BranchDto
+        {
+          Id = user.Branch.Id,
+          Name = user.Branch.Name
         } : null
       };
       userDtos.Add(userDto);
@@ -330,6 +366,16 @@ public class UserRepository : IUserRepository
     return result.Succeeded;
   }
 
+  /// <summary>
+  ///     Cambia la contraseña de un usuario.
+  /// </summary>
+  /// <param name="userId">El identificador del usuario.</param>
+  /// <param name="changePassDto">Objeto con los datos de la contraseña actual y la nueva.</param>
+  /// <returns>
+  ///     Retorna un <see cref="bool"/> con el resultado de la operación.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si el usuario no esta activo o la contraseña antigua es incorrecta, o
+  ///     si las contraseñas no coinciden.
+  /// </returns>
   public async Task<bool> ChangePasswordAsync(string userId, ChangePassDto changePassDto)
   {
     var user = await _userManager.FindByIdAsync(userId);
@@ -354,6 +400,62 @@ public class UserRepository : IUserRepository
     return result.Succeeded;
   }
 
+  /// <summary>
+  ///     Genera un token de recuperación de contraseña para un usuario registrado.
+  /// </summary>
+  /// <param name="email">El correo electrónico del usuario.</param>
+  /// <returns>
+  ///     Retorna una tupla con el token de recuperación de contraseña y el primer nombre del usuario.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encuentra el usuario.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si el usuario no está activo.
+  /// </returns>
+  public async Task<(string Token, string FirstName)> RecoverPasswordAsync(string email)
+  {
+    var user = await _userManager.FindByEmailAsync(email);
+    if (user == null)
+    {
+      throw new KeyNotFoundException("Usuario no registrado.");
+    }
+    if (!user.Active)
+    {
+      throw new BadHttpRequestException("El usuario no esta activo.");
+    }
+    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+    return (token, user.FirstName);
+  }
+
+  /// <summary>
+  ///     Resetea la contraseña de un usuario al que se le ha enviado un correo de recuperación.
+  /// </summary>
+  /// <param name="recoverPassDto">Objeto que contiene el correo electrónico del usuario, el token de recuperación y la nueva contraseña.</param>
+  /// <returns>
+  ///     Retorna un <see cref="bool"/> indicando si la operación de reseteo de contraseña fue exitosa.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encuentra el usuario.
+  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si el usuario no está activo.
+  /// </returns>
+  public async Task<bool> RecoverPasswordAsync(RecoverPassDto recoverPassDto)
+  {
+    var user = await _userManager.FindByEmailAsync(recoverPassDto.Email);
+    if (user == null)
+    {
+      throw new KeyNotFoundException("Usuario no registrado.");
+    }
+    if (!user.Active)
+    {
+      throw new BadHttpRequestException("El usuario no esta activo.");
+    }
+    var result = await _userManager.ResetPasswordAsync(user, recoverPassDto.Token, recoverPassDto.NewPassword);
+    return result.Succeeded;
+  }
+
+  /// <summary>
+  ///     Obtiene las transacciones de un usuario.
+  /// </summary>
+  /// <param name="userId">El identificador del usuario.</param>
+  /// <returns>
+  ///     Retorna un <see cref="UserTransactionsDto"/> que contiene las transacciones del usuario.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron usuarios.
+  /// </returns>
   public async Task<UserTransactionsDto> GetUserTransactionsAsync(string userId)
   {
     var user = await _userManager.FindByIdAsync(userId);
@@ -382,6 +484,15 @@ public class UserRepository : IUserRepository
     return userTransactionsDto;
   }
 
+  /// <summary>
+  ///     Crea una solicitud de recarga para un usuario.
+  /// </summary>
+  /// <param name="topUpRequestDto">Objeto con los datos de la solicitud de recarga.</param>
+  /// <returns>
+  ///     Retorna un <see cref="TopUpRequestResponseDto"/> que contiene los datos de la solicitud de recarga recién creada.
+  ///     Lanza una excepción <see cref="KeyNotFoundException"/> si el usuario no existe o no esta activo.
+  ///     Lanza una excepción <see cref="Exception"/> si no se pudo insertar la solicitud de recarga.
+  /// </returns>
   public async Task<TopUpRequestResponseDto> CreateTopUpRequestAsync(TopUpRequestCreateDto topUpRequestDto)
   {
     var user = _userManager.Users.FirstOrDefault(u => u.Id == topUpRequestDto.TargetUserId);
@@ -434,6 +545,14 @@ public class UserRepository : IUserRepository
     };
   }
 
+  /// <summary>
+  ///   Aprobar o rechazar una solicitud de recarga de saldo.
+  /// </summary>
+  /// <param name="topUpRequestDto">El objeto con los datos de la solicitud de recarga.</param>
+  /// <returns>El objeto con los datos de la solicitud de recarga actualizada.</returns>
+  /// <exception cref="KeyNotFoundException">Si no se encuentra la solicitud de recarga.</exception>
+  /// <exception cref="InvalidOperationException">Si la solicitud de recarga no tiene estado PENDIENTE.</exception>
+  /// <exception cref="BadHttpRequestException">Si no se puede actualizar el saldo del usuario.</exception>
   public async Task<TopUpRequestResponseDto> AproveOrRejectTopUpAsync(TopUpRequestUpdateDto topUpRequestDto)
   {
     var topUpRequest = await _context.TopUpRequests
@@ -486,6 +605,11 @@ public class UserRepository : IUserRepository
     };
   }
 
+  /// <summary>
+  ///   Obtiene todas las solicitudes de recarga de saldo.
+  /// </summary>
+  /// <returns>Una lista de objetos con los datos de las solicitudes de recarga.</returns>
+  /// <exception cref="KeyNotFoundException">Si no se encontraron solicitudes de recarga.</exception>
   public async Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsAsync()
   {
     var results = await _context.TopUpRequests
@@ -522,6 +646,12 @@ public class UserRepository : IUserRepository
     return requests;
   }
 
+  /// <summary>
+  ///   Obtiene las solicitudes de recarga de saldo del usuario con el identificador especificado.
+  /// </summary>
+  /// <param name="userId">El identificador del usuario.</param>
+  /// <returns>Una lista de objetos con los datos de las solicitudes de recarga.</returns>
+  /// <exception cref="KeyNotFoundException">Si no se encontró el usuario o no se encontraron solicitudes de recarga para el usuario.</exception>
   public async Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsByUserIdAsync(string userId)
   {
     var user = await _userManager.FindByIdAsync(userId);
@@ -557,6 +687,34 @@ public class UserRepository : IUserRepository
     }).ToList();
 
     return requests;
+  }
+
+  private string GenerateValidPassword()
+  {
+    var random = new Random();
+    const string mayus = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const string minus = "abcdefghijklmnopqrstuvwxyz";
+    const string numeros = "0123456789";
+    const string especiales = "!@#$%^&*()_-+=<>?";
+
+    // Asegurar al menos un carácter de cada tipo
+    var chars = new List<char>
+    {
+        mayus[random.Next(mayus.Length)],
+        minus[random.Next(minus.Length)],
+        numeros[random.Next(numeros.Length)],
+        especiales[random.Next(especiales.Length)]
+    };
+
+    // Rellenar hasta llegar a 8 caracteres
+    string todos = mayus + minus + numeros + especiales;
+    while (chars.Count < 8)
+    {
+      chars.Add(todos[random.Next(todos.Length)]);
+    }
+
+    // Mezclar los caracteres
+    return new string(chars.OrderBy(_ => random.Next()).ToArray());
   }
 
 }
