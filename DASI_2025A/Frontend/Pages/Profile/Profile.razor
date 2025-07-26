@@ -32,7 +32,7 @@
         <section class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
           <!-- Nombre -->
           <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-2 shadow-sm">
-            <i class="fa-solid fa-user text-blue-800 text-l"></i>
+            <i class="fa-solid fa-user text-blue-800 text-lg"></i>
             <div class="flex flex-col">
               <span class="font-bold text-green-700">Nombre:</span>
               <span class="font-medium">@userDto!.FirstName @userDto!.LastName</span>
@@ -82,8 +82,8 @@
           <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
             <i class="fa-solid fa-user text-blue-800 text-lg"></i>
             <div class="flex flex-col">
-              <span class="font-bold text-green-700">Nombre:</span>
-              <span class="font-medium">@userDto!.FirstName @userDto!.LastName</span>
+              <span class="font-bold text-green-700">Rama:</span>
+              <span class="font-medium">@userDto!.Branch!.Name</span>
             </div>
           </div>
         </section>

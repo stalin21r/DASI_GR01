@@ -1,0 +1,21 @@
+@inject NavigationManager Navigation
+@inject ILocalStorageService LocalStorage
+@implements IDisposable
+@using Frontend
+
+@code
+{
+  protected override async Task OnInitializedAsync()
+  {
+    // Limpiar token inválido si existe
+    await LocalStorage.RemoveItemAsync("token");
+
+    // Redirigir al login
+    Navigation.NavigateTo("/login", forceLoad: true);
+  }
+
+  public void Dispose()
+  {
+    // Implementación requerida por IDisposable
+  }
+}

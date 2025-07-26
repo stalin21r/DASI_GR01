@@ -72,4 +72,48 @@ public class AuthService : IAuthService
       return new ApiResponse<bool>("Error desconocido al activar el usuario.");
     }
   }
+
+  public async Task<ApiResponse<bool>> SendRecoverPassMailAsync(string email)
+  {
+    try
+    {
+      var response = await _http.GetAsync($"api/v1/User/SendRecoverMail/{email}");
+      if (!response.IsSuccessStatusCode)
+      {
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+        return errorResponse != null
+            ? new ApiResponse<bool>(errorResponse.message)
+            : new ApiResponse<bool>("Error al enviar correo de restablecimiento.");
+      }
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+      return result!;
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e);
+      return new ApiResponse<bool>("Error desconocido al enviar correo de restablecimiento.");
+    }
+  }
+
+  public async Task<ApiResponse<bool>> ResetPasswordAsync(RecoverPassDto recoverPassDto)
+  {
+    try
+    {
+      var response = await _http.PutAsJsonAsync("api/v1/User/ResetPassword", recoverPassDto);
+      if (!response.IsSuccessStatusCode)
+      {
+        var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+        return errorResponse != null
+            ? new ApiResponse<bool>(errorResponse.message)
+            : new ApiResponse<bool>("Error al restablecer la contraseña.");
+      }
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<bool>>();
+      return result!;
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e);
+      return new ApiResponse<bool>("Error desconocido al restablecer la contraseña.");
+    }
+  }
 }

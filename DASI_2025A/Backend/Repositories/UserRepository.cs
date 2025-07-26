@@ -64,7 +64,6 @@ public class UserRepository : IUserRepository
   /// <exception cref="BadHttpRequestException">Si no se pudo crear el usuario.</exception>
   public async Task<(UserDto userDto, string token)> CreateAsync(UserDto userDto)
   {
-    Console.WriteLine("UsuarioDto:\n " + userDto);
     var user = new ApplicationUser
     {
       Email = userDto.Email,
@@ -76,9 +75,6 @@ public class UserRepository : IUserRepository
       OccupationFk = userDto.OccupationFk,
       BranchFk = userDto.BranchFk
     };
-
-    Console.WriteLine("User branch:\n " + user.BranchFk);
-
     string password = GenerateValidPassword();
     var result = await _userManager.CreateAsync(user, password);
     if (!result.Succeeded)
@@ -105,7 +101,6 @@ public class UserRepository : IUserRepository
       Id = branch.Id,
       Name = branch.Name
     } : null;
-
     var token = await _userManager.GeneratePasswordResetTokenAsync(user);
     return (userDto, token);
   }
@@ -125,10 +120,14 @@ public class UserRepository : IUserRepository
     if (user == null) throw new KeyNotFoundException("No se encontró este Usuario.");
     user.Active = true;
     user.EmailConfirmed = true;
-    var resetPass = await _userManager.ResetPasswordAsync(user, activateUserDto.Token, activateUserDto.NewPassword);
-    if (!resetPass.Succeeded) throw new BadHttpRequestException("Error al activar el usuario.");
+    var resetPass = await _userManager.ResetPasswordAsync(user, activateUserDto.Token, activateUserDto.NewPassword!);
+    foreach (var error in resetPass.Errors)
+    {
+      if (error.Description.Contains("invalid")) throw new UnauthorizedAccessException("Solicitud invalida o expirada.");
+    }
+    if (!resetPass.Succeeded) throw new BadHttpRequestException("Error al activar el usuario 1.");
     var result = await _userManager.UpdateAsync(user);
-    if (!result.Succeeded) throw new BadHttpRequestException("Error al activar el usuario.");
+    if (!result.Succeeded) throw new BadHttpRequestException("Error al activar el usuario 2.");
     return true;
   }
 
@@ -146,13 +145,8 @@ public class UserRepository : IUserRepository
     .Include(u => u.Occupation)
     .Include(u => u.Branch)
     .AsNoTracking()
+    .OrderByDescending(u => u.Id)
     .ToListAsync();
-    Console.WriteLine("\n\n\n\n");
-    foreach (var user in users)
-    {
-      Console.WriteLine("user:\n " + user.BranchFk + " userBranch: " + user.Branch + " userBranch: " + user.Branch.Name);
-    }
-    Console.WriteLine("\n\n\n\n");
     if (users == null || users.Count == 0)
     {
       throw new KeyNotFoundException("No se encontraron Usuarios.");
@@ -353,7 +347,6 @@ public class UserRepository : IUserRepository
   public async Task<bool> DeleteAsync(string id)
   {
 
-    Console.WriteLine("llega aqui: ");
     var user = await _userManager.FindByIdAsync(id);
     if (user == null)
     {
@@ -362,7 +355,6 @@ public class UserRepository : IUserRepository
     user.Active = false;
 
     var result = await _userManager.UpdateAsync(user);
-    Console.WriteLine("llega aqui, success: " + result.Succeeded);
     return result.Succeeded;
   }
 
@@ -444,7 +436,7 @@ public class UserRepository : IUserRepository
     {
       throw new BadHttpRequestException("El usuario no esta activo.");
     }
-    var result = await _userManager.ResetPasswordAsync(user, recoverPassDto.Token, recoverPassDto.NewPassword);
+    var result = await _userManager.ResetPasswordAsync(user, recoverPassDto.Token, recoverPassDto.NewPassword!);
     return result.Succeeded;
   }
 
@@ -464,7 +456,7 @@ public class UserRepository : IUserRepository
       throw new KeyNotFoundException("No se encontraron Usuarios.");
     }
     var transactions = await _context.BalanceTransactions.
-    Where(t => t.UserId == userId).ToListAsync();
+    Where(t => t.UserId == userId).OrderByDescending(t => t.Id).ToListAsync();
     UserTransactionsDto userTransactionsDto = new UserTransactionsDto
     {
       UserId = user.Id,
@@ -616,6 +608,7 @@ public class UserRepository : IUserRepository
     .Include(r => r.RequestedByUser)
     .Include(r => r.TargetUser)
     .Include(r => r.AuthorizedByUser)
+    .OrderByDescending(r => r.Id)
     .ToListAsync();
     if (results == null)
     {
@@ -664,6 +657,7 @@ public class UserRepository : IUserRepository
         .Include(r => r.TargetUser)
         .Include(r => r.AuthorizedByUser)
         .Where(r => r.TargetUserId == userId)
+        .OrderByDescending(r => r.Id)
         .ToListAsync();
 
     if (results == null || results.Count == 0)

@@ -12,13 +12,12 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 // Servicios comunes
 builder.Services.AddSweetAlert2();
 builder.Services.AddBlazoredLocalStorage();
+
+// Configuración de autenticación y autorización
 builder.Services.AddAuthorizationCore();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddScoped<CustomAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
     provider.GetRequiredService<CustomAuthStateProvider>());
-
-
 
 // HttpClient público (sin token) - debe estar antes de usarlo en otros servicios
 builder.Services.AddScoped(sp => new HttpClient
@@ -69,6 +68,3 @@ builder.Services.AddScoped<IOrderService>(sp =>
 });
 
 await builder.Build().RunAsync();
-
-
-

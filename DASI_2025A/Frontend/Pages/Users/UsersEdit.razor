@@ -179,6 +179,7 @@
   private async Task handleSubmit()
   {
     userDto.OccupationFk = userDto.Occupation?.Id ?? 0;
+    userDto.BranchFk = userDto.Branch?.Id ?? 0;
     var result = await _userService.UpdateUserAsync(userDto);
     serverMessage = result.message;
     if (result.data is null)

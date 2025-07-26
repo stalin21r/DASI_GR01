@@ -21,7 +21,9 @@ public class MailkitService : IMailkitService
     if (codigo == null) return false;
     // Construir la URL de activación
     var urlBase = _config["App:UrlBase"] ?? throw new InvalidOperationException("App:UrlBase no está configurada");
-    var urlActivacion = $"{urlBase.TrimEnd('/')}/activar-cuenta?token={codigo}&email={para}";
+    var tokenEncoded = Uri.EscapeDataString(codigo);
+    var emailEncoded = Uri.EscapeDataString(para);
+    var urlActivacion = $"{urlBase.TrimEnd('/')}/activar-cuenta?token={tokenEncoded}&email={emailEncoded}";
 
     // Obtener la plantilla HTML
     var plantillaHtml = GetActivationTemplate();
@@ -59,7 +61,9 @@ public class MailkitService : IMailkitService
     if (codigo == null) return false;
     // Construir la URL de activación
     var urlBase = _config["App:UrlBase"] ?? throw new InvalidOperationException("App:UrlBase no está configurada");
-    var urlActivacion = $"{urlBase.TrimEnd('/')}/recuperar-contrasena?token={codigo}&email={para}";
+    var tokenEncoded = Uri.EscapeDataString(codigo);
+    var emailEncoded = Uri.EscapeDataString(para);
+    var urlActivacion = $"{urlBase.TrimEnd('/')}/recuperar-contrasena?token={tokenEncoded}&email={emailEncoded}";
 
     // Obtener la plantilla HTML
     var plantillaHtml = GetPasswordRecoveryTemplate();
@@ -194,7 +198,7 @@ public class MailkitService : IMailkitService
               <!-- Logo Section -->
               <tr>
                 <td class=""logo-section"">
-                  <img src=""./LogoScouts1.webp"" alt=""Logo SS.CC. Rumipamba"" width=""150"" height=""150""
+                  <img src=""https://i.imgur.com/XrdnRZP.png"" alt=""Logo SS.CC. Rumipamba"" width=""150"" height=""150""
                     style=""border-radius: 10px;"">
                 </td>
               </tr>
@@ -356,7 +360,7 @@ public class MailkitService : IMailkitService
               <!-- Logo Section -->
               <tr>
                 <td class=""logo-section"">
-                  <img src=""./LogoScouts1.webp"" alt=""Logo SS.CC. Rumipamba"" width=""150"" height=""150""
+                  <img src=""https://i.imgur.com/XrdnRZP.png"" alt=""Logo SS.CC. Rumipamba"" width=""150"" height=""150""
                     style=""border-radius: 10px;"">
                 </td>
               </tr>

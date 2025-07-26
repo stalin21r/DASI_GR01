@@ -90,6 +90,11 @@ namespace Backend
         _logger.LogWarning("Solicitud inválida al activar usuario: {Message}", ex.Message);
         return BadRequest(new { message = ex.Message });
       }
+      catch (InvalidOperationException ex)
+      {
+        _logger.LogWarning("Operación inválida al activar usuario: {Message}", ex.Message);
+        return BadRequest(new { message = ex.Message });
+      }
       catch (Exception ex)
       {
         _logger.LogError(ex, "Error inesperado al activar el usuario.");

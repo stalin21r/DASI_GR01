@@ -12,9 +12,9 @@ public class RecoverPassDto
 
   [Required(ErrorMessage = "Nueva contraseña requerida.")]
   [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un carácter especial y un número")]
-  public required string NewPassword { get; set; }
+  public string? NewPassword { get; set; }
 
   [Required(ErrorMessage = "Confirmar nueva contraseña requerida.")]
-  public required string ConfirmNewPassword { get; set; }
+  public string? ConfirmNewPassword { get; set; }
 }
 

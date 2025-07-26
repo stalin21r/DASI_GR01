@@ -20,6 +20,15 @@ public class ProductRepository : IProductRepository
     _imgurService = imgurService;
   }
 
+  /// <summary>
+  ///   Crea un nuevo producto en la base de datos.
+  /// </summary>
+  /// <param name="productDto">Objeto con los datos del producto a crear.</param>
+  /// <param name="userId">El Id del usuario que hace la petición.</param>
+  /// <returns>
+  ///   Retorna el objeto <see cref="ProductDto"/> creado si se encontró el producto.
+  ///   Retorna <see langword="null"/> si no se encontró el producto.
+  /// </returns>
   public async Task<ProductDto> CreateAsync(ProductDto productDto, string userId)
   {
     string? imgurLink = null;
@@ -84,7 +93,7 @@ public class ProductRepository : IProductRepository
   ///   Obtiene todos los productos de la base de datos.
   /// </summary>
   /// <returns>
-  ///   Retorna un <see cref="IList{ProductDto}"/> con todos los productos de la base de datos.
+  ///   Retorna una lista de objetos <see cref="ProductDto"/> que contienen los datos de los productos.
   /// </returns>
   public async Task<IEnumerable<ProductDto>> GetAllAsync()
   {
@@ -99,7 +108,9 @@ public class ProductRepository : IProductRepository
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
-      }).ToListAsync();
+      })
+      .OrderByDescending(p => p.Id)
+      .ToListAsync();
   }
 
   /// <summary>
@@ -123,7 +134,9 @@ public class ProductRepository : IProductRepository
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
-      }).ToListAsync();
+      })
+      .OrderByDescending(p => p.Id)
+      .ToListAsync();
   }
 
   /// <summary>

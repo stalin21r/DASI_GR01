@@ -15,6 +15,13 @@ public class OrderRepository : IOrderRepository
     _userRepository = userRepository;
   }
 
+  /// <summary>
+  /// Crea una orden de compra y registra la transacción en la base de datos.
+  /// </summary>
+  /// <param name="order">La orden de compra a crear.</param>
+  /// <returns>La orden creada con los nombres de los comprador y vendedor.</returns>
+  /// <exception cref="KeyNotFoundException">Si no se encontró el comprador.</exception>
+  /// <exception cref="InvalidOperationException">Si el saldo del comprador es insuficiente o no se pudo realizar la venta.</exception>
   public async Task<OrderResponseDto> CreateOrderAsync(OrderCreateDto order)
   {
     var buyer = await _context.Users.FirstOrDefaultAsync(u => u.Id == order.BuyerId);
@@ -83,13 +90,18 @@ public class OrderRepository : IOrderRepository
     };
   }
 
+  /// <summary>
+  /// Obtiene todas las órdenes de compra
+  /// </summary>
+  /// <returns>Una lista de DTO de respuesta de órdenes de compra</returns>
   public async Task<IEnumerable<OrderResponseDto>> GetAllOrdersAsync()
   {
     var orders = await _context.Orders
       .Include(o => o.Buyer)
       .Include(o => o.Seller)
       .Include(o => o.OrderDetails)
-      .ThenInclude(od => od.Product) // Solo si necesitas info del producto
+      .ThenInclude(od => od.Product)
+      .OrderByDescending(o => o.Id)
       .ToListAsync();
 
     return orders.Select(order => new OrderResponseDto
@@ -120,7 +132,8 @@ public class OrderRepository : IOrderRepository
       .Include(o => o.Buyer)
       .Include(o => o.Seller)
       .Include(o => o.OrderDetails)
-        .ThenInclude(od => od.Product)
+      .ThenInclude(od => od.Product)
+      .OrderByDescending(o => o.Id)
       .ToListAsync();
 
     if (orders == null)
@@ -154,7 +167,8 @@ public class OrderRepository : IOrderRepository
       .Include(o => o.Buyer)
       .Include(o => o.Seller)
       .Include(o => o.OrderDetails)
-        .ThenInclude(od => od.Product)
+      .ThenInclude(od => od.Product)
+      .OrderByDescending(o => o.Id)
       .ToListAsync();
 
     if (orders == null)
