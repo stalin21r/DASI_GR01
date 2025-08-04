@@ -78,11 +78,19 @@ El proyecto se desarrolla utilizando **ASP.NET Core Web API como backend** y **B
 
 Diseñar e implementar una aplicación web que permita:
 
-- 🍹 Registrar productos (bebidas y alimentos)  
-- 🧾 Gestionar ventas, pedidos y saldos 
-- 📦 Controlar el inventario de insumos  
-- 📊 Generar reportes de ventas  
-- 👤 Administrar roles de usuarios (user, admin, superadmin.)
+-🍹 Registrar y administrar productos (bebidas y alimentos)
+-🧾 Gestionar ventas, pedidos y control de despacho
+-💰 Administrar saldos y recargas de usuarios (efectivo o transferencia)
+-📄 Procesar solicitudes de recarga con comprobantes adjuntos
+-📊 Generar reportes detallados de ventas, recargas y movimientos
+-👤 Administrar usuarios con roles jerárquicos (scout, jefe, admin, superadmin)
+-🔐 Garantizar seguridad en frontend y backend mediante autenticación, autorización y manejo de rutas
+-🧭 Navegación segura y controlada según el rol de usuario
+-🔍 Aplicar filtros eficientes en módulos de usuarios, órdenes y recargas
+-📧 Incluir funcionalidades de activación de cuenta y recuperación de contraseña mediante correo electrónico
+-📄 Mostrar páginas informativas de Términos y Condiciones y Políticas de Privacidad
+
+
 
 ---
 
@@ -165,36 +173,48 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
    En la raíz de la carpeta **Backend**, crea un archivo llamado `appsettings.json` con la siguiente estructura:
 
-   ```json
-   {
-      "Imgur": {
-      "ImgutToken": "<token>",
-      "ImgurRefreshToken": "<refreshtoken>"
+   ```json   
+  {
+    "ConnectionStrings": {
+      "DefaultConnection": "Server={el nombre del server};Database=gestion_bar;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
     },
-     "Superadmin": {
-       "Email": "<email-del-superadmin>",
-       "Password": "<contraseña-del-superadmin>"
-     },    
-     "Jwt": {
-       "Key": "<clave-secreta-de-jwt>",
-       "Issuer": "<emisor-del-token>",
-       "Audience": "<audiencia-del-token>",
-       "ExpireMinutes": <minutos-de-expiracion-del-token>,
-       "RefreshTokenExpireDays": <dias-de-expiracion-del-refresh-token>
-     },   
-     "ConnectionStrings": {
-       "DefaultConnection": "Server={el nombre del server};Database=gestion_bar;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
-     },
-     "Logging": {
-       "LogLevel": {
-         "Default": "Information",
-         "Microsoft.AspNetCore": "Warning"
-       }
-     },
-     "AllowedHosts": "*"
-   }
+    "Logging": {
+      "LogLevel": {
+        "Default": "Information",
+        "Microsoft.AspNetCore": "Warning"
+      }
+    },
+    "AllowedHosts": "*",
+    "Superadmin": {
+      "Email": "aquiles.superadmin@epn.edu.ec",
+      "Password": "@Quil3s123"
+    },
+    "Jwt": {
+      "Key": "3FA94C2D7E8B9D4F123456789ABCDEF0",
+      "Issuer": "Scouts#18SSCCRumipamba",
+      "Audience": "Scouts",
+      "ExpireMinutes": 180,
+      "RefreshTokenExpireDays": 7
+    },
+    "Imgur": {
+      "ImgutToken": "<Imgur_Token>",
+      "ImgurRefreshToken": "<Imgur_Refresh_Token>",
+      "ImgurClientId": "<Imgur_Client_Id>"
+    },
+    "Smtp": {
+      "Host": "smtp.gmail.com",
+      "Port": "587",
+      "User": "<Correo_Gmail>",
+      "Pass": "<Contraseña_Aplicacion>",
+      "From": "<Correo_Gmail>"
+    },
+    "App": {
+      "UrlBase": "https://localhost:7206/"
+    }
+  }
 
-4. **Instalar Tailwind cli (solo desarrollo)** 
+
+1. **Instalar Tailwind cli (solo desarrollo)** 
   
    Abre una consola (power shell o bash), dirigete a la carpeta Frontend dentro de  DASI_2025A, ejecutar el comando:
   
@@ -216,7 +236,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
    > **⚠️ Importante:** Recuerda tener instalado Node.js (https://nodejs.org/es)
 
-5. **Restaurar los paquetes NuGet:**
+2. **Restaurar los paquetes NuGet:**
 
    Herramientas > Administrador de paquetes NuGet > Consola del Administrador de paquetes
 
@@ -226,7 +246,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    Update-Package -Reinstall
    ```
 
-6. **Actualizar la base de datos:**
+3. **Actualizar la base de datos:**
 
    Abre la consola de administración de paquetes NuGet, luego navega al directorio del **Backend** con el siguiente comando:
 
@@ -239,7 +259,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    Update-Database
    ```
 
-7. **Configurar los proyectos de inicio:**
+4. **Configurar los proyectos de inicio:**
 
    Para ejecutar tanto el **Frontend** como el **Backend** al mismo tiempo, sigue estos pasos:
 
@@ -247,11 +267,11 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
    - Despliega las opciones y selecciona **Configurar proyectos de inicio**.
    - En la ventana que aparece, selecciona la opción **Múltiples proyectos** y configura ambos (Frontend y Backend) para que se inicien al mismo tiempo.
 
-8. **Compilar la solución:**
+5. **Compilar la solución:**
 
    Una vez configurado, compila la solución para asegurarte de que todos los proyectos se construyan correctamente.
 
-9.  **Ejecutar el proyecto:**
+6.  **Ejecutar el proyecto:**
 
    Finalmente, ejecuta el proyecto. Se abrirá en tu navegador en **localhost**, y podrás acceder a la aplicación.
 
@@ -259,12 +279,26 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
 ### 📅 Semana Sprint / Entregable Estado
 
-| Semana | Sprint / Entregable                | Estado      |
-|--------|------------------------------------|-------------|
-| 1      | Configuración de entorno y backlog | ✅ Terminado |
-| 2      | Diseño general del sistema         | 🔄 Proceso |
-| 3      | Usuarios y Login                   | 🧾 Pruebas |
-| 4      | Módulo de Productos                | 🧾 Pruebas |
+| Semana | Sprint / Entregable                           | Estado        |
+|--------|-----------------------------------------------|---------------|
+| 1      | Configuración de entorno y backlog            | ✅ Terminado  |
+| 2      | Diseño general del sistema                    | ✅ Terminado  |
+| 3      | Usuarios y Login                              | ✅ Terminado  |
+| 4      | Módulo de Productos                           | ✅ Terminado  |
+| 5      | Módulo de Órdenes                             | ✅ Terminado  |
+| 6      | Módulo de Administrar Recargas                | ✅ Terminado  |
+| 7      | Módulo de Solicitudes de Recarga              | ✅ Terminado  |
+| 8      | Filtros en Módulo de Usuarios                 | ✅ Terminado  |
+| 9      | Filtros en Módulo de Órdenes                  | ✅ Terminado  |
+| 10     | Filtros en Módulo de Recargas                 | ✅ Terminado  |
+| 11     | Seguridad en Backend (roles, validaciones)    | ✅ Terminado  |
+| 12     | Seguridad en Frontend (autenticación, guards) | ✅ Terminado  |
+| 13     | Manejo de rutas y navegación segura           | ✅ Terminado  |
+| 14     | Recuperación de contraseña vía correo         | ✅ Terminado  |
+| 15     | Activación de usuarios vía correo electrónico | ✅ Terminado  |
+| 16     | Página de Términos y Condiciones, Página de Políticas de Privacidad            | ✅ Terminado  |
+| 17     | Página de Políticas de Privacidad             | ✅ Terminado  |
+
 
 ---
 
