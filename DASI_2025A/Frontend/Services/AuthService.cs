@@ -1,18 +1,17 @@
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Threading.Tasks;
 using Microsoft.JSInterop;
+using Blazored.LocalStorage;
 using Shared;
 
 namespace Frontend;
 public class AuthService : IAuthService
 {
   private readonly HttpClient _http;
-  private readonly IJSRuntime _js;
-  public AuthService(HttpClient httpClient, IJSRuntime jsRuntime)
+  private readonly ILocalStorageService _localStorage;
+  public AuthService(HttpClient httpClient, ILocalStorageService localStorage)
   {
     _http = httpClient;
-    _js = jsRuntime;
+    _localStorage = localStorage;
   }
 
   public async Task<ApiResponse<AuthDto>> LoginAsync(LoginDto loginDto)
@@ -31,12 +30,13 @@ public class AuthService : IAuthService
       Console.WriteLine(result?.data);
       if (result?.data is not null)
       {
-        await _js.InvokeVoidAsync("localStorage.setItem", "token", result.data.token);
+        await _localStorage.SetItemAsync("token", result.data.token);
       }
       return result!;
     }
-    catch
+    catch (Exception e)
     {
+      Console.WriteLine(e);
       return new ApiResponse<AuthDto>("Error desconocido al iniciar sesión.");
     }
   }

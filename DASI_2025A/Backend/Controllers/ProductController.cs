@@ -1,48 +1,52 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
+using System.Security.Claims;
 
 namespace Backend
 {
   [Route("api/v1/[controller]")]
   [ApiController]
   public class ProductController : ControllerBase
-  {
-    private readonly IProductService _productService;
-
-    //// <summary>
-    /// Inicializa una nueva instancia de la clase <see cref="ProductController"/>.
-    /// </summary>
-    /// <param name="productService">Una instancia de <see cref="IProductService"/> para realizar operaciones de productos.</param>
-    public ProductController(IProductService productService)
     {
-      _productService = productService;
-    }
+        private readonly IProductService _productService;
+		private readonly IWalletRepository _walletRepository;
 
-    /// <summary>
-    ///     Crea un nuevo producto.
-    /// </summary>
-    /// <param name="productDto">Los datos del producto a crear.</param>
-    /// <returns>
-    ///     Retorna un <see cref="IActionResult"/> con un código de estado <see cref="StatusCodes.Status201Created"/> si el producto se crea correctamente.
-    ///     En caso de error, retorna un <see cref="IActionResult"/> con un código de estado <see cref="StatusCodes.Status400BadRequest"/>.
-    /// </returns>
-    [HttpPost]
+		//// <summary>
+		/// Inicializa una nueva instancia de la clase <see cref="ProductController"/>.
+		/// </summary>
+		/// <param name="productService">Una instancia de <see cref="IProductService"/> para realizar operaciones de productos.</param>
+		public ProductController(IProductService productService, IWalletRepository walletRepository)
+		{
+			_productService = productService;
+			_walletRepository = walletRepository;
+		}
+
+		/// <summary>
+		///     Crea un nuevo producto.
+		/// </summary>
+		/// <param name="productDto">Los datos del producto a crear.</param>
+		/// <returns>
+		///     Retorna un <see cref="IActionResult"/> con un código de estado <see cref="StatusCodes.Status201Created"/> si el producto se crea correctamente.
+		///     En caso de error, retorna un <see cref="IActionResult"/> con un código de estado <see cref="StatusCodes.Status400BadRequest"/>.
+		/// </returns>
+		[HttpPost]
     [Authorize(Policy = "AdminPlus")]
     public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto)
     {
       try
       {
-        var response = await _productService.CreateProductAsync(productDto);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.CreateProductAsync(productDto, userId!);
         return Created(string.Empty, response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al crear el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear el producto." });
       }
     }
 
@@ -65,11 +69,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener los productos.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener los productos." });
       }
     }
 
@@ -93,11 +97,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener los productos.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener los productos." });
       }
     }
 
@@ -121,11 +125,11 @@ namespace Backend
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al obtener el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener el producto." });
       }
     }
 
@@ -140,53 +144,100 @@ namespace Backend
     /// </returns>
     [HttpPut]
     [Authorize(Policy = "AdminPlus")]
-    public async Task<IActionResult> UpdateProduct([FromBody] ProductDto productDto)
+    public async Task<IActionResult> UpdateProduct([FromBody] UpdateProductDto productDto)
     {
       try
       {
-        var response = await _productService.UpdateProductAsync(productDto);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.UpdateProductAsync(productDto, userId!);
         return Ok(response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (KeyNotFoundException ex)
       {
-        return NotFound(ex.Message);
+        return NotFound(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al actualizar el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al actualizar el producto." });
       }
     }
 
-    /// <summary>
-    ///     Elimina un producto.
-    /// </summary>
-    /// <param name="id">El identificador del producto a eliminar.</param>
-    /// <returns>
-    ///     Retorna un <see cref="IActionResult"/> con código 200 (OK) si el producto se eliminó correctamente.
-    ///     Retorna un <see cref="IActionResult"/> con código 400 (Bad Request) si la solicitud es inválida.
-    ///     Retorna un <see cref="IActionResult"/> con código 404 (Not Found) si el producto no existe.
-    ///     Retorna un <see cref="IActionResult"/> con código 500 (Internal Server Error) para errores inesperados.
-    /// </returns>
-    [HttpDelete("{id:int:min(1)}")]
+		/// <summary>
+		/// Vende un producto, generando automáticamente una orden y actualizando el saldo
+		/// </summary>
+		/// <param name="sellProductDto">Datos de la venta a realizar</param>
+		/// <returns>Resultado completo de la operación de venta</returns>
+		[HttpPost("sell")]
+		[Authorize(Policy = "AdminPlus")]
+		public async Task<IActionResult> SellProductAsync([FromBody] SellProductDto sellProductDto)
+		{
+			try
+			{
+				var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+				if (string.IsNullOrEmpty(userId))
+				{
+					return Unauthorized(new { message = "Usuario no autenticado" });
+				}
+
+				// Realizar la venta
+				var response = await _productService.SellProductAsync(sellProductDto, userId);
+
+				// Obtener el saldo actualizado del usuario
+				var updatedBalance = await _walletRepository.GetUserBalanceAsync(userId);
+
+				return Ok(response);
+			}
+			catch (UnauthorizedAccessException ex)
+			{
+				return Unauthorized(new { message = ex.Message });
+			}
+			catch (KeyNotFoundException ex)
+			{
+				return NotFound(new { message = ex.Message });
+			}
+			catch (InvalidOperationException ex)
+			{
+				return BadRequest(new { message = ex.Message });
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(StatusCodes.Status500InternalServerError,
+					new { message = $"Error del servidor al vender el producto: {ex.Message}" });
+			}
+		}
+
+
+		/// <summary>
+		///     Elimina un producto.
+		/// </summary>
+		/// <param name="id">El identificador del producto a eliminar.</param>
+		/// <returns>
+		///     Retorna un <see cref="IActionResult"/> con código 200 (OK) si el producto se eliminó correctamente.
+		///     Retorna un <see cref="IActionResult"/> con código 400 (Bad Request) si la solicitud es inválida.
+		///     Retorna un <see cref="IActionResult"/> con código 404 (Not Found) si el producto no existe.
+		///     Retorna un <see cref="IActionResult"/> con código 500 (Internal Server Error) para errores inesperados.
+		/// </returns>
+		[HttpDelete("{id:int:min(1)}")]
     [Authorize(Policy = "AdminPlus")]
     public async Task<IActionResult> DeleteProduct([FromRoute] int id)
     {
       try
       {
-        var response = await _productService.DeleteProductAsync(id);
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var response = await _productService.DeleteProductAsync(id, userId!);
         return Ok(response);
       }
       catch (BadHttpRequestException ex)
       {
-        return BadRequest(ex.Message);
+        return BadRequest(new { message = ex.Message });
       }
       catch (Exception)
       {
-        return BadRequest("Error del servidor al eliminar el producto.");
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al eliminar el producto." });
       }
     }
   }

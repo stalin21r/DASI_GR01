@@ -11,14 +11,18 @@ public class ProductDto
   [StringLength(200, ErrorMessage = "El nombre debe tener menos de 200 caracteres")]
   public string Name { get; set; } = string.Empty;
 
+  [Required(ErrorMessage = "La descripción es requerida")]
   [StringLength(1000, ErrorMessage = "La descripción debe tener menos de 1000 caracteres")]
   public string Description { get; set; } = string.Empty;
 
   [Required(ErrorMessage = "El precio es requerido")]
-  [Range(0, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
+  [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
   public decimal Price { get; set; }
 
-  [StringLength(500, ErrorMessage = "La imagen debe tener menos de 500 caracteres")]
+  [Required(ErrorMessage = "La cantidad es requerida")]
+  [Range(0, uint.MaxValue, ErrorMessage = "La cantidad debe ser mayor o igual a 0")]
+  public uint Stock { get; set; } = 0;
+
   public string? Image { get; set; }
 
   [Required(ErrorMessage = "El estado es requerido")]
@@ -26,4 +30,11 @@ public class ProductDto
 
   [Required(ErrorMessage = "El tipo es requerido")]
   public ProductType Type { get; set; }
+
+
+  public override string ToString()
+  {
+    return $"Id: {Id}, Name: {Name}, Description: {Description}, Price: {Price}, Stock: {Stock}, Active: {Active}, Type: {Type}";
+  }
+
 }

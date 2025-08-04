@@ -1,0 +1,175 @@
+@page "/Productos/Crear"
+@inject IProductService _productService
+@inject NavigationManager NavigationManager
+@inject SweetAlertService _sw
+
+<PageTitle>Crear Producto</PageTitle>
+
+<div class="space-y-4 w-full">
+  <section class="flex flex-col w-full justify-center items-start">
+    <div class="p-2 flex gap-4 justify-center items-center">
+      <img src="/Assets/Images/mapache.webp" alt="mapache scout SSCC" class="w-auto h-[120px]">
+      <div class="text-center">
+        <div class="flex flex-col">
+          <span class="text-sm font-bold text-[#2b4266]">SS.CC.</span>
+          <span class="text-2xl font-bold text-[#1C328C]">Rumipamba</span>
+        </div>
+        <span class="text-gray-400/90 text-sm font-bold">Crear Productos y Lunches</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="w-full flex justify-between items-center px-4">
+    <h1 class="text-4xl font-bold text-[#427500]">Crear Productos</h1>
+    <div class="flex gap-4">
+      <NavLink href="/Productos"
+        class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
+        <i class="fa-solid fa-arrow-left"></i>Atrás
+      </NavLink>
+    </div>
+  </section>
+
+  <section class="w-full flex justify-center items-center">
+    <EditForm Model="productDto" OnValidSubmit="handleSubmit"
+      class="p-10 w-full rounded-2xl border border-gray-300/50 shadow-2xl">
+      <div class="grid grid-cols-3 grid-rows-4 gap-4 space-y-4">
+        <DataAnnotationsValidator />
+        <div>
+          <div>
+            <FloatingLabelInput Label="Nombre" Name="name" Type="text" LabelColor="blue" Value="@productDto.Name"
+              OnChange="(e) => productDto.Name = e.Value?.ToString() ?? string.Empty">
+            </FloatingLabelInput>
+            <ValidationMessage For="@(() => productDto.Name)" />
+          </div>
+        </div>
+        <div>
+          <div>
+            <FloatingLabelSelect Label="Tipo" Name="Type" LabelColor="blue"
+              SelectedValue="@(productDto.Type.ToString())"
+              SelectedValueChanged="(value) => productDto.Type = Enum.Parse<ProductType>(value)" Placeholder="Tipo">
+              <option value="General">General</option>
+              <option value="Lunch">Lunch</option>
+            </FloatingLabelSelect>
+            <ValidationMessage For="@(() => productDto.Type)" />
+          </div>
+
+        </div>
+        <div class="col-start-1 row-start-2">
+          <div>
+            <FloatingLabelInput Label="Precio" Name="Price" Type="number" LabelColor="blue"
+              Value="@productDto.Price.ToString()" step="any"
+              OnChange="(e) => { var input = e.Value?.ToString(); if (decimal.TryParse(input, out var value)) { productDto.Price = value; } else { productDto.Price = 0; } }">
+            </FloatingLabelInput>
+            <ValidationMessage For="@(() => productDto.Price)" />
+          </div>
+        </div>
+        <div class="col-start-2 row-start-2">
+          <div>
+            <FloatingLabelInput Label="Stock" Name="Stock" Type="number" LabelColor="blue"
+              Value="@productDto.Stock.ToString()"
+              OnChange="(e) => { var input = e.Value?.ToString(); if (uint.TryParse(input, out var value)) { productDto.Stock = value; } else { productDto.Stock = 0; } }">
+            </FloatingLabelInput>
+            <ValidationMessage For="@(() => productDto.Stock)" />
+          </div>
+        </div>
+        <div class="col-span-2 row-span-2 col-start-1 row-start-3">
+          <div>
+            <FloatingLabelTextArea Label="Descripción" Name="Description" LabelColor="blue"
+              Value="@productDto.Description"
+              OnChange="(e) => productDto.Description = e.Value?.ToString() ?? string.Empty">
+            </FloatingLabelTextArea>
+            <ValidationMessage For="@(() => productDto.Description)" />
+          </div>
+        </div>
+        <div class="row-span-3 col-start-3 row-start-1 flex flex-col justify-center items-center">
+          <div class="flex-3 flex justify-center items-center">
+            <!-- Aqui va  la preview de  la imagen -->
+            @if (!string.IsNullOrEmpty(previewUrl))
+            {
+              <img src="@previewUrl" alt="Vista previa" class="h-[150px] w-[150px] object-contain rounded shadow" />
+            }
+          </div>
+          <div class="flex flex-col justify-center items-center flex-1 w-full">
+            <label for="fileInput" accept="image/jpeg,image/jpg,image/gif,image/png,image/apng,image/tiff"
+              class="text-sm inline-block px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 text-center w-3/4">
+              Seleccionar archivo
+            </label>
+            <InputFile id="fileInput" OnChange="HandleFileSelected" class="hidden" />
+          </div>
+        </div>
+        <div class="col-start-3 row-start-4 flex justify-center items-start">
+          <button type="submit"
+            class="bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
+            Crear Producto</button>
+        </div>
+      </div>
+    </EditForm>
+  </section>
+</div>
+
+@code
+{
+  private ProductDto productDto = new();
+  private string serverMessage = string.Empty;
+  private string? previewUrl;
+
+  private async Task handleSubmit()
+  {
+    Console.WriteLine(productDto.ToString());
+    var result = await _productService.CreateProductAsync(productDto);
+    //Console.WriteLine(result.data);
+    serverMessage = result.message;
+
+    if (result.data is null)
+    {
+      await _sw.FireAsync("Error", serverMessage, SweetAlertIcon.Error);
+      return;
+    }
+    await _sw.FireAsync("Producto creado", serverMessage, SweetAlertIcon.Success);
+    NavigationManager.NavigateTo("/Productos");
+  }
+
+  private async Task HandleFileSelected(InputFileChangeEventArgs e)
+  {
+    try
+    {
+      var file = e.File;
+
+      if (file != null)
+      {
+        if (!file.ContentType.Contains("image/jpeg") &&
+        !file.ContentType.Contains("image/jpg") &&
+        !file.ContentType.Contains("image/gif") &&
+        !file.ContentType.Contains("image/png") &&
+        !file.ContentType.Contains("image/apng") &&
+        !file.ContentType.Contains("image/tiff"))
+        {
+          await _sw.FireAsync("Error", "Debe seleccionar un archivo con formato de imagen", SweetAlertIcon.Error);
+          return;
+        }
+
+        using var stream = file.OpenReadStream(5 * 1024 * 1024); // 5 MB
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        var imageBytes = ms.ToArray();
+
+        previewUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
+        productDto.Image = Convert.ToBase64String(imageBytes);
+      }
+    }
+    catch (IOException ex)
+    {
+      if (ex.Message.Contains("exceeds the maximum"))
+      {
+        Console.WriteLine(ex.Message);
+        await _sw.FireAsync("Error", "El archivo es demasiado grande, máximo permitido 5mb", SweetAlertIcon.Error);
+      }
+      else
+      {
+        await _sw.FireAsync("Error", "Error al leer el archivo", SweetAlertIcon.Error);
+      }
+    }
+  }
+
+
+}

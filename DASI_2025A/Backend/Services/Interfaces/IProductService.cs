@@ -4,10 +4,11 @@ namespace Backend;
 
 public interface IProductService
 {
-  Task<ApiResponse<ProductDto>> CreateProductAsync(ProductDto productDto);
+  Task<ApiResponse<ProductDto>> CreateProductAsync(ProductDto productDto, string userId);
   Task<ApiResponse<IEnumerable<ProductDto>>> GetAllProductsAsync();
   Task<ApiResponse<IEnumerable<ProductDto>>> GetProductsByTypeAsync(ProductType type);
   Task<ApiResponse<ProductDto>> GetProductByIdAsync(int id);
-  Task<ApiResponse<ProductDto>> UpdateProductAsync(ProductDto productDto);
-  Task<ApiResponse<bool>> DeleteProductAsync(int id);
+  Task<ApiResponse<ProductDto>> UpdateProductAsync(UpdateProductDto productDto, string userId);
+  Task<ApiResponse<bool>> DeleteProductAsync(int id, string userId);
+  Task<ApiResponse<SellResultDto>> SellProductAsync(SellProductDto sellProductDto, string UserId);
 }

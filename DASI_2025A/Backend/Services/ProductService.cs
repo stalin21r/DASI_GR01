@@ -1,31 +1,43 @@
-﻿using Shared;
+﻿using Microsoft.AspNetCore.Identity;
+using Shared;
 
 namespace Backend;
 
 public class ProductService : IProductService
 {
-  private readonly IProductRepository _repository;
+  private readonly IProductRepository _productRepository;
+	private readonly IOrderRepository _orderRepository;
+	private readonly IWalletRepository _walletRepository;
+	private readonly UserManager<ApplicationUser> _userManager;
 
-  /// <summary>
-  ///   Inicializa una nueva instancia de <see cref="ProductService"/>.</summary>
-  /// <param name="repository">Una instancia de <see cref="IProductRepository"/> para realizar operaciones de productos.</param>
-  public ProductService(IProductRepository repository)
+
+	/// <summary>
+	///   Inicializa una nueva instancia de <see cref="ProductService"/>.</summary>
+	/// <param name="repository">Una instancia de <see cref="IProductRepository"/> para realizar operaciones de productos.</param>
+	public ProductService(
+		IProductRepository productRepository,
+		IOrderRepository orderRepository,
+		IWalletRepository walletRepository,
+		UserManager<ApplicationUser> userManager)
+	{
+		_productRepository = productRepository;
+		_orderRepository = orderRepository;
+		_walletRepository = walletRepository;
+		_userManager = userManager;
+	}
+
+	/// <summary>
+	///     Crea un nuevo producto en el sistema.
+	/// </summary>
+	/// <param name="productDto">Los datos del producto a crear.</param>
+	/// <returns>
+	///     Retorna un <see cref="ApiResponse{ProductDto}"/> con los datos del producto recién creado.
+	///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo crear el producto.
+	/// </returns>
+
+	public async Task<ApiResponse<ProductDto>> CreateProductAsync(ProductDto productDto, string userId)
   {
-    _repository = repository;
-  }
-
-  /// <summary>
-  ///     Crea un nuevo producto en el sistema.
-  /// </summary>
-  /// <param name="productDto">Los datos del producto a crear.</param>
-  /// <returns>
-  ///     Retorna un <see cref="ApiResponse{ProductDto}"/> con los datos del producto recién creado.
-  ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo crear el producto.
-  /// </returns>
-
-  public async Task<ApiResponse<ProductDto>> CreateProductAsync(ProductDto productDto)
-  {
-    var result = await _repository.CreateAsync(productDto);
+    var result = await _productRepository.CreateAsync(productDto, userId);
     if (result == null)
     {
       throw new BadHttpRequestException("Error al crear el producto.");
@@ -47,7 +59,7 @@ public class ProductService : IProductService
   /// </returns>
   public async Task<ApiResponse<IEnumerable<ProductDto>>> GetAllProductsAsync()
   {
-    var result = await _repository.GetAllAsync();
+    var result = await _productRepository.GetAllAsync();
     if (result == null || !result.Any())
     {
       throw new KeyNotFoundException("No se encontraron Productos.");
@@ -71,7 +83,7 @@ public class ProductService : IProductService
 
   public async Task<ApiResponse<IEnumerable<ProductDto>>> GetProductsByTypeAsync(ProductType type)
   {
-    var result = await _repository.GetByTypeAsync(type);
+    var result = await _productRepository.GetByTypeAsync(type);
     if (result == null || !result.Any())
     {
       throw new KeyNotFoundException("No se encontraron Productos.");
@@ -94,7 +106,7 @@ public class ProductService : IProductService
   /// </returns>
   public async Task<ApiResponse<ProductDto>> GetProductByIdAsync(int id)
   {
-    var result = await _repository.GetAsync(id);
+    var result = await _productRepository.GetAsync(id);
     if (result == null)
     {
       throw new KeyNotFoundException("No se encontraron Productos.");
@@ -115,9 +127,9 @@ public class ProductService : IProductService
   ///     Retorna un <see cref="ApiResponse{ProductDto}"/> con los datos del producto actualizado.
   ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo actualizar el producto.
   /// </returns>
-  public async Task<ApiResponse<ProductDto>> UpdateProductAsync(ProductDto productDto)
+  public async Task<ApiResponse<ProductDto>> UpdateProductAsync(UpdateProductDto productDto, string userId)
   {
-    var result = await _repository.UpdateAsync(productDto);
+    var result = await _productRepository.UpdateAsync(productDto, userId);
     if (result == null)
     {
       throw new BadHttpRequestException("Error al actualizar el producto.");
@@ -138,9 +150,9 @@ public class ProductService : IProductService
   ///     Retorna un <see cref="ApiResponse{bool}"/> con el resultado de la operación.
   ///     Lanza una excepción <see cref="BadHttpRequestException"/> si no se pudo eliminar el producto.
   /// </returns>
-  public async Task<ApiResponse<bool>> DeleteProductAsync(int id)
+  public async Task<ApiResponse<bool>> DeleteProductAsync(int id, string userId)
   {
-    var result = await _repository.DeleteAsync(id);
+    var result = await _productRepository.DeleteAsync(id, userId);
     if (!result)
     {
       throw new BadHttpRequestException("Error al eliminar el producto.");
@@ -152,4 +164,58 @@ public class ProductService : IProductService
     );
     return response;
   }
+	/// <summary>
+	/// Vende un producto, creando automáticamente una orden y actualizando el saldo del usuario
+	/// </summary>
+	public async Task<ApiResponse<SellResultDto>> SellProductAsync(SellProductDto sellProductDto, string userId)
+	{
+		// Validar el usuario
+		var user = await _userManager.FindByIdAsync(userId);
+		if (user == null || (!await _userManager.IsInRoleAsync(user, "Admin") && !await _userManager.IsInRoleAsync(user, "SuperAdmin")))
+			throw new UnauthorizedAccessException("Solo un Administrador o Super Administrador puede vender productos.");
+
+		//Verifica producto y stock
+		var product = await _productRepository.GetAsync(sellProductDto.ProductId);
+		if (product == null)
+			throw new KeyNotFoundException($"No se encontró el producto con ID {sellProductDto.ProductId}");
+
+		if (!product.Active)
+			throw new InvalidOperationException("No se puede vender un producto inactivo");
+
+		if (product.Stock < sellProductDto.Quantity)
+			throw new InvalidOperationException($"Stock insuficiente para {product.Name}");
+
+		//Crea la orden
+		var order = await _orderRepository.CreateSaleOrderAsync(
+			sellProductDto.ProductId,
+			sellProductDto.Quantity,
+			userId);
+		// Registra transacción en wallet
+		var walletTransaction = await _walletRepository.RegisterSaleTransactionAsync(
+			order.Id,
+			order.TotalAmount, userId);
+		// Realizar la venta
+		var saleResult = await _productRepository.RegisterSellProductAsync(
+			sellProductDto,
+			userId);
+
+		// Obtiene el producto actualizado y el saldo del usuario
+		var updatedProduct = await _productRepository.GetAsync(saleResult.Id);
+		var updatedBalance = await _walletRepository.GetUserBalanceAsync(userId);
+
+		var result = new SellResultDto
+		{
+			Product = updatedProduct,
+			Order = order,
+			WalletTransaction = walletTransaction,
+			TransactionDate = DateTime.Now,
+			UpdatedBalance = updatedBalance
+		};
+
+		return new ApiResponse<SellResultDto>(
+			message: "Producto vendido exitosamente",
+			data: result,
+			totalRecords: 1
+		);
+	}
 }
