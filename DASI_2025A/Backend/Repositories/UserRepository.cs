@@ -139,30 +139,82 @@ public class UserRepository : IUserRepository
   ///     Si no se encontraron usuarios, lanza una excepción <see cref="KeyNotFoundException"/>.
   ///     Si ocurre un error inesperado, lanza una excepción <see cref="BadHttpRequestException"/>.
   /// </returns>
-  public async Task<IEnumerable<UserDto>> GetAllAsync()
+  public async Task<PagedResult<UserDto>> GetAllAsync(UserQueryParams queryParams)
   {
-    var users = await _userManager.Users
-    .Include(u => u.Occupation)
-    .Include(u => u.Branch)
-    .AsNoTracking()
-    .OrderByDescending(u => u.Id)
-    .ToListAsync();
+    var query = _userManager.Users
+      .Include(u => u.Occupation)
+      .Include(u => u.Branch)
+      .Where(u => u.Active == true)
+      .AsNoTracking()
+      .AsQueryable();
+
+    // Filtro por nombre/apellido
+    if (!string.IsNullOrWhiteSpace(queryParams.SearchName))
+    {
+      var search = queryParams.SearchName.ToLower();
+      query = query.Where(u =>
+        u.FirstName.ToLower().Contains(search) ||
+        u.LastName.ToLower().Contains(search));
+    }
+
+    if (!string.IsNullOrWhiteSpace(queryParams.SearchEmail))
+    {
+      Console.WriteLine(queryParams.SearchEmail);
+      var search = queryParams.SearchEmail.ToLower();
+      query = query.Where(u =>
+        u.Email!.ToLower().Contains(search)
+      );
+    }
+
+    // Filtro por ocupación
+    if (queryParams.OccupationFk.HasValue)
+    {
+      query = query.Where(u => u.OccupationFk == queryParams.OccupationFk.Value);
+    }
+
+    // Filtro por branch
+    if (queryParams.BranchFk.HasValue)
+    {
+      query = query.Where(u => u.BranchFk == queryParams.BranchFk.Value);
+    }
+    if (!string.IsNullOrWhiteSpace(queryParams.Role))
+    {
+      var roleToMatch = queryParams.Role;
+      var userIdsWithRole = (await _userManager.GetUsersInRoleAsync(roleToMatch)).Select(u => u.Id);
+      query = query.Where(u => userIdsWithRole.Contains(u.Id));
+    }
+
+    // Total sin paginación
+    var totalItems = await query.CountAsync();
+
+    // Aplicar paginación
+    var users = await query
+      .OrderByDescending(u => u.Id)
+      .Skip(queryParams.Skip)
+      .Take(queryParams.PageSize)
+      .ToListAsync();
+
     if (users == null || users.Count == 0)
     {
-      throw new KeyNotFoundException("No se encontraron Usuarios.");
+      return new PagedResult<UserDto>
+      {
+        Items = [],
+        TotalItems = 0
+      };
     }
-    var userDtos = new List<UserDto>();
-    // se pre carga todos los roles para no hacer muchas consultas
+
+    // Obtener todos los roles
     var userRoles = new Dictionary<string, IList<string>>();
     foreach (var user in users)
     {
       userRoles[user.Id] = await _userManager.GetRolesAsync(user);
     }
-    // Mapear los usuarios de entidad a dto´s
-    foreach (var user in users)
+
+    // Mapear a DTO
+    var userDtos = users.Select(user =>
     {
       var roles = userRoles[user.Id];
-      var userDto = new UserDto
+      return new UserDto
       {
         Id = user.Id,
         FirstName = user.FirstName,
@@ -171,7 +223,7 @@ public class UserRepository : IUserRepository
         DateOfBirth = user.DateOfBirth,
         ScoutUniqueId = user.ScoutUniqueId,
         Active = user.Active,
-        Role = roles.FirstOrDefault(), // Tomamos el primer rol si hay múltiples
+        Role = roles.FirstOrDefault(),
         OccupationFk = user.OccupationFk,
         Balance = user.Balance,
         Occupation = user.Occupation != null ? new OccupationDto
@@ -186,14 +238,15 @@ public class UserRepository : IUserRepository
           Name = user.Branch.Name
         } : null
       };
-      userDtos.Add(userDto);
-    }
-    if (userDtos == null || userDtos.Count == 0)
+    }).ToList();
+
+    return new PagedResult<UserDto>
     {
-      throw new BadHttpRequestException("No se pudo obtener los usuarios.");
-    }
-    return userDtos;
+      Items = userDtos,
+      TotalItems = totalItems
+    };
   }
+
 
   /// <summary>
   /// Obtiene un usuario por su ID.
@@ -602,19 +655,42 @@ public class UserRepository : IUserRepository
   /// </summary>
   /// <returns>Una lista de objetos con los datos de las solicitudes de recarga.</returns>
   /// <exception cref="KeyNotFoundException">Si no se encontraron solicitudes de recarga.</exception>
-  public async Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsAsync()
+  public async Task<PagedResult<TopUpRequestResponseDto>> GetTopUpRequestsAsync(AdminTopUpRequestQueryParams query)
   {
-    var results = await _context.TopUpRequests
-    .Include(r => r.RequestedByUser)
-    .Include(r => r.TargetUser)
-    .Include(r => r.AuthorizedByUser)
-    .OrderByDescending(r => r.Id)
-    .ToListAsync();
-    if (results == null)
-    {
-      throw new KeyNotFoundException("No se encontraron solicitudes de recarga.");
-    }
-    var requests = results.Select(request => new TopUpRequestResponseDto
+    var baseQuery = _context.TopUpRequests
+      .Include(r => r.RequestedByUser)
+      .Include(r => r.TargetUser)
+      .Include(r => r.AuthorizedByUser)
+      .AsQueryable();
+
+    // Filtros dinámicos
+    if (!string.IsNullOrWhiteSpace(query.Type))
+      baseQuery = baseQuery.Where(r => r.Type == query.Type);
+
+    if (!string.IsNullOrWhiteSpace(query.Status))
+      baseQuery = baseQuery.Where(r => r.Status == query.Status);
+
+    if (!string.IsNullOrWhiteSpace(query.TargetUser))
+      baseQuery = baseQuery.Where(r => (r.TargetUser!.FirstName + " " + r.TargetUser.LastName).Contains(query.TargetUser));
+
+    if (!string.IsNullOrWhiteSpace(query.AuthorizedByUser))
+      baseQuery = baseQuery.Where(r => r.AuthorizedByUser != null && (r.AuthorizedByUser.FirstName + " " + r.AuthorizedByUser.LastName).Contains(query.AuthorizedByUser));
+
+    if (query.StartDate.HasValue)
+      baseQuery = baseQuery.Where(r => r.AuditableDate >= query.StartDate.Value);
+
+    if (query.EndDate.HasValue)
+      baseQuery = baseQuery.Where(r => r.AuditableDate <= query.EndDate.Value);
+
+    var totalCount = await baseQuery.CountAsync();
+
+    var result = await baseQuery
+      .OrderByDescending(r => r.Id)
+      .Skip(query.Skip)
+      .Take(query.PageSize)
+      .ToListAsync();
+
+    var mapped = result.Select(request => new TopUpRequestResponseDto
     {
       Id = request.Id,
       Amount = request.Amount,
@@ -623,21 +699,20 @@ public class UserRepository : IUserRepository
       Receipt = request.Receipt != null
         ? $"data:image/png;base64,{Convert.ToBase64String(File.ReadAllBytes(request.Receipt))}"
         : null,
-      TargetUser = request.TargetUser != null
-    ? $"{request.TargetUser.FirstName} {request.TargetUser.LastName}"
-    : "Desconocido",
-      RequestedByUser = request.RequestedByUser != null
-    ? $"{request.RequestedByUser.FirstName} {request.RequestedByUser.LastName}"
-    : "Desconocido",
-      AuthorizedByUser = request.AuthorizedByUser != null
-    ? $"{request.AuthorizedByUser.FirstName} {request.AuthorizedByUser.LastName}"
-    : null,
-      AuditableDate = request.AuditableDate, // asumiendo que viene de AuditableEntity
-      MachineName = request.MachineName  // idem
+      TargetUser = request.TargetUser != null ? $"{request.TargetUser.FirstName} {request.TargetUser.LastName}" : "Desconocido",
+      RequestedByUser = request.RequestedByUser != null ? $"{request.RequestedByUser.FirstName} {request.RequestedByUser.LastName}" : "Desconocido",
+      AuthorizedByUser = request.AuthorizedByUser != null ? $"{request.AuthorizedByUser.FirstName} {request.AuthorizedByUser.LastName}" : null,
+      AuditableDate = request.AuditableDate,
+      MachineName = request.MachineName
     }).ToList();
 
-    return requests;
+    return new PagedResult<TopUpRequestResponseDto>
+    {
+      Items = mapped,
+      TotalItems = totalCount
+    };
   }
+
 
   /// <summary>
   ///   Obtiene las solicitudes de recarga de saldo del usuario con el identificador especificado.

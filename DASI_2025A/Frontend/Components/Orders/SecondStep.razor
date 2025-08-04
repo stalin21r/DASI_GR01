@@ -2,98 +2,113 @@
 @using Microsoft.AspNetCore.Components.Web
 @inject IProductService _productService
 
-<section class="w-full flex justify-between items-center px-4">
-  <h1 class="text-4xl font-bold text-[#427500]">Agregar Productos</h1>
+<section class="w-full flex flex-col md:flex-row justify-between items-start md:items-center px-4 gap-2 md:gap-0">
+  <h1 class="text-3xl md:text-4xl font-bold text-[#427500]">Agregar Productos</h1>
 </section>
 
 @if (products == null && string.IsNullOrEmpty(errorMessage))
 {
-  <h1 class="text-sm font-bold text-[#427500]">Cargando ...</h1>
+  <h1 class="text-sm font-bold text-[#427500] mt-4">Cargando ...</h1>
 }
 else if (!string.IsNullOrEmpty(errorMessage))
 {
-  <h1 class="text-sm font-bold text-red">@errorMessage</h1>
+  <h1 class="text-sm font-bold text-red-600 mt-4">@errorMessage</h1>
 }
 else
 {
   <section>
-    <div class="p-6 col-span-2">
-      <div class="flex justify-end w-full px-6 py-2">
+    <div class="p-4 md:p-6 col-span-2">
+      <!-- Paginación -->
+      <div class="flex justify-center md:justify-end w-full px-2 py-2">
         <nav class="inline-flex space-x-1">
           <button @onclick="() => GoToPage(currentPage - 1)"
-            class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
-            disabled="@(@currentPage == 1)"><i class="fa-solid fa-chevron-left"></i></button>
-
+            class="w-8 h-8 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white transition duration-300"
+            disabled="@(@currentPage == 1)">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
           @for (int i = 1; i <= totalPages; i++)
           {
             <button @onclick="() => GoToPage(i)"
-              class="w-7 h-7 font-bold text-center rounded-full @(i == currentPage ? "bg-blue-500/80 text-white" : "bg-white hover:bg-gray-300/80 cursor-pointer") text-xs">
+              class="w-8 h-8 rounded-full text-xs font-bold text-center transition duration-300
+                                     @(i == currentPage ? "bg-blue-500 text-white" : "bg-white hover:bg-gray-200 text-black")">
               @i
             </button>
           }
           <button @onclick="() => GoToPage(currentPage + 1)"
-            class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
-            disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i></button>
+            class="w-8 h-8 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white transition duration-300"
+            disabled="@(@currentPage == totalPages)">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
         </nav>
       </div>
-      <section class="flex gap-4 justify-around items-center">
+      <!-- Selector de tipo de producto -->
+      <section class="flex flex-col sm:flex-row gap-2 justify-center items-center my-4">
         <button @onclick="() => productType = 0"
-          class=" @(productType == 1 ? "bg-gray-500" : "bg-green-700") w-[150px] hover:bg-green-400 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">Lunch</button>
+          class="w-full sm:w-[150px] text-center py-3 px-2 rounded-xl font-bold text-white border border-white/30 transition duration-200
+                  @(productType == 0 ? "bg-green-700 hover:bg-green-500" : "bg-gray-500 hover:bg-gray-400") cursor-pointer">
+          Lunch
+        </button>
         <button @onclick="() => productType = 1"
-          class="@(productType == 0 ? "bg-gray-500" : "bg-green-700") w-[150px] hover:bg-green-400 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">General</button>
+          class="w-full sm:w-[150px] text-center py-3 px-2 rounded-xl font-bold text-white border border-white/30 transition duration-200
+                  @(productType == 1 ? "bg-green-700 hover:bg-green-500" : "bg-gray-500 hover:bg-gray-400") cursor-pointer">
+          General
+        </button>
       </section>
-      <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-2 px-4 mt-4">
-        @if (productType == 0)
+      <!-- Grid de productos -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-2 px-2 mt-4">
+        @foreach (var product in pagedProducts)
         {
-          @foreach (var product in pagedProducts.Where(p => p.Type == ProductType.Lunch))
-          {
-            <div class="flex flex-col justify-center items-center px-4 space-y-1">
-              <div class="hover:scale-105 transition-all duration-300">
-                <ProductCard product="product" />
-              </div>
-              <button @onclick="() => OnProductSelected.InvokeAsync(product)"
-                class="w-2/3 flex gap-1 text-xs bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
-                <i class="fa-solid fa-cart-shopping"></i>
-                Agregar
-              </button>
+          <div class="flex flex-col justify-center items-center px-2 space-y-2">
+            <div class="hover:scale-105 transition-all duration-300 w-full">
+              <ProductCard product="product" />
             </div>
-
-          }
-        }
-        else
-        {
-          @foreach (var product in pagedProducts.Where(p => p.Type == ProductType.General))
-          {
-            <div class="flex flex-col justify-center items-center px-4 space-y-1">
-              <div class="hover:scale-105 transition-all duration-300">
-                <ProductCard product="product" />
-              </div>
-              <button @onclick="() => OnProductSelected.InvokeAsync(product)"
-                class="w-2/3 flex gap-1 text-xs bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
-                <i class="fa-solid fa-cart-shopping"></i>
-                Agregar
-              </button>
-            </div>
-          }
+            <button @onclick="() => OnProductSelected.InvokeAsync(product)"
+              class="w-full sm:w-2/3 flex items-center justify-center gap-2 text-xs bg-green-700 hover:bg-green-500 text-white font-bold py-2 px-2 rounded-xl border border-white/30 transition duration-200">
+              <i class="fa-solid fa-cart-shopping"></i>
+              Agregar
+            </button>
+          </div>
         }
       </section>
     </div>
   </section>
 }
 
-
-
 @code
 {
   [Parameter] public EventCallback<ProductDto> OnProductSelected { get; set; }
   private IEnumerable<ProductDto>? products;
+  private IEnumerable<ProductDto>? lunchProducts;
+  private IEnumerable<ProductDto>? generalProducts;
   private string? errorMessage;
-  private int currentPage = 1;
+
+  // Paginación separada para cada tipo
+  private int currentLunchPage = 1;
+  private int currentGeneralPage = 1;
   private int pageSize = 5;
-  private int totalPages = 1;
+  private int lunchTotalPages = 1;
+  private int generalTotalPages = 1;
+
   private int productType = 0;
-  private IEnumerable<ProductDto> pagedProducts => products?.Skip((currentPage - 1) * pageSize).Take(pageSize) ??
-  Enumerable.Empty<ProductDto>();
+
+  // Propiedades calculadas para paginación actual
+  private int currentPage => productType == 0 ? currentLunchPage : currentGeneralPage;
+  private int totalPages => productType == 0 ? lunchTotalPages : generalTotalPages;
+
+  private IEnumerable<ProductDto> pagedProducts
+  {
+    get
+    {
+      if (productType == 0) // Lunch
+      {
+        return lunchProducts?.Skip((currentLunchPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<ProductDto>();
+      }
+      else // General
+      {
+        return generalProducts?.Skip((currentGeneralPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<ProductDto>();
+      }
+    }
+  }
 
   protected override async Task OnInitializedAsync()
   {
@@ -104,14 +119,29 @@ else
     }
     else
     {
-      products = response.data.Where(p => p.Active);
-      totalPages = (int)Math.Ceiling((double)products.Count() / pageSize);
+      products = response.data.Where(p => p.Active && p.Stock > 0).ToList();
+
+      // Separar en dos listas
+      lunchProducts = products.Where(p => p.Type == ProductType.Lunch).ToList();
+      generalProducts = products.Where(p => p.Type == ProductType.General).ToList();
+
+      // Calcular páginas totales para cada tipo
+      lunchTotalPages = (int)Math.Ceiling((double)lunchProducts.Count() / pageSize);
+      generalTotalPages = (int)Math.Ceiling((double)generalProducts.Count() / pageSize);
     }
   }
+
   private void GoToPage(int page)
   {
-    if (page < 1 || page > totalPages) return;
-    currentPage = page;
+    if (productType == 0) // Lunch
+    {
+      if (page < 1 || page > lunchTotalPages) return;
+      currentLunchPage = page;
+    }
+    else // General
+    {
+      if (page < 1 || page > generalTotalPages) return;
+      currentGeneralPage = page;
+    }
   }
-
 }

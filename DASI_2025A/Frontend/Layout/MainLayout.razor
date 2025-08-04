@@ -16,20 +16,22 @@
 		<div
 			class="sticky top-0 z-10 px-4 lg:px-8 h-14 flex items-center justify-between bg-[#F3F4F6] border-b border-gray-300">
 			<span class="text-gray-700 font-normal">Bienvenido, @UserName</span>
-			<div class="relative group">
-				<button
-					class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center hover:bg-gray-400 transition duration-300 focus:outline-none">
-					<i class="fas fa-user text-gray-700"></i>
-				</button>
-				<div
-					class="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 group-hover:opacity-100 group-hover:visible invisible transition-opacity duration-200 z-50 overflow-hidden">
-					<a href="/Perfil"
-						class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 transition duration-150">Perfil</a>
-					<button @onclick="Logout"
-						class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-white hover:bg-red-400 transition duration-150 cursor-pointer overflow-hidden">Cerrar
-						sesión</button>
-				</div>
-			</div>
+			<div class="relative">
+    <button @onclick="ToggleMenu"
+            class="w-10 h-10 rounded-full bg-gray-300 text-white flex items-center justify-center hover:bg-gray-400 transition duration-300 focus:outline-none">
+        <i class="fas fa-user text-gray-700"></i>
+    </button>
+
+    <div class=@($"absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border border-gray-200 transition-opacity duration-200 z-50 overflow-hidden {(menuVisible ? "opacity-100 visible" : "opacity-0 invisible")}")>
+        <a href="/Perfil"
+           @onclick="HideMenu"
+           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 transition duration-150">Perfil</a>
+        <button @onclick="async () => { await Logout(); HideMenu(); }"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:text-white hover:bg-red-400 transition duration-150 cursor-pointer overflow-hidden">
+            Cerrar sesión
+        </button>
+    </div>
+</div>
 		</div>
 		<!-- Contenido con scroll -->
 		<article class="px-4 lg:px-8 py-4 overflow-auto grow">
@@ -43,6 +45,7 @@
 {
 
 	private string? UserName;
+	private bool menuVisible = false;
 	protected override async Task OnInitializedAsync()
 	{
 		var token = await _localStorage.GetItemAsync<string>("token");
@@ -60,5 +63,13 @@
 		await _localStorage.RemoveItemAsync("token");
 		Nav.NavigateTo("/Login", forceLoad: true);
 	}
+	private void ToggleMenu()
+	{
+		menuVisible = !menuVisible;
+	}
 
+	private void HideMenu()
+	{
+		menuVisible = false;
+	}
 }

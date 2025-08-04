@@ -51,7 +51,8 @@
               disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i></button>
           </nav>
         </div>
-        <div class="overflow-x-auto rounded-lg shadow-2xl">
+        <!-- Vista de tabla pantallas grandes -->
+        <div class="hidden md:block overflow-x-auto rounded-lg shadow-2xl">
           <table class="w-full">
             <thead class="bg-gray-200 font-bold">
               @{
@@ -99,6 +100,52 @@
             }
           </tbody>
         </table>
+      </div>
+      <!-- Vista de tarjetas para móvil -->
+      <div class="block md:hidden space-y-4 px-4">
+        @foreach (var (product, index) in PagedProducts.Select((p, i) => (p, i)))
+        {
+          <div class="@(product.Active ? "bg-white" : "bg-red-50") rounded-lg shadow-md border border-gray-200 p-4">
+            <!-- Header con imagen y nombre -->
+            <div class="flex items-start gap-3 mb-3">
+              <img src="@product.Image" alt="@product.Name" class="w-16 h-16 rounded-lg object-cover">
+              <div class="flex-1">
+                <h3 class="font-bold text-gray-900 text-lg">@product.Name</h3>
+                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">@product.Type</span>
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <p class="text-gray-600 text-sm mb-3 line-clamp-2">@product.Description</p>
+
+            <!-- Información -->
+            <div class="grid grid-cols-2 gap-2 mb-4">
+              <div class="text-center bg-gray-50 rounded-lg p-2">
+                <div class="text-lg font-bold text-green-600">$@product.Price.ToString("0.00")</div>
+                <div class="text-xs text-gray-500">Precio</div>
+              </div>
+              <div class="text-center bg-gray-50 rounded-lg p-2">
+                <div class="text-lg font-bold @(product.Stock == 0 ? "text-red-500" : "text-gray-900")">@product.Stock
+                </div>
+                <div class="text-xs text-gray-500">Stock</div>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="flex gap-2 justify-end">
+              <NavLink href=@{
+              $"/Productos/Editar/{product.Id}"
+                        }
+              class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </NavLink>
+            <button @onclick="() => OnDeleteProduct(product.Id)"
+              class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+                }
       </div>
     </div>
   </section>

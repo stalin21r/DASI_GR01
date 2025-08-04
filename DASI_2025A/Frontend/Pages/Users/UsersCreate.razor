@@ -6,17 +6,16 @@
 @inject IOccupationService _occupationService
 @inject IBranchService _branchService
 
-<PageTitle>Crear Usuarios</PageTitle>
+<PageTitle>Crear Usuarios | SS.CC. Rumipamba</PageTitle>
 
 <div class="space-y-4 w-full">
   <BodyHeader title="Crear Usuarios" />
-
   <section class="w-full flex justify-between items-center px-4">
     <h1 class="text-4xl font-bold text-[#427500]">Crear Usuarios</h1>
     <div class="flex gap-4">
       <NavLink href="/Usuarios"
         class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
-        <i class="fa-solid fa-arrow-left"></i>Atrás
+        <i class="fa-solid fa-arrow-left"></i><span class="hidden md:inline">Atrás</span>
       </NavLink>
     </div>
   </section>
@@ -34,7 +33,7 @@
     <section class="w-full flex justify-center items-center">
       <EditForm Model="userDto" OnValidSubmit="handleSubmit"
         class="p-10 w-3/4 rounded-2xl border border-gray-300/50 shadow-2xl">
-        <div class="grid grid-cols-3 grid-rows-3 gap-4 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-3 gap-4 space-y-6">
           <DataAnnotationsValidator />
           <div>
             <div>

@@ -7,14 +7,11 @@ public class OrderRepository : IOrderRepository
 {
   private readonly ApplicationDbContext _context;
   private readonly IProductRepository _productRepository;
-  private readonly IUserRepository _userRepository;
-  public OrderRepository(ApplicationDbContext context, IProductRepository productRepository, IUserRepository userRepository)
+  public OrderRepository(ApplicationDbContext context, IProductRepository productRepository)
   {
     _context = context;
     _productRepository = productRepository;
-    _userRepository = userRepository;
   }
-
   /// <summary>
   /// Crea una orden de compra y registra la transacción en la base de datos.
   /// </summary>
@@ -68,7 +65,6 @@ public class OrderRepository : IOrderRepository
     await _context.SaveChangesAsync();
     // Obtener nombres para el DTO de respuesta (puede optimizarse si ya están en el contexto)
     var seller = await _context.Users.FirstOrDefaultAsync(u => u.Id == order.SellerId);
-
     return new OrderResponseDto
     {
       Id = orderEntity.Id,
@@ -89,22 +85,42 @@ public class OrderRepository : IOrderRepository
       }).ToList()
     };
   }
-
   /// <summary>
-  /// Obtiene todas las órdenes de compra
+  /// Obtiene todas las órdenes de compra registradas en el sistema.
   /// </summary>
-  /// <returns>Una lista de DTO de respuesta de órdenes de compra</returns>
-  public async Task<IEnumerable<OrderResponseDto>> GetAllOrdersAsync()
+  /// <returns>Una lista de DTOs que representan todas las órdenes de compra, incluyendo detalles del comprador, vendedor y productos.</returns>
+  /// <exception cref="KeyNotFoundException">Si no se encontraron órdenes.</exception>
+  public async Task<(IEnumerable<OrderResponseDto> Orders, int TotalItems)> GetAllOrdersAsync(OrderQueryParams queryParams)
   {
-    var orders = await _context.Orders
+    var query = _context.Orders
       .Include(o => o.Buyer)
       .Include(o => o.Seller)
       .Include(o => o.OrderDetails)
       .ThenInclude(od => od.Product)
+      .AsQueryable();
+
+    // Aplicar filtros
+    if (queryParams.StartDate.HasValue)
+      query = query.Where(o => o.AuditableDate >= queryParams.StartDate.Value);
+
+    if (queryParams.EndDate.HasValue)
+      query = query.Where(o => o.AuditableDate <= queryParams.EndDate.Value);
+
+    if (!string.IsNullOrWhiteSpace(queryParams.BuyerFullName))
+      query = query.Where(o => (o.Buyer!.FirstName + " " + o.Buyer.LastName).Contains(queryParams.BuyerFullName));
+
+    if (!string.IsNullOrWhiteSpace(queryParams.SellerFullName))
+      query = query.Where(o => (o.Seller!.FirstName + " " + o.Seller.LastName).Contains(queryParams.SellerFullName));
+
+    var totalItems = await query.CountAsync();
+
+    var orders = await query
       .OrderByDescending(o => o.Id)
+      .Skip(queryParams.Skip)
+      .Take(queryParams.PageSize)
       .ToListAsync();
 
-    return orders.Select(order => new OrderResponseDto
+    var result = orders.Select(order => new OrderResponseDto
     {
       Id = order.Id,
       BuyerId = order.BuyerId,
@@ -120,10 +136,19 @@ public class OrderRepository : IOrderRepository
         Quantity = detail.Quantity,
         UnitPrice = detail.UnitPrice,
         Subtotal = detail.Subtotal,
-        // Puedes agregar más propiedades si tu DTO las tiene, como nombre o imagen del producto
+        ProductName = detail.Product!.Name
       }).ToList()
     });
+
+    return (result, totalItems);
   }
+
+  /// <summary>
+  /// Obtiene todas las ordenes de un usuario en su rol de comprador.
+  /// </summary>
+  /// <param name="userId">El ID del usuario comprador.</param>
+  /// <returns>Una lista de DTOs que representan las ordenes del comprador.</returns>
+  /// <exception cref="KeyNotFoundException">Si no se encontraron ordenes.</exception>
 
   public async Task<IEnumerable<OrderResponseDto>> GetOrdersByBuyerIdAsync(string userId)
   {
@@ -135,12 +160,10 @@ public class OrderRepository : IOrderRepository
       .ThenInclude(od => od.Product)
       .OrderByDescending(o => o.Id)
       .ToListAsync();
-
     if (orders == null)
     {
       throw new KeyNotFoundException("No se encontraron ordenes.");
     }
-
     return orders.Select(order => new OrderResponseDto
     {
       Id = order.Id,
@@ -160,6 +183,12 @@ public class OrderRepository : IOrderRepository
       }).ToList()
     });
   }
+  /// <summary>
+  ///   Obtiene todas las ordenes de un usuario en su rol de vendedor.
+  /// </summary>
+  /// <param name="userId">El ID del usuario vendedor.</param>
+  /// <returns>Una lista de DTOs que representan las ordenes del vendedor.</returns>
+  /// <exception cref="KeyNotFoundException">Si no se encontraron ordenes.</exception>
   public async Task<IEnumerable<OrderResponseDto>> GetOrdersBySellerIdAsync(string userId)
   {
     var orders = await _context.Orders
@@ -170,12 +199,10 @@ public class OrderRepository : IOrderRepository
       .ThenInclude(od => od.Product)
       .OrderByDescending(o => o.Id)
       .ToListAsync();
-
     if (orders == null)
     {
       throw new KeyNotFoundException("No se encontraron ordenes.");
     }
-
     return orders.Select(order => new OrderResponseDto
     {
       Id = order.Id,
@@ -195,5 +222,4 @@ public class OrderRepository : IOrderRepository
       }).ToList()
     });
   }
-
 }

@@ -53,31 +53,30 @@ namespace Backend
 
     [HttpGet]
     [Authorize(Policy = "AdminPlus")]
-    public async Task<IActionResult> GetAllOrdersAsync()
+    public async Task<IActionResult> GetAllOrdersAsync([FromQuery] OrderQueryParams queryParams)
     {
-      _logger.LogInformation("Obteniendo todas las órdenes.");
+      _logger.LogInformation("Obteniendo órdenes con filtros: {@QueryParams}", queryParams);
+
       try
       {
-        var response = await _orderService.GetAllOrdersAsync();
-        _logger.LogInformation("Órdenes obtenidas exitosamente.");
+        var response = await _orderService.GetAllOrdersAsync(queryParams);
         return Ok(response);
       }
       catch (KeyNotFoundException ex)
       {
-        _logger.LogWarning("No se encontraron órdenes: {Mensaje}", ex.Message);
         return NotFound(new { message = ex.Message });
       }
       catch (BadHttpRequestException ex)
       {
-        _logger.LogWarning("Solicitud incorrecta al obtener órdenes: {Mensaje}", ex.Message);
         return BadRequest(new { message = ex.Message });
       }
       catch (Exception ex)
       {
         _logger.LogError(ex, "Error inesperado del servidor al obtener las órdenes.");
-        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al crear la orden." });
+        return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor." });
       }
     }
+
 
     [HttpGet("buyer-orders/{buyerId}")]
     [Authorize]

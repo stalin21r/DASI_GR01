@@ -15,7 +15,7 @@
     <div class="flex gap-4">
       <NavLink href="/Usuarios"
         class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
-        <i class="fa-solid fa-arrow-left"></i>Atrás
+        <i class="fa-solid fa-arrow-left"></i><span class="hidden md:inline">Atrás</span>
       </NavLink>
     </div>
   </section>
@@ -32,7 +32,7 @@
     <section class="w-full flex justify-center items-center">
       <EditForm Model="userDto" OnSubmit="handleSubmit"
         class="p-10 w-3/4 rounded-2xl border border-gray-300/50 shadow-2xl">
-        <div class="grid grid-cols-3 grid-rows-3 gap-4 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-3 gap-4 space-y-6">
           <DataAnnotationsValidator />
           <div>
             <div>

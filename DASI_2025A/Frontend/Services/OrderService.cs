@@ -34,26 +34,44 @@ public class OrderService : IOrderService
     }
   }
 
-  public async Task<ApiResponse<IEnumerable<OrderResponseDto>>> GetAllOrdersAsync()
+  public async Task<ApiResponse<PagedResult<OrderResponseDto>>> GetAllOrdersAsync(OrderQueryParams query)
   {
     try
     {
-      var response = await _http.GetAsync("api/v1/Order");
+      var queryParams = $"?PageNumber={query.PageNumber}&PageSize={query.PageSize}";
+
+      if (!string.IsNullOrWhiteSpace(query.SellerFullName))
+        queryParams += $"&SellerFullName={Uri.EscapeDataString(query.SellerFullName)}";
+
+      if (!string.IsNullOrWhiteSpace(query.BuyerFullName))
+        queryParams += $"&BuyerFullName={Uri.EscapeDataString(query.BuyerFullName)}";
+
+      if (query.StartDate.HasValue)
+        queryParams += $"&StartDate={query.StartDate.Value:yyyy-MM-dd}";
+
+      if (query.EndDate.HasValue)
+        queryParams += $"&EndDate={query.EndDate.Value:yyyy-MM-dd}";
+
+      // Asegúrate de agregar los query params a la URL
+      var response = await _http.GetAsync($"api/v1/Order{queryParams}");
+
       if (!response.IsSuccessStatusCode)
       {
         var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
         return errorResponse != null
-            ? new ApiResponse<IEnumerable<OrderResponseDto>>(errorResponse.message)
-            : new ApiResponse<IEnumerable<OrderResponseDto>>("Error al crear el producto.");
+          ? new ApiResponse<PagedResult<OrderResponseDto>>(errorResponse.message)
+          : new ApiResponse<PagedResult<OrderResponseDto>>("Error al obtener las órdenes.");
       }
-      var result = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<OrderResponseDto>>>();
+
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<OrderResponseDto>>>();
       return result!;
     }
     catch
     {
-      return new ApiResponse<IEnumerable<OrderResponseDto>>("Error desconocido al crear el producto.");
+      return new ApiResponse<PagedResult<OrderResponseDto>>("Error desconocido al obtener las órdenes.");
     }
   }
+
 
   public async Task<ApiResponse<IEnumerable<OrderResponseDto>>> GetOrdersByBuyerIdAsync(string buyerId)
   {

@@ -34,28 +34,44 @@ public class UsersService : IUsersService
     }
   }
 
-  public async Task<ApiResponse<IEnumerable<UserDto>>> GetAllUsersAsync()
+  public async Task<ApiResponse<PagedResult<UserDto>>> GetAllUsersAsync(UserQueryParams query)
   {
     try
     {
-      var response = await _http.GetAsync("api/v1/User");
+      var queryParams = $"?PageNumber={query.PageNumber}&PageSize={query.PageSize}";
+
+      if (!string.IsNullOrWhiteSpace(query.SearchName))
+        queryParams += $"&SearchName={Uri.EscapeDataString(query.SearchName)}";
+
+      if (!string.IsNullOrWhiteSpace(query.SearchEmail))
+        queryParams += $"&SearchEmail={Uri.EscapeDataString(query.SearchEmail)}";
+
+      if (!string.IsNullOrWhiteSpace(query.Role))
+        queryParams += $"&Role={Uri.EscapeDataString(query.Role)}";
+
+      if (query.OccupationFk.HasValue)
+        queryParams += $"&OccupationFk={query.OccupationFk.Value}";
+
+      if (query.BranchFk.HasValue)
+        queryParams += $"&BranchFk={query.BranchFk.Value}";
+
+      var response = await _http.GetAsync($"api/v1/User{queryParams}");
+
       if (!response.IsSuccessStatusCode)
       {
         var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
         return errorResponse != null
-          ? new ApiResponse<IEnumerable<UserDto>>(errorResponse.message)
-          : new ApiResponse<IEnumerable<UserDto>>("Error al obtener los usuarios.");
+          ? new ApiResponse<PagedResult<UserDto>>(errorResponse.message)
+          : new ApiResponse<PagedResult<UserDto>>("Error al obtener los usuarios.");
       }
 
-      var result = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<UserDto>>>();
-
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<UserDto>>>();
       return result!;
-
     }
     catch (Exception ex)
     {
       Console.WriteLine(ex);
-      return new ApiResponse<IEnumerable<UserDto>>("Error desconocido al obtener los usuarios.");
+      return new ApiResponse<PagedResult<UserDto>>("Error desconocido al obtener los usuarios.");
     }
   }
 
@@ -175,27 +191,50 @@ public class UsersService : IUsersService
     }
   }
 
-  public async Task<ApiResponse<IEnumerable<TopUpRequestResponseDto>>> GetAllTopUpRequestsAsync()
+  public async Task<ApiResponse<PagedResult<TopUpRequestResponseDto>>> GetAllTopUpRequestsAsync(AdminTopUpRequestQueryParams query)
   {
     try
     {
-      var response = await _http.GetAsync("/api/v1/User/topuprequest");
+      var queryParams = $"?PageNumber={query.PageNumber}&PageSize={query.PageSize}";
+
+      if (!string.IsNullOrWhiteSpace(query.Type))
+        queryParams += $"&Type={Uri.EscapeDataString(query.Type)}";
+
+      if (!string.IsNullOrWhiteSpace(query.Status))
+        queryParams += $"&Status={Uri.EscapeDataString(query.Status)}";
+
+      if (!string.IsNullOrWhiteSpace(query.TargetUser))
+        queryParams += $"&TargetUser={Uri.EscapeDataString(query.TargetUser)}";
+
+      if (!string.IsNullOrWhiteSpace(query.AuthorizedByUser))
+        queryParams += $"&AuthorizedByUser={Uri.EscapeDataString(query.AuthorizedByUser)}";
+
+      if (query.StartDate.HasValue)
+        queryParams += $"&StartDate={query.StartDate.Value:yyyy-MM-dd}";
+
+      if (query.EndDate.HasValue)
+        queryParams += $"&EndDate={query.EndDate.Value:yyyy-MM-dd}";
+
+      var response = await _http.GetAsync($"/api/v1/User/topuprequest{queryParams}");
+
       if (!response.IsSuccessStatusCode)
       {
         var errorResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
         return errorResponse != null
-          ? new ApiResponse<IEnumerable<TopUpRequestResponseDto>>(errorResponse.message)
-          : new ApiResponse<IEnumerable<TopUpRequestResponseDto>>("Error al obtener las solicitudes de recarga.");
+          ? new ApiResponse<PagedResult<TopUpRequestResponseDto>>(errorResponse.message)
+          : new ApiResponse<PagedResult<TopUpRequestResponseDto>>("Error al obtener las solicitudes de recarga.");
       }
-      var result = await response.Content.ReadFromJsonAsync<ApiResponse<IEnumerable<TopUpRequestResponseDto>>>();
+
+      var result = await response.Content.ReadFromJsonAsync<ApiResponse<PagedResult<TopUpRequestResponseDto>>>();
       return result!;
     }
     catch (Exception ex)
     {
       Console.WriteLine(ex);
-      return new ApiResponse<IEnumerable<TopUpRequestResponseDto>>("Error desconocido al obtener las solicitudes de recarga.");
+      return new ApiResponse<PagedResult<TopUpRequestResponseDto>>("Error desconocido al obtener las solicitudes de recarga.");
     }
   }
+
 
   public async Task<ApiResponse<IEnumerable<TopUpRequestResponseDto>>> GetTopUpRequestsByUserIdAsync(string userId)
   {

@@ -6,7 +6,7 @@ public interface IUserRepository
 {
   Task<(UserDto userDto, string token)> CreateAsync(UserDto userDto);
   Task<bool> ActivateUserAsync(ActivateUserDto activateUserDto);
-  Task<IEnumerable<UserDto>> GetAllAsync();
+  Task<PagedResult<UserDto>> GetAllAsync(UserQueryParams queryParams);
   Task<UserDto?> GetAsync(string id);
   Task<UserDto?> GetByEmailAsync(string email);
   Task<UserDto> UpdateAsync(UserDto userDto);
@@ -18,6 +18,6 @@ public interface IUserRepository
   Task<UserTransactionsDto> GetUserTransactionsAsync(string userId);
   Task<TopUpRequestResponseDto> CreateTopUpRequestAsync(TopUpRequestCreateDto topUpRequestDto);
   Task<TopUpRequestResponseDto> AproveOrRejectTopUpAsync(TopUpRequestUpdateDto topUpRequestDto);
-  Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsAsync();
+  Task<PagedResult<TopUpRequestResponseDto>> GetTopUpRequestsAsync(AdminTopUpRequestQueryParams query);
   Task<IEnumerable<TopUpRequestResponseDto>> GetTopUpRequestsByUserIdAsync(string userId);
 }

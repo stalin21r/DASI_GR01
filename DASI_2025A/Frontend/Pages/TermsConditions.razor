@@ -1,0 +1,62 @@
+@page "/terminos-y-condiciones"
+@layout NoLayout
+@attribute [AllowAnonymous]
+@inject NavigationManager Navigation
+
+<PageTitle>Términos y Condiciones | SS.CC.</PageTitle>
+
+<div
+  class="w-full min-h-screen flex items-center justify-center bg-cover bg-center bg-[url('/Assets/Images/ScoutsBackground.webp')] overflow-y-auto">
+  <section class="w-full flex flex-col justify-center items-center space-y-4 p-2 sm:p-5 md:p-10 lg:p-20 z-10">
+    <div
+      class="space-y-4 w-full sm:w-3/4 md:w-1/2 backdrop-blur-sm bg-white/50 border border-white/30 rounded-2xl shadow-2xl p-10 flex flex-col items-center justify-center">
+      <section class="flex flex-col w-full justify-center items-center">
+        <div class="p-2 flex gap-4 justify-center items-center">
+          <img src="/Assets/Images/mapache.webp" alt="mapache scout SSCC" class="w-auto h-[120px]">
+          <div class="text-center">
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-[#0e5c25]">Grupo Scout #18</span>
+              <span class="text-sm font-bold text-[#2b4266]">SS.CC.</span>
+              <span class="text-2xl font-bold text-[#1C328C]">Rumipamba</span>
+            </div>
+            <span class="text-gray-400/90 text-sm font-bold">Términos y Condiciones</span>
+          </div>
+        </div>
+      </section>
+      <h1 class="text-xl sm:text-2xl font-bold text-green-800 text-center">Términos y Condiciones de Uso</h1>
+      <p><strong>1. Aceptación:</strong> Al acceder y utilizar esta aplicación web (en adelante, la “Aplicación”), usted
+        acepta quedar vinculado por los presentes Términos y Condiciones.</p>
+      <p><strong>2. Descripción del Servicio:</strong> La Aplicación permite al Grupo Scout #18 SS.CC. Rumipamba
+        gestionar usuarios, registrar recargas y realizar ventas. Las ventas son registradas por administradores. Los
+        usuarios no realizan compras directamente.</p>
+      <p><strong>3. Cuentas de Usuario:</strong> El acceso requiere cuenta activa. Usted es responsable por la seguridad
+        de su cuenta y debe mantener sus credenciales seguras. El mal uso puede resultar en suspensión.</p>
+      <p><strong>4. Datos Personales:</strong> Se almacenan nombres, correo, fecha de nacimiento, número único, grado,
+        rama, saldo, rol y comprobantes de recarga. La información es usada internamente y no se comparte sin
+        autorización legal.</p>
+      <p><strong>5. Contenido Generado:</strong> Al cargar comprobantes, usted garantiza que el contenido no infringe
+        derechos de terceros ni contiene material ilegal.</p>
+      <p><strong>6. Historial y Reportes:</strong> Se guardan registros de recargas, pedidos y productos para fines
+        administrativos.</p>
+      <p><strong>7. Comunicaciones:</strong> Acepta recibir correos para notificaciones importantes relacionadas con su
+        cuenta.</p>
+      <p><strong>8. Responsabilidad:</strong> El grupo no se responsabiliza por interrupciones técnicas ni por el mal
+        uso del sistema por parte del usuario. Se garantiza esfuerzo razonable por mantener la plataforma operativa.</p>
+      <p><strong>9. Modificaciones:</strong> Nos reservamos el derecho a cambiar estos términos en cualquier momento. El
+        uso continuo implica su aceptación.</p>
+      <p><strong>10. Legislación:</strong> Estos términos se rigen por la ley ecuatoriana. En caso de conflicto, se
+        recurrirá al Centro de Arbitraje y Mediación de la Cámara de Comercio de Quito.</p>
+      <p class="text-center mt-4 text-xs text-gray-500">Última actualización: agosto de 2025</p>
+      <div>
+        <button @onclick="handleVolver"
+          class="bg-blue-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded cursor-pointer transition duration-300">
+          Volver
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+@code
+{
+  private void handleVolver() => Navigation.NavigateTo("/home");
+}

@@ -14,7 +14,7 @@
     <div class="flex gap-4">
       <NavLink href="/Productos"
         class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
-        <i class="fa-solid fa-arrow-left"></i>Atrás
+        <i class="fa-solid fa-arrow-left"></i><span class="hidden md:inline">Atrás</span>
       </NavLink>
     </div>
   </section>
@@ -22,7 +22,7 @@
   <section class="w-full flex justify-center items-center">
     <EditForm Model="productDto" OnValidSubmit="handleSubmit"
       class="p-10 w-full rounded-2xl border border-gray-300/50 shadow-2xl">
-      <div class="grid grid-cols-3 grid-rows-4 gap-4 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-4 gap-4 space-y-4">
         <DataAnnotationsValidator />
         <div>
           <div>
@@ -34,7 +34,7 @@
         </div>
         <div>
           <div>
-            <FloatingLabelSelect Label="Tipo" Name="Type" LabelColor="blue" Type="ProductType"
+            <FloatingLabelSelect Label="Tipo" Name="Type" LabelColor="blue"
               SelectedValue="@(productDto.Type.ToString())"
               SelectedValueChanged="(value) => productDto.Type = Enum.Parse<ProductType>(value)" Placeholder="Tipo">
               <option value="General">General</option>
@@ -44,7 +44,7 @@
           </div>
 
         </div>
-        <div class="col-start-1 row-start-2">
+        <div class="md:col-start-1 md:row-start-2">
           <div>
             <FloatingLabelInput Label="Precio" Name="Price" Type="number" LabelColor="blue"
               Value="@productDto.Price.ToString()" step="any"
@@ -53,7 +53,7 @@
             <ValidationMessage For="@(() => productDto.Price)" />
           </div>
         </div>
-        <div class="col-start-2 row-start-2">
+        <div class="md:col-start-2 md:row-start-2">
           <div>
             <FloatingLabelInput Label="Stock" Name="Stock" Type="number" LabelColor="blue"
               Value="@productDto.Stock.ToString()"
@@ -62,18 +62,19 @@
             <ValidationMessage For="@(() => productDto.Stock)" />
           </div>
         </div>
-        <div class="col-span-2 row-span-2 col-start-1 row-start-3">
+        <div class="md:col-span-2 md:row-span-2 md:col-start-1 md:row-start-3">
           <div>
-            <FloatingLabelTextArea Label="Descripción" Name="Description" LabelColor="blue" type="text"
+            <FloatingLabelTextArea Label="Descripción" Name="Description" LabelColor="blue"
               Value="@productDto.Description"
               OnChange="(e) => productDto.Description = e.Value?.ToString() ?? string.Empty">
             </FloatingLabelTextArea>
             <ValidationMessage For="@(() => productDto.Description)" />
           </div>
         </div>
-        <div class="row-span-3 col-start-3 row-start-1 flex flex-col justify-center items-center">
+        <div class="md:row-span-3 md:col-start-3 md:row-start-1 flex flex-col justify-center items-center">
+          <div class="font-bold text-2xl md:hidden">Imagen</div>
           <div
-            class="flex-3 flex justify-center px-2 items-center rounded-lg border-2 border-gray-800/50 border-dashed">
+            class="flex-3 flex h-[200px] w-[200px] justify-center px-2 py-20 mb-2 items-center rounded-lg border-2 border-gray-800/50 border-dashed">
             <!-- Aqui va  la preview de  la imagen -->
             @if (!string.IsNullOrEmpty(previewUrl))
             {
@@ -88,7 +89,7 @@
             <InputFile id="fileInput" OnChange="HandleFileSelected" class="hidden" />
           </div>
         </div>
-        <div class="col-start-3 row-start-4 flex justify-center items-start">
+        <div class="md:col-start-3 md:row-start-4 flex justify-center items-center md:items-start">
           <button type="submit"
             class="bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
             Crear Producto</button>

@@ -79,20 +79,21 @@ public class UserService : IUserService
   ///     Retorna un <see cref="ApiResponse{IEnumerable{UserDto}}"/> con todos los usuarios.
   ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron usuarios.
   /// </returns>
-  public async Task<ApiResponse<IEnumerable<UserDto>>> GetAllAsync()
+  public async Task<ApiResponse<PagedResult<UserDto>>> GetAllAsync(UserQueryParams queryParams)
   {
-    var result = await _userRepository.GetAllAsync();
-    if (result == null || !result.Any())
+    var result = await _userRepository.GetAllAsync(queryParams);
+    if (result.Items == null || !result.Items.Any())
     {
       throw new KeyNotFoundException("No se encontraron Usuarios.");
     }
-    ApiResponse<IEnumerable<UserDto>> response = new ApiResponse<IEnumerable<UserDto>>(
+
+    return new ApiResponse<PagedResult<UserDto>>(
       message: "Usuarios obtenidos exitosamente",
       data: result,
-      totalRecords: result.Count()
+      totalRecords: result.TotalItems
     );
-    return response;
   }
+
 
   /// <summary>
   ///     Obtiene un usuario por su ID.
@@ -338,19 +339,19 @@ public class UserService : IUserService
   ///     Retorna un <see cref="ApiResponse{IEnumerable{TopUpRequestResponseDto}}"/> con la lista de solicitudes de recarga.
   ///     Lanza una excepción <see cref="KeyNotFoundException"/> si no se encontraron solicitudes de recarga.
   /// </returns>
-  public async Task<ApiResponse<IEnumerable<TopUpRequestResponseDto>>> GetTopUpRequestsAsync()
+  public async Task<ApiResponse<PagedResult<TopUpRequestResponseDto>>> GetTopUpRequestsAsync(AdminTopUpRequestQueryParams query)
   {
-    var result = await _userRepository.GetTopUpRequestsAsync();
-    if (result == null)
+    var result = await _userRepository.GetTopUpRequestsAsync(query);
+    if (result == null || !result.Items.Any())
     {
       throw new KeyNotFoundException("No se encontraron solicitudes de recarga.");
     }
-    ApiResponse<IEnumerable<TopUpRequestResponseDto>> response = new ApiResponse<IEnumerable<TopUpRequestResponseDto>>(
+
+    return new ApiResponse<PagedResult<TopUpRequestResponseDto>>(
       message: "Solicitudes de recarga obtenidas exitosamente",
       data: result,
-      totalRecords: result.Count()
+      totalRecords: result.TotalItems
     );
-    return response;
   }
 
   /// <summary>

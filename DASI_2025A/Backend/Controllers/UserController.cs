@@ -113,12 +113,12 @@ namespace Backend
     /// </returns>
     [HttpGet]
     [Authorize(Policy = "AdminPlus")]
-    public async Task<IActionResult> GetAllUsers()
+    public async Task<IActionResult> GetAllUsers([FromQuery] UserQueryParams queryParams)
     {
-      _logger.LogInformation("Solicitando listado de todos los usuarios.");
+      _logger.LogInformation("Solicitando listado de usuarios con filtros/paginación.");
       try
       {
-        var response = await _userService.GetAllAsync();
+        var response = await _userService.GetAllAsync(queryParams);
         _logger.LogInformation("Usuarios obtenidos correctamente.");
         return Ok(response);
       }
@@ -133,6 +133,7 @@ namespace Backend
         return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener los usuarios." });
       }
     }
+
 
     /// <summary>
     ///     Obtiene un usuario por su ID.
@@ -521,12 +522,12 @@ namespace Backend
     [HttpGet]
     [Route("topuprequest")]
     [Authorize(Policy = "SuperadminOnly")]
-    public async Task<IActionResult> GetAllTopUpRequests()
+    public async Task<IActionResult> GetAllTopUpRequests([FromQuery] AdminTopUpRequestQueryParams query)
     {
       _logger.LogInformation("Obteniendo todas las solicitudes de recarga.");
       try
       {
-        var response = await _userService.GetTopUpRequestsAsync();
+        var response = await _userService.GetTopUpRequestsAsync(query);
         _logger.LogInformation("Solicitudes de recarga obtenidas correctamente.");
         return Ok(response);
       }
@@ -546,6 +547,7 @@ namespace Backend
         return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Error del servidor al obtener recargas.\n" + ex.Message });
       }
     }
+
 
     /// <summary>
     ///     Obtiene las solicitudes de recarga de saldo para un usuario específico por su ID.

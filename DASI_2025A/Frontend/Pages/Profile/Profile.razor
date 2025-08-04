@@ -20,22 +20,22 @@
   {
     <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
   }
-  else
+  else if (userDto != null)
   {
-    <section class="w-full flex justify-center items-center p-10">
+    <section class="w-full flex justify-center items-center md:p-10">
       <div
-        class="max-w-8xl mx-auto flex flex-col justify-center border border-gray-400 rounded-lg p-10 shadow-xl space-y-8">
+        class="max-w-8xl mx-auto flex flex-col justify-center border border-gray-400 rounded-lg p-5 md:p-10 shadow-xl space-y-8">
         <span class="text-4xl font-bold text-green-800 gap-4 border-b border-gray-400/50 pb-6">
           <i class="fa-solid fa-circle-info custom-icon text-blue-800"></i>
           Datos del Usuario
         </span>
         <section class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
           <!-- Nombre -->
-          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-2 shadow-sm">
+          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
             <i class="fa-solid fa-user text-blue-800 text-lg"></i>
             <div class="flex flex-col">
               <span class="font-bold text-green-700">Nombre:</span>
-              <span class="font-medium">@userDto!.FirstName @userDto!.LastName</span>
+              <span class="font-medium">@userDto.FirstName @userDto.LastName</span>
             </div>
           </div>
           <!-- Email -->
@@ -43,7 +43,7 @@
             <i class="fa-solid fa-envelope text-blue-800 text-lg"></i>
             <div class="flex flex-col">
               <span class="font-bold text-green-700">Email:</span>
-              <span class="font-medium">@userDto!.Email</span>
+              <span class="font-medium">@userDto.Email</span>
             </div>
           </div>
           <!-- Numero Único -->
@@ -51,7 +51,7 @@
             <i class="fa-solid fa-fingerprint text-blue-800 text-lg"></i>
             <div class="flex flex-col">
               <span class="font-bold text-green-700">Numero Único:</span>
-              <span class="font-medium">@userDto!.ScoutUniqueId</span>
+              <span class="font-medium">@userDto.ScoutUniqueId</span>
             </div>
           </div>
           <!-- Nacimiento -->
@@ -59,7 +59,7 @@
             <i class="fa-solid fa-cake-candles text-blue-800 text-lg"></i>
             <div class="flex flex-col">
               <span class="font-bold text-green-700">Nacimiento:</span>
-              <span class="font-medium">@userDto!.DateOfBirth.ToShortDateString()</span>
+              <span class="font-medium">@userDto.DateOfBirth.ToShortDateString()</span>
             </div>
           </div>
           <!-- Balance -->
@@ -67,7 +67,7 @@
             <i class="fa-solid fa-money-bill text-blue-800 text-lg"></i>
             <div class="flex flex-col">
               <span class="font-bold text-green-700">Saldo:</span>
-              <span class="font-medium">$@userDto!.Balance</span>
+              <span class="font-medium">$@userDto.Balance</span>
             </div>
           </div>
           <!-- Ocupacion -->
@@ -78,12 +78,12 @@
               <span class="font-medium">@userDto?.Occupation?.Name</span>
             </div>
           </div>
-          <!-- Nuevo Campo -->
+          <!-- branch -->
           <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
-            <i class="fa-solid fa-user text-blue-800 text-lg"></i>
+            <i class="fa-solid fa-code-branch text-blue-800 text-lg"></i>
             <div class="flex flex-col">
               <span class="font-bold text-green-700">Rama:</span>
-              <span class="font-medium">@userDto!.Branch!.Name</span>
+              <span class="font-medium">@userDto?.Branch?.Name</span>
             </div>
           </div>
         </section>

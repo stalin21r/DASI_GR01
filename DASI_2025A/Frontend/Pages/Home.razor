@@ -16,7 +16,8 @@
     <!-- Columna izquierda -->
     <div class="space-y-6 flex-1">
       <!-- Tarjeta de saldo -->
-      <div class="bg-gradient-to-b from-blue-900 to-green-500 text-white px-6 py-4 rounded-lg shadow-lg w-full max-w-xs">
+      <div
+        class="bg-gradient-to-b from-blue-900 to-green-500 text-white px-6 py-4 rounded-lg shadow-lg w-full max-w-xs">
         <p class="text-sm opacity-90">Saldo disponible</p>
         <p class="text-3xl font-bold">$@userTransactions.Balance.ToString("N2")</p>
         <p class="text-xs opacity-75 mt-1">@userDto.FirstName @userDto.LastName</p>
@@ -52,7 +53,7 @@
             <span class="text-sm text-gray-500">@userTransactions.Transactions.Count total</span>
           }
         </div>
-        
+
         @if (isLoadingTransactions)
         {
           <div class="flex justify-center items-center h-40">
@@ -73,14 +74,15 @@
           <div class="space-y-3 max-h-96 overflow-y-auto">
             @foreach (var transaction in userTransactions.Transactions.Take(10))
             {
-              <div class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+              <div
+                class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
                 <div class="flex-1">
                   <div class="flex items-center gap-2">
                     <i class="fas @GetTransactionIcon(transaction.Type) @GetTransactionIconColor(transaction.Type)"></i>
                     <span class="font-medium text-gray-800">@transaction.Description</span>
                   </div>
                   <p class="text-xs text-gray-500 mt-1">
-                    @transaction.AuditableDate.ToString("dd/MM/yyyy HH:mm") 
+                    @transaction.AuditableDate.ToString("dd/MM/yyyy HH:mm")
                     • Saldo después: $@transaction.BalanceAfter.ToString("N2")
                   </p>
                 </div>
@@ -92,12 +94,11 @@
               </div>
             }
           </div>
-          
+
           @if (userTransactions.Transactions.Count > 10)
           {
             <div class="text-center mt-4">
-              <button @onclick="LoadMoreTransactions" 
-                      class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              <button @onclick="LoadMoreTransactions" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                 Ver más transacciones (@(userTransactions.Transactions.Count - 10) restantes)
               </button>
             </div>
@@ -116,7 +117,7 @@
         class="text-blue-700 hover:text-blue-500 transition duration-200">
         <i class="fab fa-facebook fa-2x"></i>
       </a>
-      <a href="https://instagram.com/tu-grupo-scout" target="_blank"
+      <a href="https://www.instagram.com/gruposcout18/" target="_blank"
         class="text-pink-600 hover:text-pink-400 transition duration-200">
         <i class="fab fa-instagram fa-2x"></i>
       </a>
@@ -130,140 +131,140 @@
 
 @code
 {
-    private UserDto userDto = new UserDto();
-    private UserTransactionsDto userTransactions = new UserTransactionsDto();
-    private BalanceTransactionDto? lastTransaction = null;
-    private bool isLoadingTransactions = true;
-    private decimal monthlyCredits = 0;
-    private decimal monthlyDebits = 0;
-    private int displayedTransactions = 10;
+  private UserDto userDto = new UserDto();
+  private UserTransactionsDto userTransactions = new UserTransactionsDto();
+  private BalanceTransactionDto? lastTransaction = null;
+  private bool isLoadingTransactions = true;
+  private decimal monthlyCredits = 0;
+  private decimal monthlyDebits = 0;
+  private int displayedTransactions = 10;
 
-    protected override async Task OnInitializedAsync()
+  protected override async Task OnInitializedAsync()
+  {
+    await LoadUserData();
+  }
+
+  private async Task LoadUserData()
+  {
+    try
     {
-        await LoadUserData();
-    }
+      var token = await _localStorage.GetItemAsync<string>("token");
+      if (token is null)
+      {
+        Nav.NavigateTo("/Login");
+        return;
+      }
 
-    private async Task LoadUserData()
+      var userId = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
+
+      // Cargar datos del usuario
+      var userResponse = await _userService.GetUserByIdAsync(userId);
+      if (userResponse.data is null)
+      {
+        await _sw.FireAsync("Error", "No se encontró este Usuario.", SweetAlertIcon.Error);
+        return;
+      }
+      userDto = userResponse.data;
+
+      // Cargar transacciones del usuario
+      await LoadTransactions(userId);
+    }
+    catch (Exception ex)
     {
-        try
-        {
-            var token = await _localStorage.GetItemAsync<string>("token");
-            if (token is null)
-            {
-                Nav.NavigateTo("/Login");
-                return;
-            }
-
-            var userId = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
-            
-            // Cargar datos del usuario
-            var userResponse = await _userService.GetUserByIdAsync(userId);
-            if (userResponse.data is null)
-            {
-                await _sw.FireAsync("Error", "No se encontró este Usuario.", SweetAlertIcon.Error);
-                return;
-            }
-            userDto = userResponse.data;
-
-            // Cargar transacciones del usuario
-            await LoadTransactions(userId);
-        }
-        catch (Exception ex)
-        {
-            await _sw.FireAsync("Error", "Error al cargar los datos del usuario.", SweetAlertIcon.Error);
-            Console.WriteLine(ex);
-        }
+      await _sw.FireAsync("Error", "Error al cargar los datos del usuario.", SweetAlertIcon.Error);
+      Console.WriteLine(ex);
     }
+  }
 
-    private async Task LoadTransactions(string userId)
+  private async Task LoadTransactions(string userId)
+  {
+    try
     {
-        try
-        {
-            isLoadingTransactions = true;
-            StateHasChanged();
+      isLoadingTransactions = true;
+      StateHasChanged();
 
-            var transactionsResponse = await _userService.GetUserTransactionsAsync(userId);
-            if (transactionsResponse.data != null)
-            {
-                userTransactions = transactionsResponse.data;
-                
-                // Ordenar transacciones por fecha (más recientes primero)
-                userTransactions.Transactions = userTransactions.Transactions
-                    .OrderByDescending(t => t.AuditableDate)
-                    .ToList();
+      var transactionsResponse = await _userService.GetUserTransactionsAsync(userId);
+      if (transactionsResponse.data != null)
+      {
+        userTransactions = transactionsResponse.data;
 
-                // Obtener última transacción
-                lastTransaction = userTransactions.Transactions.FirstOrDefault();
+        // Ordenar transacciones por fecha (más recientes primero)
+        userTransactions.Transactions = userTransactions.Transactions
+        .OrderByDescending(t => t.AuditableDate)
+        .ToList();
 
-                // Calcular estadísticas del mes actual
-                CalculateMonthlyStats();
-            }
-        }
-        catch (Exception ex)
-        {
-            await _sw.FireAsync("Error", "Error al cargar las transacciones.", SweetAlertIcon.Error);
-            Console.WriteLine(ex);
-        }
-        finally
-        {
-            isLoadingTransactions = false;
-            StateHasChanged();
-        }
+        // Obtener última transacción
+        lastTransaction = userTransactions.Transactions.FirstOrDefault();
+
+        // Calcular estadísticas del mes actual
+        CalculateMonthlyStats();
+      }
     }
-
-    private void CalculateMonthlyStats()
+    catch (Exception ex)
     {
-        var currentMonth = DateTime.Now.Month;
-        var currentYear = DateTime.Now.Year;
-
-        var monthlyTransactions = userTransactions.Transactions
-            .Where(t => t.AuditableDate.Month == currentMonth && t.AuditableDate.Year == currentYear);
-
-        monthlyCredits = monthlyTransactions
-            .Where(t => t.Type == "credit")
-            .Sum(t => t.Amount);
-
-        monthlyDebits = monthlyTransactions
-            .Where(t => t.Type == "debit")
-            .Sum(t => t.Amount);
+      await _sw.FireAsync("Error", "Error al cargar las transacciones.", SweetAlertIcon.Error);
+      Console.WriteLine(ex);
     }
-
-    private void LoadMoreTransactions()
+    finally
     {
-        displayedTransactions = userTransactions.Transactions.Count;
-        StateHasChanged();
+      isLoadingTransactions = false;
+      StateHasChanged();
     }
+  }
 
-    // Métodos de navegación simplificados
-    // Acciones rápidas retiradas
+  private void CalculateMonthlyStats()
+  {
+    var currentMonth = DateTime.Now.Month;
+    var currentYear = DateTime.Now.Year;
 
-    private string GetTransactionIcon(string type)
+    var monthlyTransactions = userTransactions.Transactions
+    .Where(t => t.AuditableDate.Month == currentMonth && t.AuditableDate.Year == currentYear);
+
+    monthlyCredits = monthlyTransactions
+    .Where(t => t.Type == "credit")
+    .Sum(t => t.Amount);
+
+    monthlyDebits = monthlyTransactions
+    .Where(t => t.Type == "debit")
+    .Sum(t => t.Amount);
+  }
+
+  private void LoadMoreTransactions()
+  {
+    displayedTransactions = userTransactions.Transactions.Count;
+    StateHasChanged();
+  }
+
+  // Métodos de navegación simplificados
+  // Acciones rápidas retiradas
+
+  private string GetTransactionIcon(string type)
+  {
+    return type switch
     {
-        return type switch
-        {
-            "credit" => "fa-arrow-up",
-            "debit" => "fa-arrow-down",
-            _ => "fa-exchange-alt"
-        };
-    }
+      "credit" => "fa-arrow-up",
+      "debit" => "fa-arrow-down",
+      _ => "fa-exchange-alt"
+    };
+  }
 
-    private string GetTransactionIconColor(string type)
+  private string GetTransactionIconColor(string type)
+  {
+    return type switch
     {
-        return type switch
-        {
-            "credit" => "text-green-600",
-            "debit" => "text-red-600",
-            _ => "text-gray-600"
-        };
-    }
+      "credit" => "text-green-600",
+      "debit" => "text-red-600",
+      _ => "text-gray-600"
+    };
+  }
 
-    private string GetTransactionAmountColor(string type)
+  private string GetTransactionAmountColor(string type)
+  {
+    return type switch
     {
-        return type switch
-        {
-            "credit" => "text-green-600",
-            "debit" => "text-red-600",
-            _ => "text-gray-600"
-        };
-    }
+      "credit" => "text-green-600",
+      "debit" => "text-red-600",
+      _ => "text-gray-600"
+    };
+  }
 }

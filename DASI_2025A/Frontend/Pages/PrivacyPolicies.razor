@@ -1,0 +1,64 @@
+@page "/politicas-de-privacidad"
+@layout NoLayout
+@attribute [AllowAnonymous]
+@inject NavigationManager Navigation
+
+<PageTitle>Política de Privacidad | SS.CC.</PageTitle>
+
+<div
+  class="w-full min-h-screen flex items-center justify-center bg-cover bg-center bg-[url('/Assets/Images/ScoutsBackground.webp')] overflow-y-auto">
+  <section class="w-full flex flex-col justify-center items-center space-y-4 p-2 sm:p-5 md:p-10 lg:p-20 z-10">
+    <div
+      class="space-y-4 w-full sm:w-3/4 md:w-1/2 backdrop-blur-sm bg-white/50 border border-white/30 rounded-2xl shadow-2xl p-10 flex flex-col items-center justify-center">
+      <section class="flex flex-col w-full justify-center items-center">
+        <div class="p-2 flex gap-4 justify-center items-center">
+          <img src="/Assets/Images/mapache.webp" alt="mapache scout SSCC" class="w-auto h-[120px]">
+          <div class="text-center">
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-[#0e5c25]">Grupo Scout #18</span>
+              <span class="text-sm font-bold text-[#2b4266]">SS.CC.</span>
+              <span class="text-2xl font-bold text-[#1C328C]">Rumipamba</span>
+            </div>
+            <span class="text-gray-400/90 text-sm font-bold">Políticas de Privacidad</span>
+          </div>
+        </div>
+      </section>
+      <h1 class="text-xl sm:text-2xl font-bold text-green-800 text-center">Política de Privacidad</h1>
+      <p><strong>I. Definiciones:</strong> Datos personales: información que permite identificar a una persona natural.
+        Tratamiento: cualquier operación sobre dichos datos. Titular: quien es dueño de sus datos.</p>
+      <p><strong>II. Responsable del tratamiento:</strong> El Grupo Scout #18 SS.CC. Rumipamba es responsable del
+        tratamiento de los datos personales registrados en la plataforma web.</p>
+      <p><strong>III. Datos que recolectamos:</strong> Nombres, correo electrónico, fecha de nacimiento, número único,
+        rama, grado, rol, saldo, e imágenes de comprobantes de pago.</p>
+      <p><strong>IV. Finalidad:</strong> Los datos son usados para crear cuentas, gestionar roles, registrar pedidos y
+        recargas, verificar pagos, y enviar notificaciones importantes.</p>
+      <p><strong>V. Conservación:</strong> Los datos se mantienen solo por el tiempo necesario para los fines
+        mencionados o el requerido por obligaciones legales.</p>
+      <p><strong>VI. Transferencia:</strong> No se comparten datos con terceros, salvo requerimiento legal. No se hacen
+        transferencias internacionales.</p>
+      <p><strong>VII. Seguridad:</strong> Se aplican medidas técnicas y organizativas para evitar acceso no autorizado,
+        pérdida o alteración de la información.</p>
+      <p><strong>VIII. Derechos del titular:</strong> Acceso, rectificación, eliminación, oposición, limitación del
+        tratamiento y consulta sobre sus datos, conforme a la Ley Orgánica de Protección de Datos Personales del
+        Ecuador.</p>
+      <p><strong>IX. Ejercicio de derechos:</strong> Puede enviar su solicitud al correo institucional con su nombre,
+        solicitud y documento de identidad (si aplica). Se responderá dentro del plazo legal.</p>
+      <p><strong>X. Uso de cookies:</strong> Solo se usan cookies necesarias para el funcionamiento de la plataforma. No
+        se utilizan con fines publicitarios ni para crear perfiles.</p>
+      <p><strong>XI. Cambios en esta política:</strong> Nos reservamos el derecho de modificar esta política. Toda
+        modificación será publicada en esta misma página.</p>
+      <p class="mt-4 text-xs text-gray-500 text-center">Última actualización: agosto de 2025</p>
+      <div>
+        <button @onclick="handleVolver"
+          class="bg-blue-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded cursor-pointer transition duration-300">
+          Volver
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+@code
+{
+  private void handleVolver() => Navigation.NavigateTo("/home");
+}
