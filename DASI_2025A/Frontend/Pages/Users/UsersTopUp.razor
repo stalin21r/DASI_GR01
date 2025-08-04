@@ -32,7 +32,7 @@
     <section class="w-full flex justify-center items-center">
       <EditForm Model="topUpRequestCreateDto" OnSubmit="HandleSubmit"
         class="p-10 w-3/6 rounded-2xl border border-gray-300/50 shadow-2xl">
-        <div class="grid grid-cols-2 grid-rows-3 gap-4 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 md:grid-rows-3 gap-4 space-y-4">
           <DataAnnotationsValidator />
           <div>
             <div>
@@ -43,7 +43,7 @@
               <ValidationMessage For="@(() => topUpRequestCreateDto.Amount)" />
             </div>
           </div>
-          <div class="col-start-1 row-start-2">
+          <div class="md:col-start-1 md:row-start-2">
             <div>
               <FloatingLabelSelect Label="Tipo" Name="Type" LabelColor="blue" SelectedValue="@topUpRequestCreateDto.Type"
                 SelectedValueChanged="(value) => topUpRequestCreateDto.Type = value" Placeholder="Tipo">
@@ -53,13 +53,13 @@
               <ValidationMessage For="@(() => topUpRequestCreateDto.Type)" />
             </div>
           </div>
-          <div class="col-start-1 row-start-3">
+          <div class="md:col-start-1 md:row-start-3">
             <div>
               <FloatingLabelInput disabled="true" Label="Beneficiario" Name="targetUser" Type="text" LabelColor="blue"
                 Value="@(userDto?.FirstName + " " + userDto?.LastName)" />
             </div>
           </div>
-          <div class="row-span-2 col-start-2 row-start-1 flex flex-col justify-center items-center">
+          <div class="md:row-span-2 md:col-start-2 md:row-start-1 flex flex-col justify-center items-center">
             <div
               class="flex-3 flex h-[200px] w-[200px] justify-center px-2 items-center rounded-lg border-2 border-gray-800/50 border-dashed">
               <!-- Aqui va  la preview de  la imagen -->
@@ -76,7 +76,7 @@
               <InputFile id="fileInput" OnChange="HandleFileSelected" class="hidden" />
             </div>
           </div>
-          <div class="col-start-2 row-start-3 flex justify-center items-start">
+          <div class="md:col-start-2 md:row-start-3 flex justify-center items-center md:items-start">
             <button type="submit"
               class="bg-green-700 hover:bg-green-500 text-white font-bold py-3 px-2 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
               Recargar
