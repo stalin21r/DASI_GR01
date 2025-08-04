@@ -38,6 +38,9 @@ namespace Backend.Migrations
                     b.Property<decimal>("Balance")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("BranchFk")
+                        .HasColumnType("int");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -103,6 +106,8 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BranchFk");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -162,6 +167,76 @@ namespace Backend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("BalanceTransactions");
+                });
+
+            modelBuilder.Entity("Backend.BranchEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AuditableDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("MachineName")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValueSql("HOST_NAME()");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Branches");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AuditableDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Jefe Grupal"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AuditableDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Subjefe Grupal"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            AuditableDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Manada"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            AuditableDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Unidad Scout"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            AuditableDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Caminantes"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            AuditableDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Rovers"
+                        });
                 });
 
             modelBuilder.Entity("Backend.OccupationEntity", b =>
@@ -304,14 +379,17 @@ namespace Backend.Migrations
                         .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Image")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("ImageDeleteHash")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MachineName")
@@ -584,11 +662,19 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.ApplicationUser", b =>
                 {
+                    b.HasOne("Backend.BranchEntity", "Branch")
+                        .WithMany("Users")
+                        .HasForeignKey("BranchFk")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Backend.OccupationEntity", "Occupation")
                         .WithMany("Users")
                         .HasForeignKey("OccupationFk")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Branch");
 
                     b.Navigation("Occupation");
                 });
@@ -736,6 +822,11 @@ namespace Backend.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Backend.BranchEntity", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Backend.OccupationEntity", b =>

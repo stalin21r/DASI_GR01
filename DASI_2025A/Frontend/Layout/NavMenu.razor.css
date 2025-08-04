@@ -24,11 +24,7 @@
 }
 
 /* Media query para pantallas grandes */
-@media (min-width: 641px) {
-    button[title="Navigation menu"] {
-        display: none;
-    }
-
+@media (min-width: 1024px) {
     .hidden {
         display: block;
     }

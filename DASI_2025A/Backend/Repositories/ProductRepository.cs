@@ -20,6 +20,15 @@ public class ProductRepository : IProductRepository
     _imgurService = imgurService;
   }
 
+  /// <summary>
+  ///   Crea un nuevo producto en la base de datos.
+  /// </summary>
+  /// <param name="productDto">Objeto con los datos del producto a crear.</param>
+  /// <param name="userId">El Id del usuario que hace la petición.</param>
+  /// <returns>
+  ///   Retorna el objeto <see cref="ProductDto"/> creado si se encontró el producto.
+  ///   Retorna <see langword="null"/> si no se encontró el producto.
+  /// </returns>
   public async Task<ProductDto> CreateAsync(ProductDto productDto, string userId)
   {
     string? imgurLink = null;
@@ -51,7 +60,7 @@ public class ProductRepository : IProductRepository
       Description = productDto.Description,
       Price = productDto.Price,
       Stock = productDto.Stock,
-      Image = imgurLink ?? string.Empty, // o null si tu columna lo permite
+      Image = imgurLink ?? "Imagen no disponible",
       Active = productDto.Active,
       Type = productDto.Type,
       ImageDeleteHash = deleteHash ?? string.Empty
@@ -84,7 +93,7 @@ public class ProductRepository : IProductRepository
   ///   Obtiene todos los productos de la base de datos.
   /// </summary>
   /// <returns>
-  ///   Retorna un <see cref="IList{ProductDto}"/> con todos los productos de la base de datos.
+  ///   Retorna una lista de objetos <see cref="ProductDto"/> que contienen los datos de los productos.
   /// </returns>
   public async Task<IEnumerable<ProductDto>> GetAllAsync()
   {
@@ -99,7 +108,9 @@ public class ProductRepository : IProductRepository
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
-      }).ToListAsync();
+      })
+      .OrderByDescending(p => p.Id)
+      .ToListAsync();
   }
 
   /// <summary>
@@ -123,7 +134,9 @@ public class ProductRepository : IProductRepository
         Image = p.Image,
         Active = p.Active,
         Type = p.Type
-      }).ToListAsync();
+      })
+      .OrderByDescending(p => p.Id)
+      .ToListAsync();
   }
 
   /// <summary>
@@ -183,8 +196,8 @@ public class ProductRepository : IProductRepository
 
         // Subir nueva imagen
         var uploadResult = await _imgurService.UploadImageAsync(productDto.Image, productDto.Name);
-        entity.Image = uploadResult.Link;
-        entity.ImageDeleteHash = uploadResult.DeleteHash;
+        entity.Image = uploadResult.Link ?? "Imagen no disponible";
+        entity.ImageDeleteHash = uploadResult.DeleteHash ?? "No disponible";
       }
       catch (Exception ex)
       {
@@ -225,10 +238,10 @@ public class ProductRepository : IProductRepository
     {
       Id = entity.Id,
       Name = entity.Name,
-      Description = entity.Description ?? string.Empty,
+      Description = entity.Description ?? "Ninguna descripción disponible",
       Price = entity.Price,
       Stock = entity.Stock,
-      Image = entity.Image,
+      Image = entity.Image ?? "Imagen no disponible",
       Active = entity.Active,
       Type = entity.Type
     };
@@ -258,52 +271,44 @@ public class ProductRepository : IProductRepository
   {
     using var transaction = await _context.Database.BeginTransactionAsync();
 
-    try
+    foreach (var detail in order.OrderDetails)
     {
-      foreach (var detail in order.OrderDetails)
+      var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == detail.ProductId && p.Active);
+      if (product == null)
       {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == detail.ProductId && p.Active);
-        if (product == null)
-        {
-          await transaction.RollbackAsync();
-          return false; // producto no existe o no está activo
-        }
-
-        if (product.Stock < detail.Quantity)
-        {
-          await transaction.RollbackAsync();
-          return false; // stock insuficiente
-        }
-
-        uint stockBefore = product.Stock;
-        product.Stock -= detail.Quantity;
-
-        _context.Products.Update(product);
-
-        var log = new ProductLoggerDto
-        {
-          ProductId = product.Id,
-          UserId = sellerId,
-          Action = "Venta de producto",
-          Description = $"Venta de {detail.Quantity} unidades",
-          QuantityBefore = stockBefore,
-          QuantityAfter = product.Stock
-        };
-
-        await _logger.CreateAsync(log);
+        await transaction.RollbackAsync();
+        throw new InvalidOperationException("Producto no encontrado o no activo."); // producto no existe o no está activo
       }
 
-      await _context.SaveChangesAsync();
-      await transaction.CommitAsync();
+      if (product.Stock < detail.Quantity)
+      {
+        await transaction.RollbackAsync();
+        throw new InvalidOperationException("Stock insuficiente."); // stock insuficiente
+      }
 
-      return true;
+      uint stockBefore = product.Stock;
+      product.Stock -= detail.Quantity;
+
+      _context.Products.Update(product);
+
+      var log = new ProductLoggerDto
+      {
+        ProductId = product.Id,
+        UserId = sellerId,
+        Action = "Venta de producto",
+        Description = $"Venta de {detail.Quantity} unidades",
+        QuantityBefore = stockBefore,
+        QuantityAfter = product.Stock
+      };
+
+      await _logger.CreateAsync(log);
     }
-    catch (Exception ex)
-    {
-      await transaction.RollbackAsync();
-      Console.WriteLine($"Error al registrar venta: {ex.Message}");
-      return false;
-    }
+
+    await _context.SaveChangesAsync();
+    await transaction.CommitAsync();
+
+    return true;
+
   }
 
   /// <summary>

@@ -7,15 +7,17 @@ public class UserDto
 {
   public string? Id { get; set; }
 
-  [Required(ErrorMessage = "El nombre es requerido.")]
-  [MaxLength(100)]
+  [Required(ErrorMessage = "El nombre es obligatorio")]
+  [StringLength(50, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 50 caracteres")]
+  [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El nombre solo puede contener letras y espacios")]
   public string FirstName { get; set; } = default!;
 
   [Required(ErrorMessage = "El apellido es requerido.")]
-  [MaxLength(100)]
+  [StringLength(100, MinimumLength = 2, ErrorMessage = "El apellido debe tener entre 2 y 100 caracteres")]
+  [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El apellido solo puede contener letras y espacios")]
   public string LastName { get; set; } = default!;
 
-  [Required(ErrorMessage = "La fecha de nacimiento es requerida.")]
+  [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
   [DataType(DataType.Date)]
   public DateTime DateOfBirth { get; set; }
 
@@ -23,13 +25,10 @@ public class UserDto
   [MaxLength(50)]
   public string ScoutUniqueId { get; set; } = default!;
 
-  [Required(ErrorMessage = "El correo es requerido.")]
-  [EmailAddress]
-  public string? Email { get; set; }
-
-  [Required(ErrorMessage = "La contraseña es requerida")]
-  [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un carácter especial y un número")]
-  public string? Password { get; set; }
+  [Required(ErrorMessage = "El email es obligatorio")]
+  [EmailAddress(ErrorMessage = "Formato de email inválido")]
+  [StringLength(100, ErrorMessage = "El email no puede exceder 100 caracteres")]
+  public string Email { get; set; } = default!;
 
   public bool Active { get; set; } = true;
 
@@ -43,13 +42,9 @@ public class UserDto
 
   public OccupationDto? Occupation { get; set; }
 
-  public override bool Equals(object? obj)
-  {
-    return obj is UserDto dto && Id == dto.Id;
-  }
+  [Required(ErrorMessage = "La rama es requerida")]
+  public int BranchFk { get; set; }
 
-  public override int GetHashCode()
-  {
-    return Id != null ? Id.GetHashCode() : 0;
-  }
+  public BranchDto? Branch { get; set; }
+
 }

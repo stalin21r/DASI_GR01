@@ -42,7 +42,7 @@
         await OnChange.InvokeAsync(e);
     }
 
-    private bool ShouldFloat => IsFocused || !string.IsNullOrWhiteSpace(Value);
+    private bool ShouldFloat => IsFocused || !string.IsNullOrWhiteSpace(Value) || Type == "date";
 
     private string LabelClasses => ShouldFloat
         ? $"text-lg -top-7 left-4 bg-inherit z-2 px-1 {(IsFocused ? $"{TextColor} font-bold" : "text-gray-500 font-normal")}"

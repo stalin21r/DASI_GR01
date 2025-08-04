@@ -6,12 +6,24 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.DataProtection;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===============================
 // CONFIGURACIÓN DE SERVICIOS
 // ===============================
+
+// Logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.None);
+
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 // DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -37,6 +49,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductLoggerRepository, ProductLoggerRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOccupationRepository, OccupationRepository>();
+builder.Services.AddScoped<IBranchRepository, BranchRepository>();
 // Servicios
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductLoggerService, ProductLoggerService>();
@@ -45,6 +58,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IImgurService, ImgurService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IOccupationService, OccupationService>();
+builder.Services.AddScoped<IBranchService, BranchService>();
+builder.Services.AddScoped<IMailkitService, MailkitService>();
 
 // Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -91,12 +106,73 @@ builder.Services.AddSwaggerGen(c =>
 	});
 });
 
+// Crear directorio para claves si no existe
+var keysDirectory = new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "DataProtection-Keys"));
+if (!keysDirectory.Exists)
+{
+	keysDirectory.Create();
+}
+
+// Configuración cross-platform de Data Protection
+var dataProtectionBuilder = builder.Services.AddDataProtection()
+		.PersistKeysToFileSystem(keysDirectory)
+		.SetApplicationName("DASI_App")
+		.SetDefaultKeyLifetime(TimeSpan.FromDays(90));
+
+// Solo usar DPAPI en Windows
+if (OperatingSystem.IsWindows())
+{
+	dataProtectionBuilder.ProtectKeysWithDpapi(protectToLocalMachine: true);
+}
+else
+{
+	// Para Linux/macOS usar encriptación con certificado o clave
+	// En desarrollo, esto es suficiente (las claves están en el filesystem protegido)
+	builder.Logging.AddConsole();
+	var logger = LoggerFactory.Create(config => config.AddConsole()).CreateLogger("DataProtection");
+	logger.LogInformation("DPAPI no disponible en esta plataforma. Las claves se almacenan sin encriptación adicional.");
+}
+
+// ===============================
+// CONFIGURACIÓN DE RATE LIMITING (Previene ataques DDoS y de fuerza bruta)
+// ===============================
+builder.Services.AddRateLimiter(options =>
+{
+	// Límite general de API
+	options.AddFixedWindowLimiter("ApiLimit", configure =>
+	{
+		configure.Window = TimeSpan.FromMinutes(1);
+		configure.PermitLimit = 100; // 100 requests por minuto
+		configure.QueueLimit = 10;
+		configure.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+	});
+
+	// Límite estricto para autenticación (previene ataques de fuerza bruta)
+	options.AddFixedWindowLimiter("AuthLimit", configure =>
+	{
+		configure.Window = TimeSpan.FromMinutes(5);
+		configure.PermitLimit = 5; // Solo 5 intentos de login cada 5 minutos
+		configure.QueueLimit = 0;
+	});
+
+	// Configuración global de rechazo
+	options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+			RateLimitPartition.GetFixedWindowLimiter(
+					partitionKey: context.Request.Headers.Host.ToString(),
+					factory: partition => new FixedWindowRateLimiterOptions
+					{
+						AutoReplenishment = true,
+						PermitLimit = 1000, // 1000 requests por minuto por host
+						Window = TimeSpan.FromMinutes(1)
+					}));
+});
+
 // CORS
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowBlazorApp", builder =>
 	{
-		builder.WithOrigins("https://localhost:7206")
+		builder.WithOrigins("https://localhost:7206", "http://localhost:5007")
 				 .AllowAnyMethod()
 				 .AllowAnyHeader()
 				 .AllowCredentials();

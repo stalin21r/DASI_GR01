@@ -19,6 +19,7 @@ public class ProductLoggerRepository : IProductLoggerRepository
 		.Include(l => l.Product)
 		.Include(l => l.User)
 		.AsNoTracking()
+		.OrderByDescending(l => l.Id)
 		.ToListAsync();
 		if (logs is null || logs.Count() == 0)
 		{

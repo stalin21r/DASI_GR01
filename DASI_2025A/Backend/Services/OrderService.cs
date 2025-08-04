@@ -25,19 +25,20 @@ public class OrderService : IOrderService
     return response;
   }
 
-  public async Task<ApiResponse<IEnumerable<OrderResponseDto>>> GetAllOrdersAsync()
+  public async Task<ApiResponse<PagedResult<OrderResponseDto>>> GetAllOrdersAsync(OrderQueryParams queryParams)
   {
-    var result = await _orderRepository.GetAllOrdersAsync();
-    if (result == null || !result.Any())
+    var (filteredOrders, totalItems) = await _orderRepository.GetAllOrdersAsync(queryParams);
+
+    if (!filteredOrders.Any())
+      throw new KeyNotFoundException("No se encontraron órdenes con los filtros aplicados.");
+
+    var pagedResult = new PagedResult<OrderResponseDto>
     {
-      throw new KeyNotFoundException("No se encontraron Ordenes.");
-    }
-    ApiResponse<IEnumerable<OrderResponseDto>> response = new ApiResponse<IEnumerable<OrderResponseDto>>(
-      message: "Ordenes obtenidas exitosamente",
-      data: result,
-      totalRecords: result.Count()
-    );
-    return response;
+      Items = filteredOrders,
+      TotalItems = totalItems
+    };
+
+    return new ApiResponse<PagedResult<OrderResponseDto>>("Órdenes obtenidas exitosamente", pagedResult, totalItems);
   }
 
   public async Task<ApiResponse<IEnumerable<OrderResponseDto>>> GetOrdersByBuyerIdAsync(string userId)

@@ -18,7 +18,7 @@ public class UpdateProductDto
   [Range(0, uint.MaxValue, ErrorMessage = "La cantidad debe ser mayor o igual a 0")]
   public uint Stock { get; set; } = 0;
 
-  public string? Image { get; set; }
+  public string? Image { get; set; } = "Imagen no disponible";
 
   [Required(ErrorMessage = "El estado es requerido")]
   public bool Active { get; set; } = true;

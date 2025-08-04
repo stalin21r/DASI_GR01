@@ -4,6 +4,7 @@
 @inject NavigationManager Nav
 @inject SweetAlertService _sw
 @inject IOccupationService _occupationService
+@inject IBranchService _branchService
 
 <PageTitle>Editar Usuarios</PageTitle>
 
@@ -14,7 +15,7 @@
     <div class="flex gap-4">
       <NavLink href="/Usuarios"
         class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
-        <i class="fa-solid fa-arrow-left"></i>Atrás
+        <i class="fa-solid fa-arrow-left"></i><span class="hidden md:inline">Atrás</span>
       </NavLink>
     </div>
   </section>
@@ -31,7 +32,7 @@
     <section class="w-full flex justify-center items-center">
       <EditForm Model="userDto" OnSubmit="handleSubmit"
         class="p-10 w-3/4 rounded-2xl border border-gray-300/50 shadow-2xl">
-        <div class="grid grid-cols-3 grid-rows-3 gap-4 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-3 gap-4 space-y-6">
           <DataAnnotationsValidator />
           <div>
             <div>
@@ -91,8 +92,16 @@
           </div>
           <div>
             <div>
-              <FloatingLabelInput disabled="true" Label="Contraseña" Name="password" Type="text" LabelColor="blue"
-                value="@userDto?.Password" OnChange="(e) => userDto!.Password = e.Value?.ToString() ?? string.Empty" />
+              <FloatingLabelSelect Label="Rama" Name="branch" LabelColor="blue"
+                SelectedValue="@userDto?.Branch?.Id.ToString()"
+                SelectedValueChanged="(value) => userDto!.Branch = branches?.FirstOrDefault(o => o.Id == int.Parse(value))"
+                Placeholder="Rama">
+                @foreach (var branch in branches!)
+                {
+                  <option value="@branch.Id">@branch.Name</option>
+                }
+              </FloatingLabelSelect>
+              <ValidationMessage For="@(() => userDto!.Branch)" />
             </div>
           </div>
           <div>
@@ -119,6 +128,7 @@
   [Parameter] public string? id { get; set; }
   private UserDto userDto = new();
   private IEnumerable<OccupationDto> occupations = new List<OccupationDto>();
+  private IEnumerable<BranchDto> branches = new List<BranchDto>();
   private string serverMessage = string.Empty;
   private string errorMessage = string.Empty;
 
@@ -133,6 +143,13 @@
         return;
       }
       occupations = occupationsResponse.data;
+      var branchesResponse = await _branchService.GetAllBranches();
+      if (branchesResponse.data is null)
+      {
+        errorMessage = branchesResponse.message;
+        return;
+      }
+      branches = branchesResponse.data;
 
       var response = await _userService.GetUserByIdAsync(id);
       if (response.data is null)
@@ -161,9 +178,8 @@
 
   private async Task handleSubmit()
   {
-    Console.WriteLine("Llega aqui");
     userDto.OccupationFk = userDto.Occupation?.Id ?? 0;
-    userDto.Password = "C0ntr4s3n@";
+    userDto.BranchFk = userDto.Branch?.Id ?? 0;
     var result = await _userService.UpdateUserAsync(userDto);
     serverMessage = result.message;
     if (result.data is null)

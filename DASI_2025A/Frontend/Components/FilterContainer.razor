@@ -1,0 +1,40 @@
+@namespace Frontend.Components
+<div>
+  <!-- Contenedor para pantallas md+ -->
+  <div class="hidden md:block px-6 py-8 w-full space-y-4 border border-gray-200 rounded-2xl shadow-lg bg-gray-50 mb-2">
+    @ChildContent
+  </div>
+  <!-- Botón para pantallas sm y menores -->
+  <div class="block md:hidden">
+    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
+      @onclick="() => ShowModal = true">
+      Filtros
+    </button>
+  </div>
+</div>
+@if (ShowModal)
+{
+  <div class="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50"
+    @onclick="CloseModalOnOutsideClick">
+    <div class="bg-white rounded-lg p-6 w-11/12 max-w-md" @onclick:stopPropagation="true">
+      <div class="flex justify-end">
+        <button class="text-gray-600 hover:text-gray-900 font-bold text-xl cursor-pointer"
+          @onclick="() => ShowModal = false">&times;</button>
+      </div>
+      <div class="mt-2 space-y-4">
+        @ChildContent
+      </div>
+    </div>
+  </div>
+}
+@code
+{
+  [Parameter]
+  public RenderFragment? ChildContent { get; set; }
+
+  public bool ShowModal { get; set; } = false;
+
+  public void CerrarModal() => ShowModal = false;
+
+  private void CloseModalOnOutsideClick() => CerrarModal();
+}

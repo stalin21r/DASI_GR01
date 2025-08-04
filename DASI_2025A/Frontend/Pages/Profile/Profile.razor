@@ -1,0 +1,199 @@
+@attribute [Authorize]
+@page "/Perfil"
+@using System.Security.Claims;
+@inject NavigationManager Nav
+@inject SweetAlertService _sw
+@inject ILocalStorageService _localStorage
+@inject IUsersService _userService
+
+<PageTitle>Perfil</PageTitle>
+<div class="w-full">
+  <BodyHeader title="Mi Perfil" />
+  <section class="w-full flex justify-between items-center px-4">
+    <h1 class="text-4xl font-bold text-[#427500]">Mi Perfil</h1>
+  </section>
+  @if (userDto == null && string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
+  }
+  else if (!string.IsNullOrEmpty(errorMessage))
+  {
+    <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
+  }
+  else if (userDto != null)
+  {
+    <section class="w-full flex justify-center items-center md:p-10">
+      <div
+        class="max-w-8xl mx-auto flex flex-col justify-center border border-gray-400 rounded-lg p-5 md:p-10 shadow-xl space-y-8">
+        <span class="text-4xl font-bold text-green-800 gap-4 border-b border-gray-400/50 pb-6">
+          <i class="fa-solid fa-circle-info custom-icon text-blue-800"></i>
+          Datos del Usuario
+        </span>
+        <section class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
+          <!-- Nombre -->
+          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+            <i class="fa-solid fa-user text-blue-800 text-lg"></i>
+            <div class="flex flex-col">
+              <span class="font-bold text-green-700">Nombre:</span>
+              <span class="font-medium">@userDto.FirstName @userDto.LastName</span>
+            </div>
+          </div>
+          <!-- Email -->
+          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+            <i class="fa-solid fa-envelope text-blue-800 text-lg"></i>
+            <div class="flex flex-col">
+              <span class="font-bold text-green-700">Email:</span>
+              <span class="font-medium">@userDto.Email</span>
+            </div>
+          </div>
+          <!-- Numero Único -->
+          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+            <i class="fa-solid fa-fingerprint text-blue-800 text-lg"></i>
+            <div class="flex flex-col">
+              <span class="font-bold text-green-700">Numero Único:</span>
+              <span class="font-medium">@userDto.ScoutUniqueId</span>
+            </div>
+          </div>
+          <!-- Nacimiento -->
+          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+            <i class="fa-solid fa-cake-candles text-blue-800 text-lg"></i>
+            <div class="flex flex-col">
+              <span class="font-bold text-green-700">Nacimiento:</span>
+              <span class="font-medium">@userDto.DateOfBirth.ToShortDateString()</span>
+            </div>
+          </div>
+          <!-- Balance -->
+          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+            <i class="fa-solid fa-money-bill text-blue-800 text-lg"></i>
+            <div class="flex flex-col">
+              <span class="font-bold text-green-700">Saldo:</span>
+              <span class="font-medium">$@userDto.Balance</span>
+            </div>
+          </div>
+          <!-- Ocupacion -->
+          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+            <i class="fa-solid fa-font-awesome text-blue-800 text-lg"></i>
+            <div class="flex flex-col">
+              <span class="font-bold text-green-700">Grado:</span>
+              <span class="font-medium">@userDto?.Occupation?.Name</span>
+            </div>
+          </div>
+          <!-- branch -->
+          <div class="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
+            <i class="fa-solid fa-code-branch text-blue-800 text-lg"></i>
+            <div class="flex flex-col">
+              <span class="font-bold text-green-700">Rama:</span>
+              <span class="font-medium">@userDto?.Branch?.Name</span>
+            </div>
+          </div>
+        </section>
+        <section class="space-y-8">
+          <button @onclick="HandleActivateChangePassword"
+            class="cursor-pointer text-white bg-[#427500] hover:bg-[#427500]/90 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center transition-all duration-300">
+            Cambiar Contraseña
+          </button>
+          <EditForm Model="changePassDto" OnValidSubmit="handleSubmit" class='@(changePassword ? "block" : "hidden")'>
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 text-sm">
+              <DataAnnotationsValidator />
+              <div>
+                <div>
+                  <FloatingLabelInput Label="Contraseña antigua" Name="oldPassword" Type="password" LabelColor="blue"
+                    value="@changePassDto.OldPassword"
+                    OnChange="(e) => changePassDto.OldPassword = e.Value?.ToString() ?? string.Empty" />
+                  <ValidationMessage For="@(() => changePassDto.OldPassword)" />
+                </div>
+              </div>
+              <div>
+                <div>
+                  <FloatingLabelInput Label="Nueva contraseña" Name="NewPassword" Type="password" LabelColor="blue"
+                    value="@changePassDto.NewPassword"
+                    OnChange="(e) => changePassDto.NewPassword = e.Value?.ToString() ?? string.Empty" />
+                  <ValidationMessage For="@(() => changePassDto.NewPassword)" />
+                </div>
+              </div>
+              <div>
+                <div>
+                  <FloatingLabelInput Label="Confirmar contraseña" Name="ConfirmPassword" Type="password"
+                    LabelColor="blue" value="@changePassDto.ConfirmNewPassword"
+                    OnChange="(e) => changePassDto.ConfirmNewPassword = e.Value?.ToString() ?? string.Empty" />
+                  <ValidationMessage For="@(() => changePassDto.ConfirmNewPassword)" />
+                </div>
+              </div>
+              <div class="lg:col-start-2 xl:col-start-3 flex justify-center">
+                <button type="submit"
+                  class="w-3/4 bg-blue-500 hover:bg-blue-300 text-sm text-white font-bold py-2.5 rounded-lg border border-white/30 transition duration-300 cursor-pointer">
+                  Confirmar cambio
+                </button>
+              </div>
+            </div>
+          </EditForm>
+        </section>
+      </div>
+    </section>
+  }
+</div>
+
+@code
+{
+  private UserDto userDto = new UserDto();
+  private ChangePassDto changePassDto = new ChangePassDto();
+  private string errorMessage = "";
+  private bool changePassword = false;
+  protected override async Task OnInitializedAsync()
+  {
+    var token = await _localStorage.GetItemAsync<string>("token");
+    if (token is null)
+    {
+      Nav.NavigateTo("/Login");
+      return;
+    }
+    var userId = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
+    var response = await _userService.GetUserByIdAsync(userId);
+    if (response.data is null)
+    {
+      await _sw.FireAsync("Error", response.message, SweetAlertIcon.Error);
+      errorMessage = response.message;
+      return;
+    }
+    userDto = response.data;
+  }
+
+  private async Task handleSubmit()
+  {
+    var confirm = await _sw.FireAsync(new SweetAlertOptions
+    {
+      Title = "Confirmar",
+      Text = "¿Desea cambiar la contraseña?",
+      ShowCancelButton = true,
+      ConfirmButtonText = "Confirmar",
+      CancelButtonText = "Cancelar",
+      Icon = SweetAlertIcon.Question
+    });
+    if (!confirm.IsConfirmed)
+    {
+      return;
+    }
+    if (changePassDto.NewPassword != changePassDto.ConfirmNewPassword)
+    {
+      await _sw.FireAsync("Error", "Las contraseñas no coinciden.", SweetAlertIcon.Error);
+      changePassDto = new ChangePassDto();
+      return;
+    }
+    var response = await _userService.ChangePasswordAsync(changePassDto);
+    if (!response.data)
+    {
+      await _sw.FireAsync("Error", response.message, SweetAlertIcon.Error);
+      changePassDto = new ChangePassDto();
+      return;
+    }
+    await _sw.FireAsync("Éxito", response.message, SweetAlertIcon.Success);
+    changePassword = false;
+    StateHasChanged();
+  }
+
+  private void HandleActivateChangePassword()
+  {
+    changePassword = true;
+    StateHasChanged();
+  }
+}

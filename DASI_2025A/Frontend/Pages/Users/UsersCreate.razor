@@ -4,18 +4,18 @@
 @inject NavigationManager Nav
 @inject SweetAlertService _sw
 @inject IOccupationService _occupationService
+@inject IBranchService _branchService
 
-<PageTitle>Crear Usuarios</PageTitle>
+<PageTitle>Crear Usuarios | SS.CC. Rumipamba</PageTitle>
 
 <div class="space-y-4 w-full">
   <BodyHeader title="Crear Usuarios" />
-
   <section class="w-full flex justify-between items-center px-4">
     <h1 class="text-4xl font-bold text-[#427500]">Crear Usuarios</h1>
     <div class="flex gap-4">
       <NavLink href="/Usuarios"
         class="rounded-lg text-white text-sm text-center font-bold bg-violet-600 hover:bg-violet-400 transition duration-300 px-3 py-2 flex justify-center items-center gap-2">
-        <i class="fa-solid fa-arrow-left"></i>Atrás
+        <i class="fa-solid fa-arrow-left"></i><span class="hidden md:inline">Atrás</span>
       </NavLink>
     </div>
   </section>
@@ -33,7 +33,7 @@
     <section class="w-full flex justify-center items-center">
       <EditForm Model="userDto" OnValidSubmit="handleSubmit"
         class="p-10 w-3/4 rounded-2xl border border-gray-300/50 shadow-2xl">
-        <div class="grid grid-cols-3 grid-rows-3 gap-4 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-3 gap-4 space-y-6">
           <DataAnnotationsValidator />
           <div>
             <div>
@@ -54,7 +54,6 @@
               <FloatingLabelInput Label="Fecha de Nacimiento" Name="dateOfBirth" Type="date" LabelColor="blue"
                 value="@userDto.DateOfBirth.ToString("yyyy-MM-dd")"
                 OnChange="(e) => userDto.DateOfBirth = DateTime.TryParse(e.Value?.ToString(), out var date) ? date : userDto.DateOfBirth" />
-
               <ValidationMessage For="@(() => userDto.DateOfBirth)" />
             </div>
           </div>
@@ -95,9 +94,17 @@
           </div>
           <div>
             <div>
-              <FloatingLabelInput Label="Contraseña" Name="password" Type="text" LabelColor="blue"
-                value="@userDto.Password" OnChange="(e) => userDto.Password = e.Value?.ToString() ?? string.Empty" />
-              <ValidationMessage For="@(() => userDto.Password)" />
+              <FloatingLabelSelect Label="Rama" Name="branch" LabelColor="blue"
+                SelectedValue="@(userDto.Branch?.Id.ToString())"
+                SelectedValueChanged="(value) => userDto.Branch = branches?.FirstOrDefault(o => o.Id == int.Parse(value))"
+                Placeholder="Rama">
+                <option selected></option>
+                @foreach (var branch in branches!)
+                {
+                  <option value="@branch.Id">@branch.Name</option>
+                }
+              </FloatingLabelSelect>
+              <ValidationMessage For="@(() => userDto.Branch)" />
             </div>
           </div>
           <div>
@@ -126,26 +133,39 @@
     DateOfBirth = DateTime.Today // Establece la fecha actual
   };
   private IEnumerable<OccupationDto> occupations = new List<OccupationDto>();
+  private IEnumerable<BranchDto> branches = new List<BranchDto>();
   private string serverMessage = string.Empty;
   private string errorMessage = string.Empty;
 
   protected override async Task OnInitializedAsync()
   {
-    var response = await _occupationService.GetaAllOccupations();
-    if (response.data is null)
+    try
     {
-      errorMessage = response.message;
+      var occupationsResponse = await _occupationService.GetaAllOccupations();
+      if (occupationsResponse.data is null)
+      {
+        errorMessage = occupationsResponse.message;
+        return;
+      }
+      occupations = occupationsResponse.data;
+      var branchesResponse = await _branchService.GetAllBranches();
+      if (branchesResponse.data is null)
+      {
+        errorMessage = branchesResponse.message;
+        return;
+      }
+      branches = branchesResponse.data;
+      Console.WriteLine(branchesResponse.data);
     }
-    else
+    catch (Exception)
     {
-      occupations = response.data;
+      errorMessage = "Error al cargar las ocupaciones";
     }
   }
   private async Task handleSubmit()
   {
     userDto.OccupationFk = userDto.Occupation?.Id ?? 0;
-
-    Console.WriteLine(userDto.ToString());
+    userDto.BranchFk = userDto.Branch?.Id ?? 0;
     var result = await _userService.CreateUserAsync(userDto);
     serverMessage = result.message;
     if (result.data is null)

@@ -3,13 +3,12 @@
 @using System.Text.Json
 @inject NavigationManager Nav
 @inject IUsersService _userService
+@inject IOccupationService _occupationService
+@inject IBranchService _branchService
 @inject SweetAlertService _sw
-
-<PageTitle>Gestionar Usuarios</PageTitle>
-
+<PageTitle>Gestionar Usuarios | SS.CC. Rumipamba</PageTitle>
 <div class="space-y-4 w-full">
   <BodyHeader title="Gestionar Usuarios" />
-
   <section class="w-full flex justify-between items-center px-4">
     <h1 class="text-4xl font-bold text-[#427500]">Usuarios</h1>
     <div class="flex gap-4">
@@ -23,90 +22,193 @@
   {
     <h1 class="text-sm font-bold text-[#427500]">Cargando...</h1>
   }
-  else if (!string.IsNullOrEmpty(errorMessage))
-  {
-    <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
-  }
   else
   {
     <section>
       <div class="p-2">
-        <div class="flex justify-end w-full px-6 py-2">
-          <nav class="inline-flex space-x-1">
-            <button @onclick="() => GoToPage(currentPage - 1)"
-              class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
-              disabled="@(@currentPage == 1)"><i class="fa-solid fa-chevron-left"></i>
-            </button>
-
-            @for (int i = 1; i <= totalPages; i++)
-            {
-              <button @onclick="() => GoToPage(i)"
-                class="w-7 h-7 font-bold text-center rounded-full @(i == currentPage ? "bg-blue-500/80 text-white" : "bg-white hover:bg-gray-300/80 cursor-pointer") text-xs">
-                @i
-              </button>
-            }
-
-            <button @onclick="() => GoToPage(currentPage + 1)"
-              class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
-              disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i>
-            </button>
-          </nav>
-        </div>
-        <div class="overflow-x-auto rounded-lg shadow-2xl">
-          <table class="w-full">
-            <thead class="bg-gray-200 font-bold">
-              @{
-                var headers = new List<string> { "Usuario", "Nombre", "N. Único", "Ocupación", "Rol", "Balance",
-                        "Acciones" };
-              }
-              <tr>
-                <th class="w-5">#</th>
-                @foreach (var header in headers)
-                {
-                  <th class="px-6 py-3 text-left text-sm uppercase tracking-wider">@header</th>
-                }
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              @foreach (var (user, index) in PagedUsers.Select((p, i) => (p, i)))
+        <FilterContainer @ref="filterContainerRef">
+          <h3 class="block md:hidden text-2xl font-bold text-[#427500]"><strong>Filtrar Usuarios</strong></h3>
+          <div class="grid grid-cols-1 space-y-4 md:grid-cols-4 gap-4">
+            <FloatingLabelInput Label="Buscar por nombre" Name="nombre" Type="text" LabelColor="blue"
+              value="@filtroNombre" OnChange="(e) => filtroNombre = e.Value?.ToString()" />
+            <FloatingLabelInput Label="Buscar por correo" Name="correo" Type="text" LabelColor="blue" value="@filtroEmail"
+              OnChange="(e) => filtroEmail = e.Value?.ToString()" />
+            <FloatingLabelSelect Label="Rol" Name="role" LabelColor="blue" SelectedValue="@filtroRol"
+              SelectedValueChanged="(value) => filtroRol = value" Placeholder="Rol">
+              <option selected></option>
+              <option value="User">Usuario</option>
+              <option value="Admin">Admin</option>
+              <option value="Superadmin">Superadmin</option>
+            </FloatingLabelSelect>
+            <FloatingLabelSelect Label="Ocupación" Name="occupation" LabelColor="blue"
+              SelectedValue="@(filtroOccupationId?.ToString())"
+              SelectedValueChanged="(value) => filtroOccupationId = string.IsNullOrWhiteSpace(value) ? null : int.Parse(value)"
+              Placeholder="Ocupación">
+              <option selected></option>
+              @foreach (var occupation in occupations)
               {
-
-                <tr class="@(user.Active ? "hover:bg-gray-50" : "bg-red-50") transition-colors duration-150">
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@((currentPage - 1) * pageSize + index + 1)
-                  </td>
-                  <td class="px-6 py-4 whitespace-normal break-words text-xs text-gray-900">@user.Email</td>
-                  <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">@user.FirstName @user.LastName
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">@user.ScoutUniqueId</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Occupation?.Name</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Role?.ToString()</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">$@user.Balance.ToString()</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <NavLink href=@{
-                    $"/Usuarios/Recargar/{user.Id}"
-                                  }
-                    class="hover:bg-green-600 bg-green-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
-                    <i class="fa-solid fa-money-bill-transfer"></i>
-                  </NavLink>
-                  <NavLink href=@{
-                  $"/Usuarios/Editar/{user.Id}"
-                                }
-                  class="hover:bg-blue-600 bg-blue-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
-                  <i class="fa-solid fa-pen-to-square"></i>
-                </NavLink>
-                <button @onclick="() => OnDeleteUser(user.Id!)"
-                  class="hover:bg-red-600 bg-red-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
-                  <i class="fa-solid fa-trash"></i>
+                <option value="@occupation.Id">@occupation.Name</option>
+              }
+            </FloatingLabelSelect>
+            <FloatingLabelSelect Label="Rama" Name="branch" LabelColor="blue"
+              SelectedValue="@(filtroBranchId?.ToString())"
+              SelectedValueChanged="(value) => filtroBranchId = string.IsNullOrWhiteSpace(value) ? null : int.Parse(value)"
+              Placeholder="Rama">
+              <option selected></option>
+              @foreach (var branch in branches)
+              {
+                <option value="@branch.Id">@branch.Name</option>
+              }
+            </FloatingLabelSelect>
+          </div>
+          <div class="flex justify-end md:justify-start gap-2 mt-4">
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
+              @onclick="async () => { currentPage = 1; await LoadUsersAsync(); filterContainerRef?.CerrarModal(); }">
+              Buscar
+            </button>
+            <button class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded cursor-pointer"
+              @onclick="async () => { await LimpiarFiltros(); filterContainerRef?.CerrarModal(); }">
+              Limpiar
+            </button>
+          </div>
+        </FilterContainer>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+          <h1 class="text-sm font-bold text-[#427500]">@errorMessage</h1>
+        }
+        else
+        {
+          <div class="flex justify-end w-full px-6 py-2">
+            <nav class="inline-flex space-x-1">
+              <button @onclick="async () => await GoToPage(currentPage - 1)"
+                class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+                disabled="@(@currentPage == 1)"><i class="fa-solid fa-chevron-left"></i>
+              </button>
+              @for (int i = 1; i <= totalPages; i++)
+              {
+                <button @onclick="async () => await GoToPage(i)"
+                  class="w-7 h-7 font-bold text-center rounded-full @(i == currentPage ? "bg-blue-500/80 text-white" : "bg-white hover:bg-gray-300/80 cursor-pointer") text-xs">
+                  @i
                 </button>
-              </td>
-            </tr>
-                        }
-          </tbody>
-        </table>
+              }
+              <button @onclick="async () => await GoToPage(currentPage + 1)"
+                class="w-7 h-7 rounded-full font-bold text-black flex justify-center items-center hover:bg-green-800/70 hover:text-white cursor-pointer transition duration-300"
+                disabled="@(@currentPage == totalPages)"><i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </nav>
+          </div>
+          <!-- Tabla visibles solo en pantallas grandes -->
+          <div class="hidden md:block overflow-x-auto rounded-lg shadow-2xl">
+            <table class="w-full">
+              <thead class="bg-gray-200 font-bold">
+                @{
+                  var headers = new List<string> { "Usuario", "Nombre", "N. Único", "Ocupación", "Rama", "Rol", "Balance",
+                        "Acciones" };
+                }
+                <tr>
+                  <th class="w-5">#</th>
+                  @foreach (var header in headers)
+                  {
+                    <th class="px-6 py-3 text-left text-sm uppercase tracking-wider">@header</th>
+                  }
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                @foreach (var (user, index) in users!.Select((u, i) => (u, i)))
+                {
+                  <tr class="@(user.Active ? "hover:bg-gray-50" : "bg-red-50") transition-colors duration-150">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">@((currentPage - 1) * pageSize + index + 1)
+                    </td>
+                    <td class="px-6 py-4 whitespace-normal break-words text-xs text-gray-900">@user.Email</td>
+                    <td class="px-6 py-4 whitespace-normal break-words text-sm text-gray-500">@user.FirstName @user.LastName
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">@user.ScoutUniqueId</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Occupation?.Name</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Branch?.Name</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@user.Role?.ToString()</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                      <span class="@(user.Balance >= 0 ? "text-green-600" : "text-red-600")">
+                        $@user.Balance.ToString("0.00")
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      @if (user.Active)
+                      {
+                        <NavLink href=@( $"/Usuarios/Recargar/{user.Id}" )
+                          class="hover:bg-green-600 bg-green-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                          <i class="fa-solid fa-money-bill-transfer"></i>
+                        </NavLink>
+                        <NavLink href=@( $"/Usuarios/Editar/{user.Id}" )
+                          class="hover:bg-blue-600 bg-blue-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                          <i class="fa-solid fa-pen-to-square"></i>
+                        </NavLink>
+                        <button @onclick="() => OnDeleteUser(user.Id!)"
+                          class="hover:bg-red-600 bg-red-500 text-white text-sm font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                          <i class="fa-solid fa-trash"></i>
+                        </button>
+                      }
+                      else
+                      {
+                        <span
+                          class="text-xs px-2 py-1 rounded-full @(user.Active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                          @(user.Active ? "Activo" : "Inactivo")
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <!-- Tarjetas visibles solo en pantallas pequeñas -->
+          <div class="block md:hidden space-y-4">
+            @foreach (var (user, index) in users!.Select((u, i) => (u, i)))
+            {
+              <div @key="user.Id" class="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+                <div class="flex justify-between items-center mb-2">
+                  <h2 class="text-lg font-bold text-[#427500]">@user.FirstName @user.LastName</h2>
+                  <span
+                    class="text-xs px-2 py-1 rounded-full @(user.Active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                    @(user.Active ? "Activo" : "Inactivo")
+                  </span>
+                </div>
+                <div class="text-sm space-y-1 text-gray-700">
+                  <div><strong>Email:</strong> @user.Email</div>
+                  <div><strong>Rol:</strong> @user.Role</div>
+                  <div><strong>N. Único:</strong> @user.ScoutUniqueId</div>
+                  <div><strong>Ocupación:</strong> @user.Occupation?.Name</div>
+                  <div><strong>Rama:</strong> @user.Branch?.Name</div>
+                  <div>
+                    <strong>Balance:</strong>
+                    <span class="@(user.Balance >= 0 ? "text-green-600" : "text-red-600")">
+                      $@user.Balance.ToString("0.00")
+                    </span>
+                  </div>
+                </div>
+                <div class="mt-4 flex gap-2">
+                  @if (user.Active)
+                  {
+                    <NavLink href=@( $"/Usuarios/Recargar/{user.Id}" )
+                      class="hover:bg-green-600 bg-green-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                      <i class="fa-solid fa-money-bill-transfer"></i>
+                    </NavLink>
+                    <NavLink href=@( $"/Usuarios/Editar/{user.Id}" )
+                      class="hover:bg-blue-600 bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                      <i class="fa-solid fa-pen-to-square"></i>
+                    </NavLink>
+                    <button @onclick="() => OnDeleteUser(user.Id!)"
+                      class="hover:bg-red-600 bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg transition duration-300 cursor-pointer">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
       </div>
-    </div>
-  </section>
-    }
+    </section>
+  }
 </div>
 
 @code
@@ -117,24 +219,30 @@
   private int currentPage = 1;
   private int pageSize = 5;
   private int totalPages = 1;
-  private IEnumerable<UserDto> PagedUsers =>
-  users?.Skip((currentPage - 1) * pageSize).Take(pageSize) ?? Enumerable.Empty<UserDto>();
+  private string? filtroNombre;
+  private string? filtroEmail;
+  private string? filtroRol;
+  private int? filtroOccupationId;
+  private int? filtroBranchId;
+  private FilterContainer? filterContainerRef;
+  private List<OccupationDto> occupations = new();
+  private List<BranchDto> branches = new();
 
   protected override async Task OnInitializedAsync()
   {
-    var response = await _userService.GetAllUsersAsync();
-
-    if (response.data is null)
+    await LoadUsersAsync();
+    var occupationsResponse = await _occupationService.GetaAllOccupations();
+    if (occupationsResponse.data is not null)
     {
-      errorMessage = response.message;
+      occupations = occupationsResponse.data.ToList();
     }
-    else
+
+    var branchesResponse = await _branchService.GetAllBranches();
+    if (branchesResponse.data is not null)
     {
-      users = response.data.Where(p => p.Active).ToList();
-      totalPages = (int)Math.Ceiling((double)users.Count() / pageSize);
+      branches = branchesResponse.data.ToList();
     }
   }
-
   private async Task OnDeleteUser(string id)
   {
     var result = await _sw.FireAsync(new SweetAlertOptions
@@ -159,10 +267,53 @@
       await OnInitializedAsync();
     }
   }
-
-  private void GoToPage(int page)
+  private async Task GoToPage(int page)
   {
     if (page < 1 || page > totalPages) return;
     currentPage = page;
+    await LoadUsersAsync();
+    StateHasChanged(); // Forzar re-renderizado después de cargar los datos
+  }
+  private async Task LoadUsersAsync()
+  {
+    var query = new UserQueryParams
+    {
+      PageNumber = currentPage,
+      PageSize = pageSize,
+      SearchName = string.IsNullOrWhiteSpace(filtroNombre) ? null : filtroNombre,
+      SearchEmail = string.IsNullOrWhiteSpace(filtroEmail) ? null : filtroEmail,
+      Role = string.IsNullOrWhiteSpace(filtroRol) ? null : filtroRol,
+      OccupationFk = filtroOccupationId,
+      BranchFk = filtroBranchId
+    };
+
+    var response = await _userService.GetAllUsersAsync(query);
+
+    if (response.data is null)
+    {
+      errorMessage = response.message;
+      users = null;
+      totalPages = 1;
+    }
+    else
+    {
+      users = response.data.Items;
+      // Usar totalRecords en lugar de response.totalRecords si está disponible
+      var totalRecords = response.totalRecords > 0 ? response.totalRecords : response.data.TotalItems;
+      totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+      errorMessage = null;
+    }
+
+    StateHasChanged(); // Asegurar que la UI se actualice
+  }
+  private async Task LimpiarFiltros()
+  {
+    filtroNombre = null;
+    filtroEmail = null;
+    filtroRol = null;
+    filtroOccupationId = null;
+    filtroBranchId = null;
+    currentPage = 1;
+    await LoadUsersAsync();
   }
 }

@@ -9,48 +9,115 @@
 
 <PageTitle>Home</PageTitle>
 
-<BodyHeader title="Bienvenido" />
+<BodyHeader title="@($"Bienvenido {userDto.FirstName}")" />
 
 <section class="bg-white px-6 py-10 max-w-6xl mx-auto">
   <div class="flex flex-col md:flex-row justify-between gap-8">
     <!-- Columna izquierda -->
     <div class="space-y-6 flex-1">
       <!-- Tarjeta de saldo -->
-      <div class="bg-gradient-to-b from-blue-900 to-green-500 text-white px-6 py-4 rounded shadow w-full max-w-xs">
-        <p class="text-sm">Saldo</p>
-        <p class="text-2xl font-bold">$@userDto.Balance.ToString("0.00")</p>
+      <div
+        class="bg-gradient-to-b from-blue-900 to-green-500 text-white px-6 py-4 rounded-lg shadow-lg w-full max-w-xs">
+        <p class="text-sm opacity-90">Saldo disponible</p>
+        <p class="text-3xl font-bold">$@userTransactions.Balance.ToString("N2")</p>
+        <p class="text-xs opacity-75 mt-1">@userDto.FirstName @userDto.LastName</p>
       </div>
 
-      <!-- Tarjeta de última compra -->
-      <div class="bg-white px-6 py-4 rounded shadow w-full max-w-xs h-40">
-        <p class="font-semibold">Última compra</p>
-        <!-- Aquí puedes mostrar más información si lo deseas -->
+      <!-- Tarjeta de última transacción -->
+      <div class="bg-white border border-gray-200 px-6 py-4 rounded-lg shadow w-full max-w-xs">
+        <p class="font-semibold text-gray-800 mb-2">Última transacción</p>
+        @if (lastTransaction != null)
+        {
+          <div class="space-y-1">
+            <p class="text-sm text-gray-600">@lastTransaction.Description</p>
+            <p class="text-lg font-bold @(lastTransaction.Type == "credit" ? "text-green-600" : "text-red-600")">
+              @(lastTransaction.Type == "credit" ? "+" : "-")$@lastTransaction.Amount.ToString("N2")
+            </p>
+            <p class="text-xs text-gray-500">@lastTransaction.AuditableDate.ToString("dd/MM/yyyy HH:mm")</p>
+          </div>
+        }
+        else
+        {
+          <p class="text-sm text-gray-500">No hay transacciones recientes</p>
+        }
       </div>
     </div>
 
     <!-- Columna derecha -->
     <div class="flex-1">
-      <div class="bg-gray-100 p-6 rounded shadow h-full">
-        <h2 class="text-xl font-semibold mb-4">Mis transacciones</h2>
-        <!-- Lista de transacciones de ejemplo -->
-        <ul class="space-y-3 text-left">
-          <li class="border-b pb-2">Compra en tienda - USD$ 12,00</li>
-          <li class="border-b pb-2">Compra en tienda - USD$ 5,00</li>
-          <li class="border-b pb-2">Recarga - USD$ 2,00</li>
-        </ul>
+      <div class="bg-gray-50 border border-gray-200 p-6 rounded-lg shadow h-full">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold text-gray-800">Mis transacciones</h2>
+          @if (userTransactions.Transactions.Any())
+          {
+            <span class="text-sm text-gray-500">@userTransactions.Transactions.Count total</span>
+          }
+        </div>
+
+        @if (isLoadingTransactions)
+        {
+          <div class="flex justify-center items-center h-40">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span class="ml-2 text-gray-600">Cargando transacciones...</span>
+          </div>
+        }
+        else if (!userTransactions.Transactions.Any())
+        {
+          <div class="text-center py-8">
+            <i class="fas fa-receipt text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500">No hay transacciones registradas</p>
+          </div>
+        }
+        else
+        {
+          <!-- Lista de transacciones -->
+          <div class="space-y-3 max-h-96 overflow-y-auto">
+            @foreach (var transaction in userTransactions.Transactions.Take(10))
+            {
+              <div
+                class="flex justify-between items-center p-3 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <i class="fas @GetTransactionIcon(transaction.Type) @GetTransactionIconColor(transaction.Type)"></i>
+                    <span class="font-medium text-gray-800">@transaction.Description</span>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-1">
+                    @transaction.AuditableDate.ToString("dd/MM/yyyy HH:mm")
+                    • Saldo después: $@transaction.BalanceAfter.ToString("N2")
+                  </p>
+                </div>
+                <div class="text-right">
+                  <p class="font-bold @GetTransactionAmountColor(transaction.Type)">
+                    @(transaction.Type == "credit" ? "+" : "-")$@transaction.Amount.ToString("N2")
+                  </p>
+                </div>
+              </div>
+            }
+          </div>
+
+          @if (userTransactions.Transactions.Count > 10)
+          {
+            <div class="text-center mt-4">
+              <button @onclick="LoadMoreTransactions" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                Ver más transacciones (@(userTransactions.Transactions.Count - 10) restantes)
+              </button>
+            </div>
+          }
+        }
       </div>
     </div>
   </div>
+  <br>
 
   <!-- Redes sociales -->
   <div class="text-center mt-10">
-    <p class="mb-2">Contáctanos</p>
+    <p class="mb-2 text-gray-600">Contáctanos</p>
     <div class="flex justify-center space-x-6">
       <a href="https://www.facebook.com/g18rumipamba" target="_blank"
         class="text-blue-700 hover:text-blue-500 transition duration-200">
         <i class="fab fa-facebook fa-2x"></i>
       </a>
-      <a href="https://instagram.com/tu-grupo-scout" target="_blank"
+      <a href="https://www.instagram.com/gruposcout18/" target="_blank"
         class="text-pink-600 hover:text-pink-400 transition duration-200">
         <i class="fab fa-instagram fa-2x"></i>
       </a>
@@ -65,22 +132,139 @@
 @code
 {
   private UserDto userDto = new UserDto();
+  private UserTransactionsDto userTransactions = new UserTransactionsDto();
+  private BalanceTransactionDto? lastTransaction = null;
+  private bool isLoadingTransactions = true;
+  private decimal monthlyCredits = 0;
+  private decimal monthlyDebits = 0;
+  private int displayedTransactions = 10;
 
   protected override async Task OnInitializedAsync()
   {
-    var token = await _localStorage.GetItemAsync<string>("token");
-    if (token is null)
+    await LoadUserData();
+  }
+
+  private async Task LoadUserData()
+  {
+    try
     {
-      Nav.NavigateTo("/Login");
-      return;
+      var token = await _localStorage.GetItemAsync<string>("token");
+      if (token is null)
+      {
+        Nav.NavigateTo("/Login");
+        return;
+      }
+
+      var userId = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
+
+      // Cargar datos del usuario
+      var userResponse = await _userService.GetUserByIdAsync(userId);
+      if (userResponse.data is null)
+      {
+        await _sw.FireAsync("Error", "No se encontró este Usuario.", SweetAlertIcon.Error);
+        return;
+      }
+      userDto = userResponse.data;
+
+      // Cargar transacciones del usuario
+      await LoadTransactions(userId);
     }
-    var userId = JwtHelper.GetClaim(token, ClaimTypes.NameIdentifier);
-    var response = await _userService.GetUserByIdAsync(userId);
-    if (response.data is null)
+    catch (Exception ex)
     {
-      await _sw.FireAsync("Error", "No se encontró este Usuario.", SweetAlertIcon.Error);
-      return;
+      await _sw.FireAsync("Error", "Error al cargar los datos del usuario.", SweetAlertIcon.Error);
+      Console.WriteLine(ex);
     }
-    userDto = response.data;
+  }
+
+  private async Task LoadTransactions(string userId)
+  {
+    try
+    {
+      isLoadingTransactions = true;
+      StateHasChanged();
+
+      var transactionsResponse = await _userService.GetUserTransactionsAsync(userId);
+      if (transactionsResponse.data != null)
+      {
+        userTransactions = transactionsResponse.data;
+
+        // Ordenar transacciones por fecha (más recientes primero)
+        userTransactions.Transactions = userTransactions.Transactions
+        .OrderByDescending(t => t.AuditableDate)
+        .ToList();
+
+        // Obtener última transacción
+        lastTransaction = userTransactions.Transactions.FirstOrDefault();
+
+        // Calcular estadísticas del mes actual
+        CalculateMonthlyStats();
+      }
+    }
+    catch (Exception ex)
+    {
+      await _sw.FireAsync("Error", "Error al cargar las transacciones.", SweetAlertIcon.Error);
+      Console.WriteLine(ex);
+    }
+    finally
+    {
+      isLoadingTransactions = false;
+      StateHasChanged();
+    }
+  }
+
+  private void CalculateMonthlyStats()
+  {
+    var currentMonth = DateTime.Now.Month;
+    var currentYear = DateTime.Now.Year;
+
+    var monthlyTransactions = userTransactions.Transactions
+    .Where(t => t.AuditableDate.Month == currentMonth && t.AuditableDate.Year == currentYear);
+
+    monthlyCredits = monthlyTransactions
+    .Where(t => t.Type == "credit")
+    .Sum(t => t.Amount);
+
+    monthlyDebits = monthlyTransactions
+    .Where(t => t.Type == "debit")
+    .Sum(t => t.Amount);
+  }
+
+  private void LoadMoreTransactions()
+  {
+    displayedTransactions = userTransactions.Transactions.Count;
+    StateHasChanged();
+  }
+
+  // Métodos de navegación simplificados
+  // Acciones rápidas retiradas
+
+  private string GetTransactionIcon(string type)
+  {
+    return type switch
+    {
+      "credit" => "fa-arrow-up",
+      "debit" => "fa-arrow-down",
+      _ => "fa-exchange-alt"
+    };
+  }
+
+  private string GetTransactionIconColor(string type)
+  {
+    return type switch
+    {
+      "credit" => "text-green-600",
+      "debit" => "text-red-600",
+      _ => "text-gray-600"
+    };
+  }
+
+  private string GetTransactionAmountColor(string type)
+  {
+    return type switch
+    {
+      "credit" => "text-green-600",
+      "debit" => "text-red-600",
+      _ => "text-gray-600"
+    };
   }
 }

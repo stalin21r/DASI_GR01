@@ -1,5 +1,8 @@
 @page "/login"
 @layout NoLayout
+@attribute [AllowAnonymous]
+@using System.ComponentModel.DataAnnotations;
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IAuthService authService
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
@@ -20,21 +23,27 @@
       <EditForm Model="loginDto" OnValidSubmit="handleSubmit" autocomplete="off" class="flex flex-col space-y-8">
         <DataAnnotationsValidator />
         <div class="mt-4">
-          <FloatingLabelInput Label="Correo electrónico" Name="email" Type="email" LabelColor="blue"
+          <FloatingLabelInput Label="Correo electrónico" Name="email" Type="email" LabelColor="blue"
             Value=@loginDto.Email OnChange="(e) => loginDto.Email = e.Value?.ToString() ?? string.Empty">
           </FloatingLabelInput>
           <ValidationMessage For="@(() => loginDto.Email)" />
         </div>
         <div>
-          <FloatingLabelInput Label="Contraseña" Name="password" Type="password" LabelColor="blue"
+          <FloatingLabelInput Label="Contraseña" Name="password" Type="password" LabelColor="blue"
             Value=@loginDto.Password OnChange="(e) => loginDto.Password = e.Value?.ToString() ?? string.Empty">
           </FloatingLabelInput>
           <ValidationMessage For="@(() => loginDto.Password)" />
         </div>
         
-        <button type="submit"
-          class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-3 rounded-xl border border-white/30 transition duration-200 cursor-pointer">
-          Iniciar Sesión
+        <button type="submit" disabled="@isLoading"
+          class="flex justify-center items-center bg-blue-500 hover:bg-blue-300 text-white font-bold py-3 rounded-xl border border-white/30 transition duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <img src="assets/3-dots-move.svg" alt="Cargando..." class="w-5 h-5 @(isLoading ? "" : "hidden")" />
+          <span class="@(isLoading ? "hidden" : "")">Iniciar Sesión</span>
+        </button>
+        <button type="button"
+          class="mt-2 text-blue-700 underline hover:text-blue-500 transition duration-200 cursor-pointer"
+          @onclick="() => showEmailModal = true">
+          ¿Olvidaste tu contraseña?
         </button>
         @if (!string.IsNullOrEmpty(serverMessage))
         {
@@ -51,14 +60,55 @@
   </div>
 </div>
 
+@if (showEmailModal)
+{
+  <div class="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm relative">
+      <button class="absolute top-2 right-2 text-gray-500 hover:text-red-500 cursor-pointer" @onclick="handleCloseEmailModal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h2 class="text-xl font-bold mb-4 text-center">Recuperar contraseña</h2>
+      <EditForm Model="emailModel" OnValidSubmit="HandleEmailSubmit">
+        <DataAnnotationsValidator />
+        <div class="mb-4">
+          <InputText @bind-Value="emailModel.Email" type="email" class="w-full px-3 py-2 border rounded" placeholder="Correo electrónico" />
+          <ValidationMessage For="@(() => emailModel.Email)" />
+        </div>
+        <button type="submit" class="flex justify-center items-center bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded w-full transition duration-200 cursor-pointer" disabled="@isLoading">
+          <img src="assets/3-dots-move.svg" alt="Cargando..." class="w-5 h-5 @(isLoading ? "" : "hidden") text-white font-bold" />
+          <span class="@(isLoading ? "hidden" : "")">Enviar</span>
+        </button>
+      </EditForm>
+      @if (!string.IsNullOrEmpty(emailModalMessage))
+      {
+        <div class=@($"mt-4 text-center text-sm {emailModalMessageColor}")>@emailModalMessage</div>
+      }
+    </div>
+  </div>
+}
+
 @code
 {
   private LoginDto loginDto = new();
   private string serverMessage = string.Empty;
   private string serverMessageColor = "bg-sky-500";
+  private bool isLoading = false;
+
+  // Modal
+  private bool showEmailModal = false;
+  private EmailModel emailModel = new();
+  private string emailModalMessage = string.Empty;
+  private string emailModalMessageColor = "text-green-600";
 
   protected override async Task OnInitializedAsync()
   {
+    var authState = await AuthProvider.GetAuthenticationStateAsync();
+    if (authState.User.Identity?.IsAuthenticated == true)
+    {
+      NavigationManager.NavigateTo("/home");
+      return;
+    }
+
     var token = await LocalStorage.GetItemAsync<string>("token");
     if (token is not null)
     {
@@ -68,21 +118,75 @@
   
   private async Task handleSubmit()
   {
+    isLoading = true;
     serverMessage = "";
-    var result = await authService.LoginAsync(loginDto);
-    serverMessage = result.message;
-    if (result.data is not null)
+    serverMessageColor = "bg-sky-500";
+    
+    try
     {
-      NavigationManager.NavigateTo("/home");
+      var result = await authService.LoginAsync(loginDto);
+      serverMessage = result.message;
+      
+      if (result.data is not null)
+      {
+        await Task.Delay(100);
+        NavigationManager.NavigateTo("/home", forceLoad: true);
+      }
+      else
+      {
+        serverMessageColor = "bg-red-500";
+      }
     }
-    else
+    catch (Exception)
     {
+      serverMessage = "Error inesperado al iniciar sesión.";
       serverMessageColor = "bg-red-500";
+    }
+    finally
+    {
+      isLoading = false;
     }
   }
 
   private void handleCloseServerMessage()
   {
     serverMessage = string.Empty;
+  }
+
+  private async Task HandleEmailSubmit()
+  {
+    isLoading = true;
+    StateHasChanged(); // Asegura el render inicial
+
+    var response = await authService.SendRecoverPassMailAsync(emailModel.Email);
+
+    if (!response.data)
+    {
+      emailModalMessageColor = "text-red-600";
+      emailModalMessage = response.message;
+      isLoading = false;
+      StateHasChanged(); // Asegura render antes de salir
+      return;
+    }
+
+    emailModalMessageColor = "text-green-600";
+    emailModalMessage = response.message + "\nSi no recibiste el correo, revisa tu bandeja de spam.";
+    isLoading = false;
+    StateHasChanged(); // Asegura render antes de salir
+  }
+
+  private Task handleCloseEmailModal()
+  {
+    showEmailModal = false;
+    emailModalMessage = string.Empty;
+    emailModel.Email = string.Empty;
+    return Task.CompletedTask;
+  }
+
+  public class EmailModel
+  {
+    [Required(ErrorMessage = "El correo es obligatorio")]
+    [EmailAddress(ErrorMessage = "Correo inválido")]
+    public string Email { get; set; } = string.Empty;
   }
 }
