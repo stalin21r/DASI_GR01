@@ -56,13 +56,13 @@
           <div>
             <InputCheckbox @bind-Value="activateUserDto.TermsConditions"
               class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus: ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-            <label>Acepto los términos y condiciones</label>
+            <NavLink href="/terminos-y-condiciones">Acepto los términos y condiciones</NavLink>
             <ValidationMessage For="@(() => activateUserDto.TermsConditions)" />
           </div>
           <div>
             <InputCheckbox @bind-Value="activateUserDto.PrivacyPolicy"
               class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-            <label>Acepto la política de privacidad</label>
+            <NavLink href="/politicas-de-privacidad">Acepto la política de privacidad</NavLink>
             <ValidationMessage For="@(() => activateUserDto.PrivacyPolicy)" />
           </div>
           <button type="submit"
