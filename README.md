@@ -211,8 +211,7 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
     "App": {
       "UrlBase": "https://localhost:7206/"
     }
-  }
-
+  }```
 
 1. **Instalar Tailwind cli (solo desarrollo)** 
   
