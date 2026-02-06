@@ -173,8 +173,8 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
 
    En la raíz de la carpeta **Backend**, crea un archivo llamado `appsettings.json` con la siguiente estructura:
 
-   ```json   
-  {
+   ```json
+     {
     "ConnectionStrings": {
       "DefaultConnection": "Server={el nombre del server};Database=gestion_bar;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
     },
@@ -211,8 +211,9 @@ Sigue los siguientes pasos para ejecutar el proyecto en tu entorno local:
     "App": {
       "UrlBase": "https://localhost:7206/"
     }
-  }
-  ```
+   }
+   ```
+  
 
 1. **Instalar Tailwind cli (solo desarrollo)** 
   
